@@ -1,0 +1,40 @@
+@description
+Compounds used in the system.  Names from EcoCyc.  IDs typically taken from
+common abbreviations.
+
+@compound(source = EcoCyc)
+G6P: glucose-6-phosphate
+F6P: fructose-6-phosphate
+F16P: fructose 1\,6-bisphosphate
+GAP: D-glyceraldehyde 3-phosphate
+DHAP: dihyrdoxyacetone phosphate
+13DPG: 1\,3-bisphospho-D-glycerate
+3PG: 3-phospho-D-glycerate
+2PG: 2-phospho-D-glycerate
+PEP: phosphenolpyruvate
+PYR: pyruvate
+NADH: NADH
+NAD: NAD+
+ATP: ATP
+ADP: ADP
+AMP: AMP
+Pi: phosphate
+H2O: H2O
+H: H+
+CO2: CO2
+COA: coenzyme A
+ACOA: acetyl coenzyme A
+CIT: citrate
+ACN: cis-aconitate
+ICIT: isocitrate
+NADP: NADP+
+NADPH: NADPH
+OXO: oxoglutarate
+SCOA: succinyl-CoA
+SUC: succinate
+UQN: ubiquinone
+UQL: ubiquinol
+FUM: fumarate
+MAL: malate
+GLX: glyoxylate
+OXA: oxaloacetate

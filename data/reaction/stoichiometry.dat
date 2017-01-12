@@ -1,0 +1,171 @@
+@description
+Every reaction has reactants and products.  Catalysts like enzymes are both
+reactants and products.
+
+@reactant(source = EcoCyc, reaction = PGI)
+G6P, 1
+@product(source = EcoCyc, reaction = PGI)
+F6P, 1
+
+@reactant(source = EcoCyc, reaction = PFK)
+F6P, 1
+ATP, 1
+@product(source = EcoCyc, reaction = PFK)
+H, 1
+ADP, 1
+F16P, 1
+
+@reactant(source = EcoCyc, reaction = FBP)
+F16P, 1
+H2O, 1
+@product(source = EcoCyc, reaction = FBP)
+Pi, 1
+F6P, 1
+
+@reactant(source = EcoCyc, reaction = FBA)
+F16P, 1
+@product(source = EcoCyc, reaction = FBA)
+DHAP, 1
+GAP, 1
+
+@reactant(source = EcoCyc, reaction = TPI)
+DHAP, 1
+@product(source = EcoCyc, reaction = TPI)
+GAP, 1
+
+@reactant(source = EcoCyc, reaction = GAP)
+GAP, 1
+NAD, 1
+Pi, 1
+@product(source = EcoCyc, reaction = GAP)
+NADH, 1
+H, 1
+13DPG, 1
+
+@reactant(source = EcoCyc, reaction = PGK)
+13DPG, 1
+ADP, 1
+@product(source = EcoCyc, reaction = PGK)
+ATP, 1
+3PG, 1
+
+@reactant(source = EcoCyc, reaction = GPM)
+3PG, 1
+@product(source = EcoCyc, reaction = GPM)
+2PG, 1
+
+@reactant(source = EcoCyc, reaction = ENO)
+2PG, 1
+@product(source = EcoCyc, reaction = ENO)
+H2O, 1
+PEP, 1
+
+@reactant(source = EcoCyc, reaction = PYK)
+PEP, 1
+ADP, 1
+H, 1
+@product(source = EcoCyc, reaction = PYK)
+ATP, 1
+PYR, 1
+
+@reactant(source = EcoCyc, reaction = PPS)
+PYR, 1
+ATP, 1
+H2O, 1
+@product(source = EcoCyc, reaction = PPS)
+AMP, 1
+Pi, 1
+H, 2
+PEP, 1
+
+@reactant(source = EcoCyc, reaction = ACE)
+PYR, 1
+NAD, 1
+COA, 1
+@product(source = EcoCyc, reaction = ACE)
+ACOA, 1
+CO2, 1
+NADH, 1
+
+@reactant(source = EcoCyc, reaction = GLT)
+ACOA, 1
+OXA, 1
+H2O, 1
+@product(source = EcoCyc, reaction = GLT)
+COA, 1
+H, 1
+CIT, 1
+
+@reactant(source = EcoCyc, reaction = ACND)
+CIT, 1
+@product(source = EcoCyc, reaction = ACND)
+H2O, 1
+ACN, 1
+
+@reactant(source = EcoCyc, reaction = ACNH)
+ACN, 1
+H2O, 1
+@product(source = EcoCyc, reaction = ACNH)
+ICIT, 1
+
+@reactant(source = EcoCyc, reaction = ICD)
+ICIT, 1
+NADP, 1
+@product(source = EcoCyc, reaction = ICD)
+CO2, 1
+NADPH, 1
+OXO, 1
+
+@reactant(source = EcoCyc, reaction = OXOD)
+OXO, 1
+NAD, 1
+COA, 1
+@product(source = EcoCyc, reaction = OXOD)
+CO2, 1
+NADH, 1
+SCOA, 1
+
+@reactant(source = EcoCyc, reaction = SUCC)
+SCOA, 1
+ADP, 1
+Pi, 1
+@product(source = EcoCyc, reaction = SUCC)
+ATP, 1
+COA, 1
+SUC, 1
+
+@reactant(source = EcoCyc, reaction = SDH)
+SUC, 1
+UQN, 1
+@product(source = EcoCyc, reaction = SDH)
+UQL, 1
+FUM, 1
+
+@reactant(source = EcoCyc, reaction = FUM)
+FUM, 1
+H2O, 1
+@product(source = EcoCyc, reaction = FUM)
+MAL, 1
+
+@reactant(source = EcoCyc, reaction = ISOL)
+ICIT, 1
+@product(source = EcoCyc, reaction = ISOL)
+SUC, 1
+GLX, 1
+
+@reactant(source = EcoCyc, reaction = MAL)
+ACOA, 1
+GLX, 1
+H2O, 1
+@product(source = EcoCyc, reaction = MAL)
+COA, 1
+H, 1
+MAL, 1
+
+@reactant(source = EcoCyc, reaction = MDH)
+MAL, 1
+NAD, 1
+@product(source = EcoCyc, reaction = MDH)
+NADH, 1
+H, 1
+OXA, 1

@@ -1,0 +1,27 @@
+@description
+Reaction IDs and names are typically taken from the relevant genes.
+
+@reaction(source = EcoCyc)
+PGI: phosphoglucose isomerase
+PFK: fructose-6-phosphate phosphorylation
+FBP: fructose 1\,6-bisphosphotase
+FBA: fructose 1\,6-bisphosphate aldolase
+TPI: triosephosphate isomerase
+GAP: glyceraldehyde 3-phosphate dehydrogenase
+PGK: phosphoglycerate kinase
+GPM: phosphoglycerate mutase
+ENO: enolase
+PYK: pyruvate kinase
+PPS: phosphoenolpyruvate synthetase
+ACE: pyruvate dehydrogenase
+GLT: citrate synthase
+ACND: aconitate dehydratase
+ACNH: aconitate hydratase
+ICD: isocitrate dehydrogenase
+OXOD: oxoglutarate dehydrogenase
+SUCC: succinyl-CoA synthetase
+SDH: succinate oxidoreductase
+FUM: fumarase
+ISOL: isocitrate lyase
+MAL: malate synthase
+MDH: malate dehydrogenase

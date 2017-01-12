@@ -1,0 +1,33 @@
+@source
+misc: Currently uncited
+
+EcoCyc: values or topology taken directly from EcoCyc
+
+BR09T1: Table 1 from Bennett\, Rabinowitz 2009 Nat Chem Bio "Absolute Metabolite Concentrations and Implied Enzyme Active Site Occupancy in Escherichia coli"
+BR09S: Suppliment from Bennett\, Rabinowitz 2009 Nat Chem Bio "Absolute Metabolite Concentrations and Implied Enzyme Active Site Occupancy in Escherichia coli"
+
+TS2010ST4_5h: Supplimentary table 4\, 5 h column from Toya\, Shimizu 2010 Biotech Progress "13C-metabolic flux analysis for batch culture of Escherichia coli and its pyk and pgi gene knockout mutants based on mass isotopomer distribution of intracellular metabolites"
+
+1429704: PMID 1429704
+16990279: PMID 16990279
+8436219: PMID 8436219
+8309937: PMID 8309937
+9442062: PMID 9442062
+1524432: PMID 1524432
+10353839: PMID 10353839
+17642514: PMID 17642514
+24141127: PMID 24141127
+11803023: PMID 11803023
+383238: PMID 383238
+16484232: PMID 16484232
+1329945: PMID 1329945
+8203917: PMID 8203917
+8422384: PMID 8422384
+15723538: PMID 15723538
+12930982: PMID 12930982
+17947381: PMID 17947381
+
+H2015: Houser 2015
+S2015: Schmidt 2015\, Glucose column
+T2010T6: Table 6 from Taniguchi 2010
+W2014S2: Suppliment 2 from Wisniewski 2014 (average of three replicates)

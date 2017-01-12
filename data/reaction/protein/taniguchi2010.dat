@@ -1,0 +1,15 @@
+@relative_protein_count(source = T2010T6)
+PGI, 168.502
+PFK, 125.932 # pfkA, most abundant
+TPI, 767.928
+GAP, 2380.382
+PGK, 564.396
+GPM, 760.082
+PYK, 118.856
+PPS, 115.188
+ACE, 843.19 # min of aceE and aceF
+GLT, 89.104
+ACND, 231.593 # acnB
+ACNH, 231.593 # acnB
+OXOD, 158.495 # sucA
+FUM, 20.83 # fumC

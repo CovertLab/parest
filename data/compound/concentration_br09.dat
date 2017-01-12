@@ -1,0 +1,26 @@
+@description
+Metabolite concentrations as described in the 2009 Bennet/Rabinowitz paper.
+Some reported concentrations are not used because of ambiguities in their
+metabolite association; i.e. hexose phosphate includes both fructose and
+glucose phosphate.
+
+@concentration(source = BR09T1)
+NADH, 8.3e-5
+NAD, 2.6e-3
+ATP, 9.6e-3
+ADP, 5.6e-4
+AMP, 2.8e-4
+F16P, 1.5e-2
+DHAP, 3.7e-4
+PEP, 1.8e-4
+COA, 1.4e-3
+ACOA, 6.1e-4
+CIT, 2e-3
+ACN, 1.6e-5
+NADP, 2.1e-6
+NADPH, 1.2e-4
+OXO, 4.4e-4
+SCOA, 2.3e-4
+SUC, 5.7e-4
+FUM, 1.2e-4
+MAL, 1.7e-3

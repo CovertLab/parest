@@ -1,0 +1,14 @@
+@relative_flux(source = TS2010ST4_5h)
+PGI, 55
+PFK, 77
+FBA, 77
+TPI, 77
+PGK, 163
+ENO, 152
+PYK, 25
+GLT, 36
+ICD, 36
+SUCC, 27
+SDH, 27
+FUM, 27
+MDH, 27

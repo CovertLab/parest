@@ -1,0 +1,104 @@
+@forward_catalytic_rate(reaction = PFK, source = 1429704)
+111
+@substrate_saturation(reaction = PFK, source = 1429704)
+F6P, 90e-6
+ATP, 110e-6
+
+# there are multiple reported values for different subunit compositions
+@forward_catalytic_rate(reaction = FBP, source = 16990279)
+5.3
+@substrate_saturation(reaction = FBP, source = 16990279)
+F16P, 2400e-6
+
+# again, multiple entries
+@forward_catalytic_rate(reaction = FBA, source = 8436219)
+10.3
+@substrate_saturation(reaction = FBA, source = 8436219)
+F16P, 240e-6
+
+@forward_catalytic_rate(reaction = TPI, source = 8309937)
+8700
+@substrate_saturation(reaction = TPI, source = 8309937)
+GAP, 1030e-6
+
+@forward_catalytic_rate(reaction = TPI, source = 9442062)
+9000
+@substrate_saturation(reaction = TPI, source = 9442062)
+GAP, 1030e-6
+
+@forward_catalytic_rate(reaction = GLT, source = 1524432)
+81
+@substrate_saturation(reaction = GLT, source = 1524432)
+OXA, 20e-6
+ACOA, 700e-6
+
+@reverse_catalytic_rate(reaction = SUCC, source = 10353839)
+44.7
+@substrate_saturation(reaction = SUCC, source = 10353839)
+SUC, 250e-6
+ATP, 70e-6
+COA, 4e-6
+
+# duplicate?
+# @reverse_catalytic_rate(reaction = SUCC, source = 17642514)
+# 44.73
+# @substrate_saturation(reaction = SUCC, source = 17642514)
+# SUC, 250e-6
+# ATP, 70e-6
+# COA, 4e-6
+
+# k_cat's reported but meaning unclear
+@substrate_saturation(reaction = SUCC, source = 24141127)
+SUC, 141e-6
+ATP, 55e-6
+COA, 58e-6
+
+@forward_catalytic_rate(reaction = SDH, source = 383238)
+167
+
+@forward_catalytic_rate(reaction = SDH, source = 11803023)
+85
+@reverse_catalytic_rate(reaction = SDH, source = 11803023)
+1.7
+@substrate_saturation(reaction = SDH, source = 11803023)
+SUC, 2e-6
+FUM, 5e-6
+
+# inhibition also reported
+@forward_catalytic_rate(reaction = SDH, source = 16484232)
+110
+@reverse_catalytic_rate(reaction = SDH, source = 16484232)
+2
+@substrate_saturation(reaction = SDH, source = 16484232)
+SUC, 110e-6
+FUM, 100e-6
+
+@reverse_catalytic_rate(reaction = FUM, source = 1329945)
+3100
+@substrate_saturation(reaction = FUM, source = 1329945)
+MAL, 700e-6
+
+@forward_catalytic_rate(reaction = FUM, source = 8203917)
+3100
+@substrate_saturation(reaction = FUM, source = 8203917)
+FUM, 620e-6
+
+@forward_catalytic_rate(reaction = FUM, source = 8422384)
+3000
+@substrate_saturation(reaction = FUM, source = 8422384)
+FUM, 600e-6
+
+@forward_catalytic_rate(reaction = ISOL, source = 15723538)
+100
+@substrate_saturation(reaction = ISOL, source = 15723538)
+ICIT, 18e-6
+
+@forward_catalytic_rate(reaction = MAL, source = 12930982)
+48.1
+@substrate_saturation(reaction = MAL, source = 12930982)
+GLX, 9e-6
+
+@reverse_catalytic_rate(reaction = MDH, source = 17947381)
+931
+@substrate_saturation(reaction = MDH, source = 17947381)
+OXA, 40e-6

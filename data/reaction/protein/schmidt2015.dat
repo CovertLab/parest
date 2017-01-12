@@ -1,0 +1,23 @@
+@relative_protein_count(source = S2015)
+PGI, 4601
+PFK, 2387 # pfkA + pfkB
+FBP, 944
+FBA, 20049 # fbaA (most abundant)
+TPI, 7438
+GAP, 47083
+PGK, 40039
+GPM, 12056 # gpmA
+PYK, 8902 # pykF (most abundant)
+PPS, 1158
+ACE, 5815 # min of aceE, aceF
+GLT, 9671
+ACND, 7596 # acnB, most abundant
+ACNH, 7596 # acnB, most abundant
+ICD, 33670
+OXOD, 1706 # min of sucA, sucB
+SUCC, 6213 # min of sucC, sucD
+SDH, 2083 # min of sdhA and sdhB, the catalytic subunits
+FUM, 1352 # fumA (most abundant)
+ISOL, 28173
+MAL, 4393
+MDH, 53138
