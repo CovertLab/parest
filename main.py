@@ -71,10 +71,30 @@ init_acts = np.concatenate([
 
 inverse_activity_matrix = la.pinv(activity_matrix)
 
-bound_value = (-constants.RT) * np.log(RESOLUTION)
+bounds_rp = (
+	constants.RT * np.log(init_vmax * np.sqrt(RESOLUTION)),
+	constants.RT * np.log(init_vmax / np.sqrt(RESOLUTION)),
+	)
+bounds_bp = (
+	constants.RT * np.log(1*np.sqrt(RESOLUTION)),
+	constants.RT * np.log(1/np.sqrt(RESOLUTION)),
+	)
+bounds_glc = (
+	constants.RT * np.log(init_c * np.sqrt(RESOLUTION)),
+	constants.RT * np.log(init_c / np.sqrt(RESOLUTION)),
+	)
+bounds_gelc = (
+	constants.RT * np.log(init_c * np.sqrt(RESOLUTION)),
+	constants.RT * np.log(init_c / np.sqrt(RESOLUTION)),
+	)
 
 bounds = (
-	[(-bound_value, +bound_value)] * n_acts
+	[bounds_rp] * structure.forward_saturated_reaction_potential_matrix.shape[0]
+	+ [bounds_rp] * structure.reverse_saturated_reaction_potential_matrix.shape[0]
+	+ [bounds_bp] * structure.solo_reverse_binding_potential_matrix.shape[0]
+	+ [bounds_bp] * structure.solo_forward_binding_potential_matrix.shape[0]
+	+ [bounds_glc] * structure.full_glc_association_matrix.shape[0]
+	+ [bounds_gelc] * structure.gelc_association_matrix.shape[0]
 	)
 
 (lowerbounds, upperbounds) = zip(*bounds)
