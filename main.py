@@ -45,14 +45,14 @@ fit_km_weight = 1e-1
 activity_matrix = np.concatenate([
 	structure.forward_saturated_reaction_potential_matrix,
 	structure.reverse_saturated_reaction_potential_matrix,
-	structure.solo_reverse_binding_potential_matrix,
 	structure.solo_forward_binding_potential_matrix,
+	structure.solo_reverse_binding_potential_matrix,
 	structure.full_glc_association_matrix,
 	structure.gelc_association_matrix
 	])
 
 init_vmax = 1e-6 # M/s
-init_c = 1e-6 # M
+init_c = 1e-5 # M
 
 init_rp = constants.RT * np.log(init_vmax / constants.K_STAR)
 init_bp = 0 # C = K_M
@@ -61,8 +61,8 @@ init_glc = init_gelc = constants.RT * np.log(init_c)
 init_acts = np.concatenate([
 	[init_rp] * structure.forward_saturated_reaction_potential_matrix.shape[0]
 	+ [init_rp] * structure.reverse_saturated_reaction_potential_matrix.shape[0]
-	+ [init_bp] * structure.solo_reverse_binding_potential_matrix.shape[0]
 	+ [init_bp] * structure.solo_forward_binding_potential_matrix.shape[0]
+	+ [init_bp] * structure.solo_reverse_binding_potential_matrix.shape[0]
 	+ [init_glc] * structure.full_glc_association_matrix.shape[0]
 	+ [init_gelc] * structure.gelc_association_matrix.shape[0]
 	])
@@ -70,6 +70,11 @@ init_acts = np.concatenate([
 (n_acts, n_pars) = activity_matrix.shape
 
 inverse_activity_matrix = la.pinv(activity_matrix)
+
+# bounds_rp = bounds_bp = bounds_glc = bounds_gelc = (
+# 	constants.RT * np.log(1*RESOLUTION),
+# 	constants.RT * np.log(1/RESOLUTION)
+# 	)
 
 bounds_rp = (
 	constants.RT * np.log(init_vmax * np.sqrt(RESOLUTION)),
@@ -88,11 +93,32 @@ bounds_gelc = (
 	constants.RT * np.log(init_c / np.sqrt(RESOLUTION)),
 	)
 
+# bounds_rp = (
+# 	constants.RT * np.log(init_vmax * np.sqrt(RESOLUTION)),
+# 	constants.RT * np.log(init_vmax / np.sqrt(RESOLUTION)),
+# 	)
+# bounds_bp = (
+# 	constants.RT * np.log(1*RESOLUTION),
+# 	constants.RT * np.log(1/RESOLUTION),
+# 	)
+# bounds_glc = (
+# 	constants.RT * np.log(init_c * np.sqrt(RESOLUTION)),
+# 	constants.RT * np.log(init_c / np.sqrt(RESOLUTION)),
+# 	)
+# bounds_gelc = (
+# 	-np.inf,
+# 	+np.inf,
+# 	)
+
 bounds = (
-	[bounds_rp] * structure.forward_saturated_reaction_potential_matrix.shape[0]
-	+ [bounds_rp] * structure.reverse_saturated_reaction_potential_matrix.shape[0]
-	+ [bounds_bp] * structure.solo_reverse_binding_potential_matrix.shape[0]
-	+ [bounds_bp] * structure.solo_forward_binding_potential_matrix.shape[0]
+	[bounds_rp] * (
+		structure.forward_saturated_reaction_potential_matrix.shape[0]
+		+ structure.reverse_saturated_reaction_potential_matrix.shape[0]
+		)
+	+ [bounds_bp] * (
+		structure.solo_forward_binding_potential_matrix.shape[0]
+		+ structure.solo_reverse_binding_potential_matrix.shape[0]
+		)
 	+ [bounds_glc] * structure.full_glc_association_matrix.shape[0]
 	+ [bounds_gelc] * structure.gelc_association_matrix.shape[0]
 	)
@@ -151,24 +177,40 @@ def build_initial_parameter_values():
 	# TODO: validate these choices of weights
 	w_fit = 1e0
 	w_act = 1e-6
-	w_reg = 1e-12
 
-	init_pars = linear_least_l1_regression(
-		np.concatenate([
-			w_fit * fitting_matrix,
-			w_act * activity_matrix,
-			w_reg * np.identity(n_pars)
-			]),
-		np.concatenate([
-			w_fit * fitting_values,
-			w_act * init_acts,
-			w_reg * np.zeros(n_pars)
-			])
-		)[0]
+	A = np.concatenate([
+		w_fit * fitting_matrix,
+		w_act * activity_matrix,
+		])
+	b = np.concatenate([
+		w_fit * fitting_values,
+		w_act * init_acts,
+		])
+
+	# A = fitting_matrix
+	# b = fitting_values
+
+	G = np.concatenate([
+		-activity_matrix,
+		+activity_matrix
+		])
+
+	h = np.concatenate([
+		-lowerbounds,
+		upperbounds
+		]) - 1e-6 # tighten the bounds slightly
+	# I believe this to be an issue with the precision of the solver
+
+	init_pars = linear_least_l1_regression(A, b, G, h)[0]
 
 	return init_pars
 
 init_pars = build_initial_parameter_values()
+
+assert (
+	(activity_matrix.dot(init_pars) >= lowerbounds)
+	& (activity_matrix.dot(init_pars) <= upperbounds)
+	).all()
 
 def obj_abseq(dc_dt):
 	return np.sum(np.square(dc_dt))
@@ -250,12 +292,14 @@ for iterate in optimize(
 			):
 		break
 
+final_pars = iterate.best.x
+
 import matplotlib.pyplot as plt
 
 f = np.array(history_f)
 i = np.arange(f.size)
 
-points = np.column_stack([i, f])
+points = np.column_stack([i, np.log(f)])
 
 mask = rdp(points, 1e-3)
 
