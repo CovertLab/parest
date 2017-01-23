@@ -164,7 +164,7 @@ def build_initial_parameter_values():
 	assert (
 		(activity_matrix.dot(fit_pars) >= lowerbounds)
 		& (activity_matrix.dot(fit_pars) <= upperbounds)
-		).all()
+		).all(), 'fit parameters not within bounds'
 
 	N = la.nullspace_projector(fitting_matrix)
 
@@ -179,12 +179,12 @@ def build_initial_parameter_values():
 	assert (
 		(activity_matrix.dot(init_pars) >= lowerbounds)
 		& (activity_matrix.dot(init_pars) <= upperbounds)
-		).all()
+		).all(), 'init parameters not within bounds'
 
 	assert np.abs(
 		fitness
 		- np.sum(np.abs(fitting_matrix.dot(init_pars) - fitting_values))
-		) < 1e-10
+		) < 1e-10, 'init parameters not fit'
 
 	return init_pars
 
