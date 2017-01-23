@@ -15,8 +15,9 @@ ASSIGNCHAR = '='
 ID = 'id'
 FILEPATH = 'filepath'
 LINENUM = 'linenum'
+DATATYPE = 'datatype'
 
-_RESERVED = (ID, FILEPATH, LINENUM)
+_RESERVED = (ID, FILEPATH, LINENUM, DATATYPE)
 
 def idfunc_from_fields(*fieldnames):
 	def idfunc(fieldvals):
@@ -177,6 +178,7 @@ class Loader(object):
 						entry_dict = preset_fields.copy()
 						entry_dict[FILEPATH] = path
 						entry_dict[LINENUM] = linenum
+						entry_dict[DATATYPE] = datatype.name
 
 						n_actual = len(strvals)
 
