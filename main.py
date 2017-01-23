@@ -133,9 +133,7 @@ bounds = (
 (lowerbounds, upperbounds) = np.column_stack(bounds)
 
 def is_datatype(*datatypes):
-	def rule(entry):
-		return entry.datatype in datatypes
-	return rule
+	return fitting.field_value_rule(datatype = datatypes)
 
 (fitting_matrix, fitting_values, fitting_ids) = fitting.build_fitting_tensors(
 	(is_datatype('standard_energy_of_formation'), fit_gs_weight),

@@ -17,6 +17,15 @@ def find_weight(rules_and_weights, entry):
 	else:
 		return DEFAULT_WEIGHT
 
+def field_value_rule(**fields_and_values):
+	def rule(entry):
+		return all(
+			(getattr(entry, field) in values)
+			for field, values in fields_and_values.viewitems()
+			)
+
+	return rule
+
 def build_fitting_tensors(*rules_and_weights):
 	# standard molar Gibbs energies of formation
 
