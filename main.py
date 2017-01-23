@@ -23,6 +23,11 @@ from utils.rdp import rdp
 
 RESOLUTION = np.finfo(np.float64).resolution
 
+log_every = 1e3
+
+load_from = '1e-4.3.npy'
+save_as = '1e-5.3.npy'
+
 max_iterations = int(1e6)
 convergence_rate = 1e-4
 convergence_time = int(1e4)
@@ -30,10 +35,10 @@ convergence_time = int(1e4)
 perturb_init = 1e1
 perturb_final = 1e-10
 
-obj_abseq_weight = 1e6
+obj_abseq_weight = 1e1
 obj_releq_weight = 1e0
 obj_flux_weight = obj_abseq_weight
-obj_fit_weight = 1e-6
+obj_fit_weight = 1e-5
 
 target_pyruvate_production = 1e-3
 
@@ -50,6 +55,8 @@ activity_matrix = np.concatenate([
 	structure.full_glc_association_matrix,
 	structure.gelc_association_matrix
 	])
+
+# activity_matrix = np.identity(structure.n_parameters)
 
 init_vmax = 1e-6 # M/s
 init_c = 1e-5 # M
@@ -123,72 +130,25 @@ bounds = (
 	+ [bounds_gelc] * structure.gelc_association_matrix.shape[0]
 	)
 
-(lowerbounds, upperbounds) = zip(*bounds)
+(lowerbounds, upperbounds) = np.column_stack(bounds)
 
-lowerbounds = np.asarray(lowerbounds)
-upperbounds = np.asarray(upperbounds)
+def is_datatype(*datatypes):
+	def rule(entry):
+		return entry.datatype in datatypes
+	return rule
 
-def build_fitting_tensors():
-	fw = [
-		fit_gs_weight,
-		fit_glc_weight,
-		fit_kcat_weight, # forward
-		fit_kcat_weight, # reverse
-		fit_km_weight,
-		]
-
-	fm = [
-		fitting.gs_mat,
-		fitting.glc_mat,
-		fitting.kf_mat,
-		fitting.kr_mat,
-		fitting.KM_mat,
-		]
-
-	fv = [
-		fitting.gs_values,
-		fitting.glc_values,
-		fitting.kf_values,
-		fitting.kr_values,
-		fitting.KM_values,
-		]
-
-	fitting_matrix = []
-	fitting_values = []
-
-	for w, m, v in izip(fw, fm, fv):
-		if w == 0:
-			continue
-
-		else:
-			fitting_matrix.append(w*m)
-			fitting_values.append(w*v)
-
-	fitting_matrix = np.concatenate(fitting_matrix)
-	fitting_values = np.concatenate(fitting_values)
-
-	return (fitting_matrix, fitting_values)
-
-(fitting_matrix, fitting_values) = build_fitting_tensors()
+(fitting_matrix, fitting_values, fitting_ids) = fitting.build_fitting_tensors(
+	(is_datatype('standard_energy_of_formation'), fit_gs_weight),
+	(is_datatype('concentration'), fit_glc_weight),
+	(is_datatype('forward_catalytic_rate', 'reverse_catalytic_rate'), fit_kcat_weight),
+	(is_datatype('substrate_saturation'), fit_km_weight),
+	)
 
 def build_initial_parameter_values():
 	from utils.l1min import linear_least_l1_regression
 
-	# TODO: validate these choices of weights
-	w_fit = 1e0
-	w_act = 1e-6
-
-	A = np.concatenate([
-		w_fit * fitting_matrix,
-		w_act * activity_matrix,
-		])
-	b = np.concatenate([
-		w_fit * fitting_values,
-		w_act * init_acts,
-		])
-
-	# A = fitting_matrix
-	# b = fitting_values
+	A = fitting_matrix
+	b = fitting_values
 
 	G = np.concatenate([
 		-activity_matrix,
@@ -201,19 +161,43 @@ def build_initial_parameter_values():
 		]) - 1e-6 # tighten the bounds slightly
 	# I believe this to be an issue with the precision of the solver
 
-	init_pars = linear_least_l1_regression(A, b, G, h)[0]
+	fit_pars, fitness = linear_least_l1_regression(A, b, G, h)
+
+	assert (
+		(activity_matrix.dot(fit_pars) >= lowerbounds)
+		& (activity_matrix.dot(fit_pars) <= upperbounds)
+		).all()
+
+	N = la.nullspace_projector(fitting_matrix)
+
+	z = np.linalg.lstsq(
+		activity_matrix.dot(N),
+		init_acts - activity_matrix.dot(fit_pars),
+		rcond = 1e-10
+		)[0]
+
+	init_pars = fit_pars + N.dot(z)
+
+	assert (
+		(activity_matrix.dot(init_pars) >= lowerbounds)
+		& (activity_matrix.dot(init_pars) <= upperbounds)
+		).all()
+
+	assert np.abs(
+		fitness
+		- np.sum(np.abs(fitting_matrix.dot(init_pars) - fitting_values))
+		) < 1e-10
 
 	return init_pars
 
-init_pars = build_initial_parameter_values()
+if load_from is None:
+	init_pars = build_initial_parameter_values()
 
-assert (
-	(activity_matrix.dot(init_pars) >= lowerbounds)
-	& (activity_matrix.dot(init_pars) <= upperbounds)
-	).all()
+else:
+	init_pars = np.load(load_from)
 
 def obj_abseq(dc_dt):
-	return np.sum(np.square(dc_dt))
+	return np.sum(np.square(structure.dynamic_molar_masses * dc_dt))
 
 def obj_releq(dglc_dt):
 	return np.sum(np.square(dglc_dt))
@@ -254,6 +238,7 @@ def perturbation_function(optimization_result):
 	new_acts[dimension] += deviation * np.random.normal()
 
 	bounded_acts = unbounded_to_random(new_acts, upperbounds, lowerbounds)
+	# bounded_acts = new_acts
 
 	new_x = old_x + inverse_activity_matrix.dot(
 		bounded_acts - old_acts
@@ -274,7 +259,7 @@ for iterate in optimize(
 		perturbation_function
 		):
 
-	if (iterate.iteration%int(1e3)) == 0:
+	if (iterate.iteration%int(log_every)) == 0:
 		table.write(
 			iterate.iteration,
 			iterate.best.f
@@ -288,23 +273,28 @@ for iterate in optimize(
 		break
 
 	if (iterate.iteration > convergence_time) and (
-			(1-iterate.best.f / history_f[-convergence_time]) < convergence_rate
+			(
+				1-iterate.best.f / history_f[-convergence_time]
+				) < convergence_rate
 			):
 		break
 
 final_pars = iterate.best.x
 
-import matplotlib.pyplot as plt
+if save_as is not None:
+	np.save(save_as, final_pars)
 
-f = np.array(history_f)
-i = np.arange(f.size)
+# import matplotlib.pyplot as plt
 
-points = np.column_stack([i, np.log(f)])
+# f = np.array(history_f)
+# i = np.arange(f.size)
 
-mask = rdp(points, 1e-3)
+# points = np.column_stack([i, np.log(f)])
 
-plt.semilogy(i[mask], f[mask], 'k-')
+# mask = rdp(points, 1e-3)
 
-plt.show()
+# plt.semilogy(i[mask], f[mask], 'k-')
 
-import ipdb; ipdb.set_trace()
+# plt.show()
+
+# import ipdb; ipdb.set_trace()
