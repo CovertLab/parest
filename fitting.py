@@ -7,15 +7,13 @@ from data import kb
 import constants
 import structure
 
-DEFAULT_WEIGHT = 1.0
-
 def find_weight(rules_and_weights, entry):
 	for rule, weight in rules_and_weights:
 		if rule(entry):
 			return weight
 
 	else:
-		return DEFAULT_WEIGHT
+		raise Exception('Entry {} was not assigned a weight.'.format(entry))
 
 def field_value_rule(**fields_and_values):
 	def rule(entry):
@@ -27,6 +25,9 @@ def field_value_rule(**fields_and_values):
 	return rule
 
 def build_fitting_tensors(*rules_and_weights):
+	if len(rules_and_weights) == 0:
+		rules_and_weights = ((lambda entry: True, 1.0),)
+
 	# standard molar Gibbs energies of formation
 
 	gs_weights = []
