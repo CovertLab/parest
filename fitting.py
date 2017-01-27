@@ -28,6 +28,9 @@ def build_fitting_tensors(*rules_and_weights):
 	if len(rules_and_weights) == 0:
 		rules_and_weights = ((lambda entry: True, 1.0),)
 
+	if any((weight < 0) for rule, weight in rules_and_weights):
+		raise Exception('Weights must be non-negative.')
+
 	# standard molar Gibbs energies of formation
 
 	gs_weights = []
@@ -302,9 +305,8 @@ def build_fitting_tensors(*rules_and_weights):
 	KM_values = KM_values * KM_weights
 	KM_mat = KM_mat * KM_weights[:, None]
 
-	# TODO: relative enzyme concentrations
-
-	# TODO: relative fluxes
+	# relative enzyme concentrations and relative fluxes are not included
+	# because of the difficulties in dealing with relative values
 
 	fitting_values = np.concatenate([
 		gs_values,
@@ -331,3 +333,6 @@ def build_fitting_tensors(*rules_and_weights):
 		])
 
 	return fitting_mat, fitting_values, fitting_ids
+
+if __name__ == '__main__':
+	(fv, fm, fi) = build_fitting_tensors()
