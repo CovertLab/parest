@@ -1,10 +1,12 @@
 
 from __future__ import division
 
-import theano as th
-import theano.tensor as tn
+COMPILED = False
 
 def build_functions():
+	import theano as th
+	import theano.tensor as tn
+
 	gibbs_energies = tn.dvector('Molar Gibbs energies')
 
 	mu = tn.dscalar('Growth rate')
@@ -101,8 +103,178 @@ def build_functions():
 		f_dc_dt,
 		# f_jac_dc_dt,
 		f_dglc_dt,
-		f_jac_dglc_dt,
+		# f_jac_dglc_dt,
 		f_all
+		)
+
+def build_equations_uncompiled():
+	import numpy as np
+
+	def reaction_rates(
+			gibbs_energies,
+
+			mu,
+
+			k_star,
+			RT,
+
+			forward_reaction_potential,
+			reverse_reaction_potential,
+
+			forward_binding_potential,
+			reverse_binding_potential,
+
+			reaction_forward_binding_association,
+			reaction_reverse_binding_association,
+
+			stoich,
+
+			glc_association,
+			):
+		frp = forward_reaction_potential.dot(gibbs_energies)
+		rrp = reverse_reaction_potential.dot(gibbs_energies)
+
+		fbp = forward_binding_potential.dot(gibbs_energies)
+		rbp = reverse_binding_potential.dot(gibbs_energies)
+
+		denom = (
+			1
+			+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
+			+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+			)
+
+		return k_star * (np.exp(frp/RT) - np.exp(rrp/RT)) / denom
+
+	def dc_dt(
+			gibbs_energies,
+
+			mu,
+
+			k_star,
+			RT,
+
+			forward_reaction_potential,
+			reverse_reaction_potential,
+
+			forward_binding_potential,
+			reverse_binding_potential,
+
+			reaction_forward_binding_association,
+			reaction_reverse_binding_association,
+
+			stoich,
+
+			glc_association,
+			):
+		frp = forward_reaction_potential.dot(gibbs_energies)
+		rrp = reverse_reaction_potential.dot(gibbs_energies)
+
+		fbp = forward_binding_potential.dot(gibbs_energies)
+		rbp = reverse_binding_potential.dot(gibbs_energies)
+
+		denom = (
+			1
+			+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
+			+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+			)
+
+		v = k_star * (np.exp(frp/RT) - np.exp(rrp/RT)) / denom
+
+		glc = glc_association.dot(gibbs_energies)
+
+		c = np.exp(glc/RT)
+
+		return stoich.dot(v) - mu * c
+
+	def dglc_dt(
+			gibbs_energies,
+
+			mu,
+
+			k_star,
+			RT,
+
+			forward_reaction_potential,
+			reverse_reaction_potential,
+
+			forward_binding_potential,
+			reverse_binding_potential,
+
+			reaction_forward_binding_association,
+			reaction_reverse_binding_association,
+
+			stoich,
+
+			glc_association,
+			):
+		frp = forward_reaction_potential.dot(gibbs_energies)
+		rrp = reverse_reaction_potential.dot(gibbs_energies)
+
+		fbp = forward_binding_potential.dot(gibbs_energies)
+		rbp = reverse_binding_potential.dot(gibbs_energies)
+
+		denom = (
+			1
+			+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
+			+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+			)
+
+		v = k_star * (np.exp(frp/RT) - np.exp(rrp/RT)) / denom
+
+		glc = glc_association.dot(gibbs_energies)
+
+		return RT * np.exp(-glc/RT) * stoich.dot(v) - RT * mu
+
+	def compute_all(
+			gibbs_energies,
+
+			mu,
+
+			k_star,
+			RT,
+
+			forward_reaction_potential,
+			reverse_reaction_potential,
+
+			forward_binding_potential,
+			reverse_binding_potential,
+
+			reaction_forward_binding_association,
+			reaction_reverse_binding_association,
+
+			stoich,
+
+			glc_association,
+			):
+		frp = forward_reaction_potential.dot(gibbs_energies)
+		rrp = reverse_reaction_potential.dot(gibbs_energies)
+
+		fbp = forward_binding_potential.dot(gibbs_energies)
+		rbp = reverse_binding_potential.dot(gibbs_energies)
+
+		denom = (
+			1
+			+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
+			+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+			)
+
+		v = k_star * (np.exp(frp/RT) - np.exp(rrp/RT)) / denom
+
+		glc = glc_association.dot(gibbs_energies)
+
+		c = np.exp(glc/RT)
+
+		dc = stoich.dot(v) - mu * c
+
+		dglc = RT * np.exp(-glc/RT) * stoich.dot(v) - RT * mu
+
+		return (v, dc, dglc)
+
+	return (
+		reaction_rates,
+		dc_dt,
+		dglc_dt,
+		compute_all
 		)
 
 (
@@ -110,9 +282,9 @@ def build_functions():
 	dc_dt,
 	# jac_dc_dt,
 	dglc_dt,
-	jac_dglc_dt,
+	# jac_dglc_dt,
 	compute_all
-	) = build_functions()
+	) = build_functions() if COMPILED else build_equations_uncompiled()
 
 import constants
 import structure
