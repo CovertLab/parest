@@ -25,22 +25,25 @@ RESOLUTION = np.finfo(np.float64).resolution
 
 log_every = 1e5
 
+perturb_activities = True
+
 max_iterations = int(1e6)
 convergence_rate = 1e-4
 convergence_time = int(1e4)
 
 perturb_init = 1e1
-perturb_final = 1e-10
+perturb_final = 1e-6 # might need to tune down
 
-obj_abseq_weight = 1e1
+obj_abseq_weight = 1e0
 obj_releq_weight = 1e0
-obj_flux_weight = obj_abseq_weight
+obj_flux_weight = 1e0 # might need to bump up
 
-init_obj_fit_weight = 1e3
+init_obj_fit_weight = 1e10 # choose based on initial eq score
+final_obj_fit_weight = 1e-10
 falloff_rate = 1e-1
 falloff_iterations = int(np.ceil(
-	np.log(1e-8 / init_obj_fit_weight) / np.log(falloff_rate)
-	))
+	np.log(final_obj_fit_weight / init_obj_fit_weight) / np.log(falloff_rate)
+	)) # continue to fall off until constraint penalties are sufficiently small
 
 target_pyruvate_production = 1e-3
 
@@ -53,51 +56,66 @@ activity_matrix = np.concatenate([
 	structure.reverse_saturated_reaction_potential_matrix,
 	structure.solo_forward_binding_potential_matrix,
 	structure.solo_reverse_binding_potential_matrix,
-	structure.full_glc_association_matrix,
-	structure.gelc_association_matrix
+	structure.glc_association_matrix,
+	# structure.full_glc_association_matrix,
+	# structure.gelc_association_matrix
 	])
 
-(n_acts, n_pars) = activity_matrix.shape
+if perturb_activities:
+	perturbation_matrix = activity_matrix
 
-inverse_activity_matrix = la.pinv(activity_matrix)
+	basal_vmax = 1e-7 # M/s
+	basal_saturation_ratio = 1 # dimensionless, C / KM
+	basal_c = 1e-4 # M, mu * C should be ~ vMax
 
-basal_vmax = 1e-5 # M/s
-basal_saturation_ratio = 1 # dimensionless, C / KM
-basal_c = 1e-2 # M, mu * C should be ~ vMax
+	basal_rp = constants.RT * np.log(basal_vmax / constants.K_STAR)
+	basal_bp = constants.RT * np.log(basal_saturation_ratio)
+	basal_glc = basal_gelc = constants.RT * np.log(basal_c)
 
-basal_rp = constants.RT * np.log(basal_vmax / constants.K_STAR)
-basal_bp = constants.RT * np.log(basal_saturation_ratio)
-basal_glc = basal_gelc = constants.RT * np.log(basal_c)
-
-bounds_rp = (
-	constants.RT * np.log(basal_vmax * np.sqrt(RESOLUTION)),
-	constants.RT * np.log(basal_vmax / np.sqrt(RESOLUTION)),
-	)
-bounds_bp = (
-	constants.RT * np.log(1*np.sqrt(RESOLUTION)),
-	constants.RT * np.log(1/np.sqrt(RESOLUTION)),
-	)
-bounds_glc = (
-	constants.RT * np.log(basal_c * np.sqrt(RESOLUTION)),
-	constants.RT * np.log(basal_c / np.sqrt(RESOLUTION)),
-	)
-bounds_gelc = (
-	constants.RT * np.log(basal_c * np.sqrt(RESOLUTION)),
-	constants.RT * np.log(basal_c / np.sqrt(RESOLUTION)),
-	)
-
-bounds = (
-	[bounds_rp] * (
-		structure.forward_saturated_reaction_potential_matrix.shape[0]
-		+ structure.reverse_saturated_reaction_potential_matrix.shape[0]
+	bounds_rp = (
+		constants.RT * np.log(basal_vmax * np.sqrt(RESOLUTION)),
+		constants.RT * np.log(basal_vmax / np.sqrt(RESOLUTION)),
 		)
-	+ [bounds_bp] * (
-		structure.solo_forward_binding_potential_matrix.shape[0]
-		+ structure.solo_reverse_binding_potential_matrix.shape[0]
+	bounds_bp = (
+		constants.RT * np.log(1*np.sqrt(RESOLUTION)),
+		constants.RT * np.log(1/np.sqrt(RESOLUTION)),
 		)
-	+ [bounds_glc] * structure.full_glc_association_matrix.shape[0]
-	+ [bounds_gelc] * structure.gelc_association_matrix.shape[0]
-	)
+	bounds_glc = (
+		constants.RT * np.log(basal_c * np.sqrt(RESOLUTION)),
+		constants.RT * np.log(basal_c / np.sqrt(RESOLUTION)),
+		)
+	# bounds_gelc = (
+	# 	constants.RT * np.log(basal_c * np.sqrt(RESOLUTION)),
+	# 	constants.RT * np.log(basal_c / np.sqrt(RESOLUTION)),
+	# 	)
+
+	bounds = (
+		[bounds_rp] * (
+			structure.forward_saturated_reaction_potential_matrix.shape[0]
+			+ structure.reverse_saturated_reaction_potential_matrix.shape[0]
+			)
+		+ [bounds_bp] * (
+			structure.solo_forward_binding_potential_matrix.shape[0]
+			+ structure.solo_reverse_binding_potential_matrix.shape[0]
+			)
+		+ [bounds_glc] * structure.glc_association_matrix.shape[0]
+		# + [bounds_glc] * structure.full_glc_association_matrix.shape[0]
+		# + [bounds_gelc] * structure.gelc_association_matrix.shape[0]
+		)
+
+else:
+	# TODO: instead of perturbing the raw parameters, transform into
+	# more familiar parameters
+	# i.e. log k_cat, log KM, log Keq, log C, log E
+	# and bound; should add a bunch of new matrices to structure.py
+
+	perturbation_matrix = np.identity(structure.n_parameters)
+
+	raise NotImplementedError()
+
+(n_perturb, n_pars) = perturbation_matrix.shape
+
+inverse_perturbation_matrix = la.pinv(perturbation_matrix)
 
 (lowerbounds, upperbounds) = np.column_stack(bounds)
 
@@ -106,10 +124,10 @@ bounds = (
 	)
 
 def build_initial_parameter_values():
-	# init_acts = (lowerbounds + upperbounds)/2
-	# init_acts += (upperbounds - lowerbounds)/4 * np.random.normal(size = n_acts)
+	# init_perturb = (lowerbounds + upperbounds)/2
+	# init_perturb += (upperbounds - lowerbounds)/4 * np.random.normal(size = n_perturb)
 
-	init_acts = np.random.random(n_acts) * (upperbounds - lowerbounds) + lowerbounds
+	init_perturb = np.random.random(n_perturb) * (upperbounds - lowerbounds) + lowerbounds
 
 	from utils.l1min import linear_least_l1_regression
 
@@ -117,8 +135,8 @@ def build_initial_parameter_values():
 	b = fitting_values
 
 	G = np.concatenate([
-		-activity_matrix,
-		+activity_matrix
+		-perturbation_matrix,
+		+perturbation_matrix
 		])
 
 	h = np.concatenate([
@@ -130,8 +148,8 @@ def build_initial_parameter_values():
 	fit_pars, fitness = linear_least_l1_regression(A, b, G, h)
 
 	assert (
-		(activity_matrix.dot(fit_pars) >= lowerbounds)
-		& (activity_matrix.dot(fit_pars) <= upperbounds)
+		(perturbation_matrix.dot(fit_pars) >= lowerbounds)
+		& (perturbation_matrix.dot(fit_pars) <= upperbounds)
 		).all(), 'fit parameters not within bounds'
 
 	N = la.nullspace_projector(fitting_matrix)
@@ -140,7 +158,7 @@ def build_initial_parameter_values():
 
 	res = minimize(
 		lambda z: np.sum(np.square(
-			activity_matrix.dot(fit_pars + N.dot(z)) - init_acts
+			perturbation_matrix.dot(fit_pars + N.dot(z)) - init_perturb
 			)),
 		np.zeros(N.shape[1]),
 		constraints = dict(
@@ -156,8 +174,8 @@ def build_initial_parameter_values():
 	init_pars = fit_pars + N.dot(z)
 
 	assert (
-		(activity_matrix.dot(init_pars) >= lowerbounds)
-		& (activity_matrix.dot(init_pars) <= upperbounds)
+		(perturbation_matrix.dot(init_pars) >= lowerbounds)
+		& (perturbation_matrix.dot(init_pars) <= upperbounds)
 		).all(), 'init parameters not within bounds'
 
 	assert np.abs(
@@ -200,9 +218,9 @@ def perturbation_function(optimization_result):
 		* (perturb_final/perturb_init) ** (iteration / max_iterations)
 		)
 
-	dimension = np.random.randint(n_acts)
+	dimension = np.random.randint(n_perturb)
 
-	old_acts = activity_matrix.dot(old_x)
+	old_acts = perturbation_matrix.dot(old_x)
 
 	new_acts = old_acts.copy()
 
@@ -210,21 +228,30 @@ def perturbation_function(optimization_result):
 
 	bounded_acts = unbounded_to_random(new_acts, upperbounds, lowerbounds)
 
-	new_x = old_x + inverse_activity_matrix.dot(
+	new_x = old_x + inverse_perturbation_matrix.dot(
 		bounded_acts - old_acts
 		)
 
 	return new_x
 
 table = lo.Table([
+	lo.Field('Replicate', 'n'),
 	lo.Field('Step', 'n'),
 	lo.Field('Fit weight', '.2e', 10),
 	lo.Field('Iteration', 'n'),
 	lo.Field('Cost', '.2e', 10),
+	lo.Field('Fit cost', '.2e', 10),
 	])
 
-for replicate in xrange(10):
+log_time = 10
+
+import time
+last_log_time = time.time()
+
+for replicate in xrange(40):
 	init_pars = build_initial_parameter_values()
+
+	import ipdb; ipdb.set_trace()
 
 	obj_fit_weight = init_obj_fit_weight
 
@@ -245,7 +272,13 @@ for replicate in xrange(10):
 			log = False
 			quit = False
 
-			if (iterate.iteration%int(log_every)) == 0:
+			# if (iterate.iteration%int(log_every)) == 0:
+			# 	log = True
+
+			if iterate.iteration == 0:
+				log = True
+
+			if time.time() - last_log_time > log_time:
 				log = True
 
 			if iterate.iteration > max_iterations:
@@ -262,11 +295,15 @@ for replicate in xrange(10):
 
 			if log:
 				table.write(
+					replicate,
 					step,
 					obj_fit_weight,
 					iterate.iteration,
-					iterate.best.f
+					iterate.best.f,
+					np.sum(np.abs(fitting_matrix.dot(iterate.best.x) - fitting_values))
 					)
+
+				last_log_time = time.time()
 
 			if quit:
 				break
@@ -276,10 +313,15 @@ for replicate in xrange(10):
 
 	final_pars = iterate.best.x
 
+	v = equations.reaction_rates(final_pars, *equations.args)
+
 	final_mass_eq = np.sum(np.square(structure.dynamic_molar_masses * equations.dc_dt(final_pars, *equations.args)))
 	final_energy_eq = np.sum(np.square(equations.dglc_dt(final_pars, *equations.args)))
+	final_flux = ((v[-2] - v[-1])/target_pyruvate_production - 1)**2
 	final_fit = np.sum(np.abs(fitting_matrix.dot(final_pars) - fitting_values))
 
-	print final_mass_eq, final_energy_eq, final_fit
+	print final_mass_eq, final_energy_eq, final_flux, final_fit
 
 	np.save('r{}.npy'.format(replicate), final_pars)
+	np.save('s{}.npy'.format(replicate), np.array([final_mass_eq, final_energy_eq, final_flux, final_fit]))
+	np.save('last.npy', final_pars)
