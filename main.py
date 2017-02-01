@@ -21,6 +21,15 @@ import equations
 import utils.linalg as la
 from utils.rdp import rdp
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--seed', type = int, default = None)
+
+args = parser.parse_args()
+
+np.random.seed(args.seed)
+
 RESOLUTION = np.finfo(np.float64).resolution
 
 log_every = 1e5
@@ -64,9 +73,9 @@ activity_matrix = np.concatenate([
 if perturb_activities:
 	perturbation_matrix = activity_matrix
 
-	basal_vmax = 1e-7 # M/s
+	basal_vmax = 1e-5 # M/s
 	basal_saturation_ratio = 1 # dimensionless, C / KM
-	basal_c = 1e-4 # M, mu * C should be ~ vMax
+	basal_c = 1e-2 # M, mu * C should be ~ vMax
 
 	basal_rp = constants.RT * np.log(basal_vmax / constants.K_STAR)
 	basal_bp = constants.RT * np.log(basal_saturation_ratio)
@@ -124,10 +133,11 @@ inverse_perturbation_matrix = la.pinv(perturbation_matrix)
 	)
 
 def build_initial_parameter_values():
-	# init_perturb = (lowerbounds + upperbounds)/2
+	init_perturb = (lowerbounds + upperbounds)/2
+	init_perturb += 0.1 * (upperbounds - lowerbounds) * np.random.normal(size = n_perturb)
 	# init_perturb += (upperbounds - lowerbounds)/4 * np.random.normal(size = n_perturb)
 
-	init_perturb = np.random.random(n_perturb) * (upperbounds - lowerbounds) + lowerbounds
+	# init_perturb = np.random.random(n_perturb) * (upperbounds - lowerbounds) + lowerbounds
 
 	from utils.l1min import linear_least_l1_regression
 
@@ -235,7 +245,6 @@ def perturbation_function(optimization_result):
 	return new_x
 
 table = lo.Table([
-	lo.Field('Replicate', 'n'),
 	lo.Field('Step', 'n'),
 	lo.Field('Fit weight', '.2e', 10),
 	lo.Field('Iteration', 'n'),
@@ -248,80 +257,79 @@ log_time = 10
 import time
 last_log_time = time.time()
 
-for replicate in xrange(40):
-	init_pars = build_initial_parameter_values()
+init_pars = build_initial_parameter_values()
 
-	import ipdb; ipdb.set_trace()
+obj_fit_weight = init_obj_fit_weight
 
-	obj_fit_weight = init_obj_fit_weight
+pars = init_pars.copy()
 
-	for step in xrange(falloff_iterations):
+for step in xrange(falloff_iterations):
 
-		history_f = []
+	history_f = []
 
-		for iterate in optimize(
-				init_pars,
-				objective,
-				perturbation_function
+	for iterate in optimize(
+			pars,
+			objective,
+			perturbation_function
+			):
+
+		history_f.append(
+			iterate.best.f
+			)
+
+		log = False
+		quit = False
+
+		# if (iterate.iteration%int(log_every)) == 0:
+		# 	log = True
+
+		if iterate.iteration == 0:
+			log = True
+
+		if time.time() - last_log_time > log_time:
+			log = True
+
+		if iterate.iteration > max_iterations:
+			log = True
+			quit = True
+
+		if (iterate.iteration >= convergence_time) and (
+				(
+					1-iterate.best.f / history_f[-convergence_time]
+					) < convergence_rate
 				):
+			log = True
+			quit = True
 
-			history_f.append(
-				iterate.best.f
+		if log:
+			table.write(
+				step,
+				obj_fit_weight,
+				iterate.iteration,
+				iterate.best.f,
+				np.sum(np.abs(fitting_matrix.dot(iterate.best.x) - fitting_values))
 				)
 
-			log = False
-			quit = False
+			last_log_time = time.time()
 
-			# if (iterate.iteration%int(log_every)) == 0:
-			# 	log = True
+		if quit:
+			break
 
-			if iterate.iteration == 0:
-				log = True
+	pars = iterate.best.x
+	obj_fit_weight *= falloff_rate
 
-			if time.time() - last_log_time > log_time:
-				log = True
+final_pars = iterate.best.x
 
-			if iterate.iteration > max_iterations:
-				log = True
-				quit = True
+v = equations.reaction_rates(final_pars, *equations.args)
 
-			if (iterate.iteration >= convergence_time) and (
-					(
-						1-iterate.best.f / history_f[-convergence_time]
-						) < convergence_rate
-					):
-				log = True
-				quit = True
+final_mass_eq = np.sum(np.square(structure.dynamic_molar_masses * equations.dc_dt(final_pars, *equations.args)))
+final_energy_eq = np.sum(np.square(equations.dglc_dt(final_pars, *equations.args)))
+final_flux = ((v[-2] - v[-1])/target_pyruvate_production - 1)**2
+final_fit = np.sum(np.abs(fitting_matrix.dot(final_pars) - fitting_values))
 
-			if log:
-				table.write(
-					replicate,
-					step,
-					obj_fit_weight,
-					iterate.iteration,
-					iterate.best.f,
-					np.sum(np.abs(fitting_matrix.dot(iterate.best.x) - fitting_values))
-					)
+print final_mass_eq, final_energy_eq, final_flux, final_fit
 
-				last_log_time = time.time()
-
-			if quit:
-				break
-
-		init_pars = iterate.best.x
-		obj_fit_weight *= falloff_rate
-
-	final_pars = iterate.best.x
-
-	v = equations.reaction_rates(final_pars, *equations.args)
-
-	final_mass_eq = np.sum(np.square(structure.dynamic_molar_masses * equations.dc_dt(final_pars, *equations.args)))
-	final_energy_eq = np.sum(np.square(equations.dglc_dt(final_pars, *equations.args)))
-	final_flux = ((v[-2] - v[-1])/target_pyruvate_production - 1)**2
-	final_fit = np.sum(np.abs(fitting_matrix.dot(final_pars) - fitting_values))
-
-	print final_mass_eq, final_energy_eq, final_flux, final_fit
-
-	np.save('r{}.npy'.format(replicate), final_pars)
-	np.save('s{}.npy'.format(replicate), np.array([final_mass_eq, final_energy_eq, final_flux, final_fit]))
-	np.save('last.npy', final_pars)
+if args.seed is not None:
+	np.save('out/ip{}.npy'.format(args.seed), init_pars)
+	np.save('out/fp{}.npy'.format(args.seed), final_pars)
+	np.save('out/s{}.npy'.format(args.seed), np.array([final_mass_eq, final_energy_eq, final_flux, final_fit]))
