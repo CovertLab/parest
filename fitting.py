@@ -348,9 +348,6 @@ def build_relative_fitting_tensor_sets(*rules_and_weights):
 	tensor_sets = []
 
 	for source, entries in relative_protein_count_sets.viewitems():
-		# if source != 'S2015':
-		# 	continue
-
 		# gelc_weights = []
 		gelc_indices = []
 		gelc_values = []
