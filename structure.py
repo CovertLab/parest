@@ -280,3 +280,122 @@ for compound_id in DYNAMIC_COMPOUNDS:
 	dynamic_molar_masses.append(entry.molar_mass)
 
 dynamic_molar_masses = np.array(dynamic_molar_masses)
+
+activity_matrix = np.concatenate([
+	forward_saturated_reaction_potential_matrix,
+	reverse_saturated_reaction_potential_matrix,
+	solo_forward_binding_potential_matrix,
+	solo_reverse_binding_potential_matrix,
+	glc_association_matrix,
+	])
+
+n_activities = activity_matrix.shape[0]
+
+kcat_f_matrix = np.zeros((n_reactions, n_parameters))
+
+for i, reaction in enumerate(active_reactions):
+	gt_ind = parameters.index(GTE.format(reaction))
+
+	kcat_f_matrix[i, gt_ind] = -1
+
+	for reactant in reactants_by_reaction[reaction]:
+		for s in xrange(reactant.stoichiometry):
+			j = parameters.index(
+				GBER.format(
+					reactant.compound,
+					s+1,
+					reactant.reaction
+					)
+				)
+
+			kcat_f_matrix[i, j] += 1
+
+kcat_r_matrix = np.zeros((n_reactions, n_parameters))
+
+for i, reaction in enumerate(active_reactions):
+	gt_ind = parameters.index(GTE.format(reaction))
+
+	kcat_r_matrix[i, gt_ind] = -1
+
+	for product in products_by_reaction[reaction]:
+		for s in xrange(product.stoichiometry):
+			j = parameters.index(
+				GBEP.format(
+					product.compound,
+					s+1,
+					product.reaction
+					)
+				)
+
+			kcat_r_matrix[i, j] += 1
+
+Keq_matrix = (
+	reverse_reaction_potential_matrix
+	- forward_reaction_potential_matrix
+	)
+
+KM_f_matrix = np.zeros((
+	solo_forward_binding_potential_matrix.shape[0],
+	n_parameters
+	))
+
+i = 0
+for reaction in active_reactions:
+	for reactant in reactants_by_reaction[reaction]:
+		for s in xrange(reactant.stoichiometry):
+			gs_ind = parameters.index(
+				GS.format(
+					reactant.compound,
+					)
+				)
+
+			gb_ind = parameters.index(
+				GBER.format(
+					reactant.compound,
+					s+1,
+					reactant.reaction
+					)
+				)
+
+			KM_f_matrix[i, gs_ind] = +1
+			KM_f_matrix[i, gb_ind] = -1
+
+			i += 1
+
+KM_r_matrix = np.zeros((
+	solo_reverse_binding_potential_matrix.shape[0],
+	n_parameters
+	))
+
+i = 0
+for reaction in active_reactions:
+	for product in products_by_reaction[reaction]:
+		for s in xrange(product.stoichiometry):
+			gs_ind = parameters.index(
+				GS.format(
+					product.compound,
+					)
+				)
+
+			gb_ind = parameters.index(
+				GBEP.format(
+					product.compound,
+					s+1,
+					product.reaction
+					)
+				)
+
+			KM_r_matrix[i, gs_ind] = +1
+			KM_r_matrix[i, gb_ind] = -1
+
+			i += 1
+
+standard_parameter_matrix = np.concatenate([
+	full_glc_association_matrix,
+	gelc_association_matrix,
+	kcat_f_matrix,
+	# kcat_r_matrix,
+	Keq_matrix,
+	KM_f_matrix,
+	KM_r_matrix
+	])
