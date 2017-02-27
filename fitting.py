@@ -38,7 +38,7 @@ def build_fitting_tensors(*rules_and_weights):
 	gs_indices = []
 	gs_values = []
 
-	gs_ids = []
+	gs_entries = []
 
 	for entry in kb.standard_energy_of_formation:
 		try:
@@ -61,7 +61,7 @@ def build_fitting_tensors(*rules_and_weights):
 		gs_indices.append(i)
 		gs_values.append(v)
 
-		gs_ids.append('{}({})'.format(entry.datatype, entry.id))
+		gs_entries.append(entry)
 
 	gs_weights = np.array(gs_weights)
 
@@ -83,7 +83,7 @@ def build_fitting_tensors(*rules_and_weights):
 	glc_indices = []
 	glc_values = []
 
-	glc_ids = []
+	glc_entries = []
 
 	for entry in kb.concentration:
 		try:
@@ -105,7 +105,7 @@ def build_fitting_tensors(*rules_and_weights):
 
 		glc_indices.append(i)
 		glc_values.append(v)
-		glc_ids.append('{}({})'.format(entry.datatype, entry.id))
+		glc_entries.append(entry)
 
 	glc_weights = np.array(glc_weights)
 
@@ -127,7 +127,7 @@ def build_fitting_tensors(*rules_and_weights):
 	kf_rows = []
 	kf_values = []
 
-	kf_ids = []
+	kf_entries = []
 
 	for entry in kb.forward_catalytic_rate:
 		if entry.reaction not in structure.reactions:
@@ -166,7 +166,7 @@ def build_fitting_tensors(*rules_and_weights):
 			constants.RT * np.log(entry.k_cat / constants.K_STAR)
 			)
 
-		kf_ids.append('{}({})'.format(entry.datatype, entry.id))
+		kf_entries.append(entry)
 
 	kf_weights = np.array(kf_weights)
 
@@ -186,7 +186,7 @@ def build_fitting_tensors(*rules_and_weights):
 	kr_rows = []
 	kr_values = []
 
-	kr_ids = []
+	kr_entries = []
 
 	for entry in kb.reverse_catalytic_rate:
 		if entry.reaction not in structure.reactions:
@@ -225,7 +225,7 @@ def build_fitting_tensors(*rules_and_weights):
 			constants.RT * np.log(entry.k_cat / constants.K_STAR)
 			)
 
-		kr_ids.append('{}({})'.format(entry.datatype, entry.id))
+		kr_entries.append(entry)
 
 	kr_weights = np.array(kr_weights)
 
@@ -249,7 +249,7 @@ def build_fitting_tensors(*rules_and_weights):
 	KM_rows = []
 	KM_values = []
 
-	KM_ids = []
+	KM_entries = []
 
 	for entry in kb.substrate_saturation:
 		if entry.reaction not in structure.reactions:
@@ -291,7 +291,7 @@ def build_fitting_tensors(*rules_and_weights):
 
 		KM_values.append(constants.RT * np.log(entry.K_M))
 
-		KM_ids.append('{}({})'.format(entry.datatype, entry.id))
+		KM_entries.append(entry)
 
 	KM_weights = np.array(KM_weights)
 
@@ -304,9 +304,6 @@ def build_fitting_tensors(*rules_and_weights):
 
 	KM_values = KM_values * KM_weights
 	KM_mat = KM_mat * KM_weights[:, None]
-
-	# relative enzyme concentrations and relative fluxes are not included
-	# because of the difficulties in dealing with relative values
 
 	fitting_values = np.concatenate([
 		gs_values,
@@ -324,15 +321,82 @@ def build_fitting_tensors(*rules_and_weights):
 		KM_mat
 		])
 
-	fitting_ids = np.concatenate([
-		gs_ids,
-		glc_ids,
-		kf_ids,
-		kr_ids,
-		KM_ids
-		])
+	fitting_entries = sum([
+		gs_entries,
+		glc_entries,
+		kf_entries,
+		kr_entries,
+		KM_entries
+		], [])
 
-	return fitting_mat, fitting_values, fitting_ids
+	return fitting_mat, fitting_values, fitting_entries
+
+def build_relative_fitting_tensor_sets(*rules_and_weights):
+	if len(rules_and_weights) == 0:
+		rules_and_weights = ((lambda entry: True, 1.0),)
+
+	if any((weight < 0) for rule, weight in rules_and_weights):
+		raise Exception('Weights must be non-negative.')
+
+	# relative enzyme concentrations
+
+	relative_protein_count_sets = structure.gather(
+		kb.relative_protein_count,
+		'source'
+		)
+
+	tensor_sets = []
+
+	for source, entries in relative_protein_count_sets.viewitems():
+		# if source != 'S2015':
+		# 	continue
+
+		# gelc_weights = []
+		gelc_indices = []
+		gelc_values = []
+		gelc_entries = []
+
+		for entry in entries:
+			if entry.reaction not in structure.active_reactions:
+				continue
+
+			w = find_weight(rules_and_weights, entry)
+
+			if w == 0:
+				continue
+
+			elif w != 1:
+				raise NotImplementedError(
+					'Non-trivial weighted relative values not implemented - need to develop the math'
+					)
+
+			# gelc_weights.append(w)
+
+			i = structure.parameters.index(
+				structure.GELC.format(entry.reaction)
+				)
+
+			gelc_indices.append(i)
+
+			v = constants.RT * np.log(entry.count)
+
+			gelc_values.append(v)
+
+			gelc_entries.append(entry)
+
+		# gelc_weights = np.array(gelc_weights)
+		gelc_indices = np.array(gelc_indices)
+		gelc_values = np.array(gelc_values)
+
+		gelc_mat = np.zeros((gelc_values.size, structure.n_parameters))
+
+		for (i, j) in enumerate(gelc_indices):
+			gelc_mat[i, j] = 1
+
+		tensor_sets.append((gelc_mat, gelc_values, gelc_entries))
+
+	return tensor_sets
 
 if __name__ == '__main__':
-	(fv, fm, fi) = build_fitting_tensors()
+	(fv, fm, fe) = build_fitting_tensors()
+	tensor_sets = build_relative_fitting_tensor_sets()
