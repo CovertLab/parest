@@ -1,5 +1,21 @@
-*.pyc
-*.npy
 
+# Binary types
+*.npy
+*.pdf
+
+# Execution
+*.sbatch
+
+
+# Output
 out/*
 out_old/*
+slurm/*
+
+# Misc
+
+# compiled python module
+*.pyc
+
+# pyenv file
+.python-version
