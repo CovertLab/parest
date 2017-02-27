@@ -25,7 +25,7 @@ def idfunc_from_fields(*fieldnames):
 
 	return idfunc
 
-_idfunc_default = idfunc_from_fields(FILEPATH, LINENUM)
+_idfunc_default = idfunc_from_fields(DATATYPE, FILEPATH, LINENUM)
 
 def escape_split(string, splitchars, remove = True):
 	assert '{' not in string
