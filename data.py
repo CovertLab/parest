@@ -26,7 +26,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('name'),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('name')
+	loader.idfunc_from_fields(loader.DATATYPE, 'name')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -35,7 +35,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('name'),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('name')
+	loader.idfunc_from_fields(loader.DATATYPE, 'name')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -46,7 +46,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('stoichiometry', int),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('reaction', 'compound')
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'compound')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -57,7 +57,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('stoichiometry', int),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('reaction', 'compound')
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'compound')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -67,7 +67,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('molar_mass', float),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('compound', 'source')
+	loader.idfunc_from_fields(loader.DATATYPE, 'compound', 'source')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -77,7 +77,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('standard_energy_of_formation', float),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('compound', 'source')
+	loader.idfunc_from_fields(loader.DATATYPE, 'compound', 'source')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -87,7 +87,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('concentration', float),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('compound', 'source')
+	loader.idfunc_from_fields(loader.DATATYPE, 'compound', 'source')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -97,7 +97,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('k_cat', float),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('reaction', 'source')
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'source')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -107,7 +107,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('k_cat', float),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('reaction', 'source')
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'source')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -118,7 +118,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('K_M', float),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('reaction', 'compound', 'source')
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'compound', 'source')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -128,7 +128,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('flux', float),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('reaction', 'source')
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'source')
 	))
 
 _loader.add_datatype(loader.DataType(
@@ -138,7 +138,7 @@ _loader.add_datatype(loader.DataType(
 		loader.Field('count', float),
 		loader.Field('source')
 		),
-	loader.idfunc_from_fields('reaction', 'source')
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'source')
 	))
 
 _paths = list(
