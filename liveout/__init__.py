@@ -1,4 +1,6 @@
 
+import sys
+
 from itertools import izip
 
 ALIGNMENT = {
@@ -42,11 +44,13 @@ class Field(object):
 			)
 
 class Table(object):
-	def __init__(self, fields, margin = ' ', separator = '  ', reprint_header_every = 40):
+	def __init__(self, fields, margin = ' ', separator = '  ', reprint_header_every = 40, out = sys.stdout, flush = True):
 		self.fields = fields
 		self.margin = margin
 		self.separator = separator
 		self.reprint_header_every = reprint_header_every
+		self.out = out
+		self.flush = flush
 
 		self.time_since_header = None
 
@@ -62,9 +66,9 @@ class Table(object):
 
 	def write(self, *values):
 		if self.time_since_header is None or self.time_since_header > self.reprint_header_every:
-			print self.lines
-			print self.header
-			print self.lines
+			self.out.write(self.lines + '\n')
+			self.out.write(self.header + '\n')
+			self.out.write(self.lines + '\n')
 
 			self.time_since_header = 0
 
@@ -74,9 +78,12 @@ class Table(object):
 				field.format(value)
 				)
 
-		print self.margin + self.separator.join(formatted) + self.margin
+		self.out.write(self.margin + self.separator.join(formatted) + self.margin + '\n')
 
 		self.time_since_header += 1
+
+		if self.flush:
+			self.out.flush()
 
 if __name__ == '__main__':
 	fields = [
