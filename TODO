@@ -1,0 +1,15 @@
+flip fitting weight dropoff to a constraint weight increase
+faster stopping conditions with staggered perturbation size decrease, instead of exp dropoff
+- will need extensive testing
+options for alternative perturbation vectors, unfit initialization
+- need to add args, but is currently possible
+review included kinetics, esp. for isozymes
+try implementing relative enzyme concentrations
+- if im willing to ignore the initialization, this is easier to implement
+- unsure of how to choose overall weighting...
+test for hitting bounds in initialization
+- easy, just run twice
+repository clean-up (delete unused code)
+- ongoing
+interactive jupyter notebook for selecting weights
+- later...
