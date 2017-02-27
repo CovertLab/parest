@@ -38,7 +38,7 @@ FALLOFF_ITERATIONS = int(np.ceil(
 
 TARGET_PYRUVATE_PRODUCTION = 1e-3
 
-def compute_relative_protein_fit(x, tensor_sets):
+def compute_relative_fit(x, tensor_sets):
 	cost = 0
 
 	for (fm, fv, fe) in tensor_sets:
@@ -66,7 +66,7 @@ class ObjectiveValues(object):
 
 		self.fit = (
 			np.sum(np.abs(fitting_matrix.dot(pars) - fitting_values))
-			+ compute_relative_protein_fit(pars, relative_fitting_tensor_sets)
+			+ compute_relative_fit(pars, relative_fitting_tensor_sets)
 			)
 
 	def total(self, weight_mass_eq, weight_energy_eq, weight_flux, weight_fit):
@@ -258,7 +258,7 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 					iteration,
 					best_obj,
 					np.sum(np.abs(fitting_matrix.dot(best_pars) - fitting_values))
-					+ compute_relative_protein_fit(best_pars, relative_fitting_tensor_sets)
+					+ compute_relative_fit(best_pars, relative_fitting_tensor_sets)
 					)
 
 				last_log_time = time.time()
