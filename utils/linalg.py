@@ -51,8 +51,6 @@ def pinv(matrix, rcond = _RES):
 	return vT_inv.dot(np.diag(s_inv).dot(u_inv))
 
 def projector(matrix, rcond = _RES):
-	u, s, vT = np.linalg.svd(matrix, full_matrices = True)
-
 	matrix_pseudoinverse = pinv(matrix, rcond)
 
 	return matrix_pseudoinverse.dot(matrix)
