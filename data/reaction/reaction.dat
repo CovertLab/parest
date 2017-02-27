@@ -13,15 +13,3 @@ GPM: phosphoglycerate mutase
 ENO: enolase
 PYK: pyruvate kinase
 PPS: phosphoenolpyruvate synthetase
-ACE: pyruvate dehydrogenase
-GLT: citrate synthase
-ACND: aconitate dehydratase
-ACNH: aconitate hydratase
-ICD: isocitrate dehydrogenase
-OXOD: oxoglutarate dehydrogenase
-SUCC: succinyl-CoA synthetase
-SDH: succinate oxidoreductase
-FUM: fumarase
-ISOL: isocitrate lyase
-MAL: malate synthase
-MDH: malate dehydrogenase
