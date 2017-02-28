@@ -1,6 +1,8 @@
 
 from __future__ import division
 
+# TODO: remove all theano
+
 COMPILED = False
 
 def build_functions():
@@ -285,6 +287,78 @@ def build_equations_uncompiled():
 	# jac_dglc_dt,
 	compute_all
 	) = build_functions() if COMPILED else build_equations_uncompiled()
+
+import numpy as np
+
+def forward_reaction_rates(
+		gibbs_energies,
+
+		mu,
+
+		k_star,
+		RT,
+
+		forward_reaction_potential,
+		reverse_reaction_potential,
+
+		forward_binding_potential,
+		reverse_binding_potential,
+
+		reaction_forward_binding_association,
+		reaction_reverse_binding_association,
+
+		stoich,
+
+		glc_association,
+		):
+	frp = forward_reaction_potential.dot(gibbs_energies)
+	# rrp = reverse_reaction_potential.dot(gibbs_energies)
+
+	fbp = forward_binding_potential.dot(gibbs_energies)
+	rbp = reverse_binding_potential.dot(gibbs_energies)
+
+	denom = (
+		1
+		+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
+		+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+		)
+
+	return k_star * np.exp(frp/RT) / denom
+
+def reverse_reaction_rates(
+		gibbs_energies,
+
+		mu,
+
+		k_star,
+		RT,
+
+		forward_reaction_potential,
+		reverse_reaction_potential,
+
+		forward_binding_potential,
+		reverse_binding_potential,
+
+		reaction_forward_binding_association,
+		reaction_reverse_binding_association,
+
+		stoich,
+
+		glc_association,
+		):
+	# frp = forward_reaction_potential.dot(gibbs_energies)
+	rrp = reverse_reaction_potential.dot(gibbs_energies)
+
+	fbp = forward_binding_potential.dot(gibbs_energies)
+	rbp = reverse_binding_potential.dot(gibbs_energies)
+
+	denom = (
+		1
+		+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
+		+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+		)
+
+	return k_star * np.exp(rrp/RT) / denom
 
 import constants
 import structure
