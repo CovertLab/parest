@@ -8,8 +8,7 @@
 
 
 # Output
-out/*
-out_old/*
+out*
 slurm/*
 
 # Misc
