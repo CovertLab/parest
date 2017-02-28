@@ -6,6 +6,9 @@ import numpy as np
 import constants
 import structure
 
+# TODO: expand bounds
+# TODO: un-center SRP (vmax) bounds about 1e-3
+
 BOUNDS_MATRIX = structure.activity_matrix
 INVERSE_BOUNDS_MATRIX = np.linalg.pinv(BOUNDS_MATRIX)
 
