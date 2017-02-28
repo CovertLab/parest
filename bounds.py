@@ -6,25 +6,22 @@ import numpy as np
 import constants
 import structure
 
-# TODO: expand bounds
-# TODO: un-center SRP (vmax) bounds about 1e-3
-
 BOUNDS_MATRIX = structure.activity_matrix
 INVERSE_BOUNDS_MATRIX = np.linalg.pinv(BOUNDS_MATRIX)
 
 BOUNDS_SATURATED_REACTION_POTENTIAL = (
-	constants.RT * np.log(1e-9/constants.K_STAR),
-	constants.RT * np.log(1e3/constants.K_STAR),
+	constants.RT * np.log(1e-15/constants.K_STAR),
+	constants.RT * np.log(1e15/constants.K_STAR),
 	)
 
 BOUNDS_BINDING_POTENTIAL = (
-	constants.RT * np.log(1e-9),
-	constants.RT * np.log(1e9),
+	constants.RT * np.log(1e-15),
+	constants.RT * np.log(1e15),
 	)
 
 BOUNDS_GIBBS_LOG_CONC = (
-	constants.RT * np.log(1e-9/constants.K_STAR),
-	constants.RT * np.log(1e3/constants.K_STAR),
+	constants.RT * np.log(1e-15),
+	constants.RT * np.log(1e15),
 	)
 
 (LOWERBOUNDS, UPPERBOUNDS) = np.column_stack(
@@ -38,6 +35,3 @@ BOUNDS_GIBBS_LOG_CONC = (
 		)
 	+ [BOUNDS_GIBBS_LOG_CONC] * structure.glc_association_matrix.shape[0]
 	)
-
-LOWERBOUNDS -= 10
-UPPERBOUNDS += 10
