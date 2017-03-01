@@ -95,11 +95,11 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 		A_ub = np.concatenate([
 			np.concatenate([-A_scaled, -I], 1),
 			np.concatenate([+A_scaled, -I], 1),
-			np.concatenate([+G, np.zeros((G.shape[0], n))], 1)
+			np.concatenate([+SCALE*G, np.zeros((G.shape[0], n))], 1)
 			],
 			0)
 
-		b_ub = np.concatenate([-b_scaled, +b_scaled, h])
+		b_ub = np.concatenate([-b_scaled, +b_scaled, SCALE*h])
 
 		result = linprog(
 			c,
@@ -153,7 +153,7 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 			- np.sum(np.abs(A.dot(init_pars) - b))
 			)
 
-		assert init_fit < 1e-8, 'init parameters not fit'
+		assert init_fit < 1e-6, 'init parameters not fit'
 
 		init_pars = init_pars[:n_pars]
 
@@ -166,13 +166,19 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 
 if __name__ == '__main__':
 	import fitting
+	import problems
 
-	fitting_tensors = fitting.build_fitting_tensors()
+	for problem, definition in problems.DEFINITIONS.viewitems():
+		fitting_tensors = fitting.build_fitting_tensors(*definition)
+		relative_fitting_tensor_sets = fitting.build_relative_fitting_tensor_sets(*definition)
 
-	relative_fitting_tensor_sets = fitting.build_relative_fitting_tensor_sets()
+		try:
+			(init_pars, fitness, residuals) = build_initial_parameter_values(
+				fitting_tensors, relative_fitting_tensor_sets
+				)
 
-	(init_pars, fitness, residuals) = build_initial_parameter_values(
-		fitting_tensors, relative_fitting_tensor_sets
-		)
-
-	print fitness
+		except Exception as e:
+			print 'Failed to initialize problem "{}" with exception {}'.format(
+				problem,
+				e
+				)
