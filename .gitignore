@@ -9,7 +9,7 @@
 
 # Output
 out*
-slurm/*
+slurm*
 
 # Misc
 
