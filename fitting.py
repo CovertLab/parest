@@ -381,6 +381,9 @@ def build_relative_fitting_tensor_sets(*rules_and_weights):
 
 			gelc_entries.append(entry)
 
+		if len(gelc_values) == 0:
+			continue
+
 		# gelc_weights = np.array(gelc_weights)
 		gelc_indices = np.array(gelc_indices)
 		gelc_values = np.array(gelc_values)
@@ -389,7 +392,6 @@ def build_relative_fitting_tensor_sets(*rules_and_weights):
 
 		for (i, j) in enumerate(gelc_indices):
 			gelc_mat[i, j] = 1
-
 		tensor_sets.append((gelc_mat, gelc_values, gelc_entries))
 
 	return tensor_sets
