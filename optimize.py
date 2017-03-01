@@ -38,6 +38,24 @@ FALLOFF_ITERATIONS = int(np.ceil(
 
 TARGET_PYRUVATE_PRODUCTION = 1e-3
 
+def fast_shortarray_median1d(x):
+	# faster 1d median than np.median for short arrays (100 or less elements, up to 10x speed-up)
+	# I don't know why the built-in median is so slow; possibly due to Python overhead
+	size = x.size
+	(halfsize, remainder) = divmod(size, 2)
+	x_sorted = np.sort(x)
+
+	if remainder == 0:
+		return (x_sorted[halfsize-1] + x_sorted[halfsize])/2
+
+	else:
+		return x_sorted[halfsize]
+
+median1d = (
+	# np.median
+	fast_shortarray_median1d
+	)
+
 def compute_relative_fit(x, tensor_sets):
 	cost = 0
 
@@ -45,7 +63,7 @@ def compute_relative_fit(x, tensor_sets):
 		predicted = fm.dot(x)
 		d = predicted - fv
 
-		m = np.median(d)
+		m = median1d(d)
 
 		cost += np.sum(np.abs(d - m))
 
