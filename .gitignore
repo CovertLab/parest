@@ -3,10 +3,6 @@
 *.npy
 *.pdf
 
-# Execution
-*.sbatch
-
-
 # Output
 out*
 slurm*
