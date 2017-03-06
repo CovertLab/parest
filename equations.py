@@ -1,11 +1,7 @@
 
 from __future__ import division
 
-# TODO: remove all theano
-
-COMPILED = False
-
-def build_functions():
+def build_jacobian():
 	import theano as th
 	import theano.tensor as tn
 
@@ -45,10 +41,6 @@ def build_functions():
 
 	glc = glc_association.dot(gibbs_energies)
 
-	c = tn.exp(glc/RT)
-
-	dc_dt = stoich.dot(v) - mu * c
-
 	inputs = (
 		gibbs_energies,
 
@@ -71,43 +63,15 @@ def build_functions():
 		glc_association,
 		)
 
-	f_v = th.function(inputs, v, on_unused_input = 'ignore')
-
-	f_dc_dt = th.function(inputs, dc_dt)
-
-	# jac_dc_dt = tn.jacobian(dc_dt, c)
-
-	# dglc_dt = RT * tn.exp(-glc/RT) * dc_dt
-
 	dglc_dt = RT * tn.exp(-glc/RT) * stoich.dot(v) - RT * mu
 
 	jac_dglc_dt = tn.jacobian(dglc_dt, gibbs_energies).dot(
 		glc_association.T
 		)
 
-	# f_jac_dc_dt = th.function(inputs, jac_dc_dt)
-
-	f_dglc_dt = th.function(inputs, dglc_dt)
 	f_jac_dglc_dt = th.function(inputs, jac_dglc_dt)
 
-	f_all = th.function(
-		inputs,
-		[
-			v,
-			dc_dt,
-			dglc_dt,
-			# jac_dglc_dt
-			]
-		)
-
-	return (
-		f_v,
-		f_dc_dt,
-		# f_jac_dc_dt,
-		f_dglc_dt,
-		# f_jac_dglc_dt,
-		f_all
-		)
+	return f_jac_dglc_dt
 
 def build_equations_uncompiled():
 	import numpy as np
@@ -279,14 +243,14 @@ def build_equations_uncompiled():
 		compute_all
 		)
 
+# jac_dglc_dt = build_jacobian()
+
 (
 	reaction_rates,
 	dc_dt,
-	# jac_dc_dt,
 	dglc_dt,
-	# jac_dglc_dt,
 	compute_all
-	) = build_functions() if COMPILED else build_equations_uncompiled()
+	) = build_equations_uncompiled()
 
 import numpy as np
 
