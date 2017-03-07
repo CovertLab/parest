@@ -1,8 +1,10 @@
 
+from collections import OrderedDict
+
 from data import kb
 import structure
 
-DEFINITIONS = {}
+DEFINITIONS = OrderedDict()
 
 DEFINITIONS['data_agnostic'] = tuple()
 
