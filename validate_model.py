@@ -4,6 +4,8 @@ from __future__ import division
 import os.path as pa
 from itertools import izip
 
+import sys
+
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.integrate
@@ -56,7 +58,20 @@ def init_dg_dt(pars):
 
 # data_agnostic, 67 & 214 - high initial concentration of F6P leads to NaN errors
 
-for problem in ['data_agnostic']: #problems.DEFINITIONS.viewkeys():
+# for problem in problems.DEFINITIONS.viewkeys():
+
+problem = problems.DEFINITIONS.keys()[int(sys.argv[1])]
+
+stable_path = pa.join('out', problem, 'stable.npy')
+equ_path = pa.join('out', problem, 'equ.npy')
+lre_path = pa.join('out', problem, 'lre.npy')
+
+if pa.exists(stable_path) and pa.exists(equ_path) and pa.exists(lre_path):
+	print 'skipping {}, output already exists'.format(problem)
+
+else:
+	print 'validating {} parameters'.format(problem)
+
 	(all_obj, all_pars) = load_pars(problem)
 
 	equ = []
@@ -179,6 +194,8 @@ for problem in ['data_agnostic']: #problems.DEFINITIONS.viewkeys():
 		else:
 			stable.append(True)
 
-		# import ipdb; ipdb.set_trace()
+	np.save(stable_path, np.array(stable, np.bool))
+	np.save(equ_path, np.array(equ, np.bool))
+	np.save(lre_path, np.array(lre, np.float64))
 
-import ipdb; ipdb.set_trace()
+	print np.mean(equ), np.mean(stable)
