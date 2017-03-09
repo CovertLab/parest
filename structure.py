@@ -339,6 +339,8 @@ KM_f_matrix = np.zeros((
 	n_parameters
 	))
 
+KM_f_ids = []
+
 i = 0
 for reaction in active_reactions:
 	for reactant in reactants_by_reaction[reaction]:
@@ -360,12 +362,22 @@ for reaction in active_reactions:
 			KM_f_matrix[i, gs_ind] = +1
 			KM_f_matrix[i, gb_ind] = -1
 
+			KM_f_ids.append(
+				'{}:{}, #{}'.format(
+					reactant.reaction,
+					reactant.compound,
+					(s+1),
+					)
+				)
+
 			i += 1
 
 KM_r_matrix = np.zeros((
 	solo_reverse_binding_potential_matrix.shape[0],
 	n_parameters
 	))
+
+KM_r_ids = []
 
 i = 0
 for reaction in active_reactions:
@@ -387,6 +399,14 @@ for reaction in active_reactions:
 
 			KM_r_matrix[i, gs_ind] = +1
 			KM_r_matrix[i, gb_ind] = -1
+
+			KM_r_ids.append(
+				'{}:{}, #{}'.format(
+					product.reaction,
+					product.compound,
+					(s+1),
+					)
+				)
 
 			i += 1
 
