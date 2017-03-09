@@ -17,13 +17,13 @@ def exclude_entry(excluded_entry):
 		)
 
 for entry in kb.concentration:
-	if entry.compound in structure.active_compounds:
+	if entry.compound in structure.compounds:
 		problem_name = 'exclude_{}'.format(entry.id).replace(':', '_')
 
 		DEFINITIONS[problem_name] = exclude_entry(entry)
 
 for entry in kb.standard_energy_of_formation:
-	if entry.compound in structure.active_compounds:
+	if entry.compound in structure.compounds:
 		problem_name = 'exclude_{}'.format(entry.id).replace(':', '_')
 
 		DEFINITIONS[problem_name] = exclude_entry(entry)
@@ -31,15 +31,15 @@ for entry in kb.standard_energy_of_formation:
 # kinetics_sources = set()
 
 # for entry in kb.forward_catalytic_rate:
-# 	if entry.reaction in structure.active_reactions:
+# 	if entry.reaction in structure.reactions:
 # 		kinetics_sources.add(entry.source)
 
 # for entry in kb.reverse_catalytic_rate:
-# 	if entry.reaction in structure.active_reactions:
+# 	if entry.reaction in structure.reactions:
 # 		kinetics_sources.add(entry.source)
 
 # for entry in kb.substrate_saturation:
-# 	if entry.reaction in structure.active_reactions:
+# 	if entry.reaction in structure.reactions:
 # 		kinetics_sources.add(entry.source)
 
 # def exclude_source(source):

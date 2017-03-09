@@ -354,7 +354,7 @@ def build_relative_fitting_tensor_sets(*rules_and_weights):
 		gelc_entries = []
 
 		for entry in entries:
-			if entry.reaction not in structure.active_reactions:
+			if entry.reaction not in structure.reactions:
 				continue
 
 			w = find_weight(rules_and_weights, entry)
