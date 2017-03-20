@@ -33,11 +33,11 @@ def build_jacobian():
 
 	denom = (
 		1
-		+ reaction_forward_binding_association.dot(tn.exp(fbp/RT))
-		+ reaction_reverse_binding_association.dot(tn.exp(rbp/RT))
+		+ reaction_forward_binding_association.dot(tn.exp(-fbp/RT))
+		+ reaction_reverse_binding_association.dot(tn.exp(-rbp/RT))
 		)
 
-	v = k_star * (tn.exp(frp/RT) - tn.exp(rrp/RT)) / denom
+	v = k_star * (tn.exp(-frp/RT) - tn.exp(-rrp/RT)) / denom
 
 	glc = glc_association.dot(gibbs_energies)
 
@@ -105,11 +105,11 @@ def build_equations_uncompiled():
 
 		denom = (
 			1
-			+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
-			+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+			+ reaction_forward_binding_association.dot(np.exp(-fbp/RT))
+			+ reaction_reverse_binding_association.dot(np.exp(-rbp/RT))
 			)
 
-		return k_star * (np.exp(frp/RT) - np.exp(rrp/RT)) / denom
+		return k_star * (np.exp(-frp/RT) - np.exp(-rrp/RT)) / denom
 
 	def dc_dt(
 			gibbs_energies,
@@ -140,11 +140,11 @@ def build_equations_uncompiled():
 
 		denom = (
 			1
-			+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
-			+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+			+ reaction_forward_binding_association.dot(np.exp(-fbp/RT))
+			+ reaction_reverse_binding_association.dot(np.exp(-rbp/RT))
 			)
 
-		v = k_star * (np.exp(frp/RT) - np.exp(rrp/RT)) / denom
+		v = k_star * (np.exp(-frp/RT) - np.exp(-rrp/RT)) / denom
 
 		glc = glc_association.dot(gibbs_energies)
 
@@ -181,11 +181,11 @@ def build_equations_uncompiled():
 
 		denom = (
 			1
-			+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
-			+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+			+ reaction_forward_binding_association.dot(np.exp(-fbp/RT))
+			+ reaction_reverse_binding_association.dot(np.exp(-rbp/RT))
 			)
 
-		v = k_star * (np.exp(frp/RT) - np.exp(rrp/RT)) / denom
+		v = k_star * (np.exp(-frp/RT) - np.exp(-rrp/RT)) / denom
 
 		glc = glc_association.dot(gibbs_energies)
 
@@ -220,11 +220,11 @@ def build_equations_uncompiled():
 
 		denom = (
 			1
-			+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
-			+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+			+ reaction_forward_binding_association.dot(np.exp(-fbp/RT))
+			+ reaction_reverse_binding_association.dot(np.exp(-rbp/RT))
 			)
 
-		v = k_star * (np.exp(frp/RT) - np.exp(rrp/RT)) / denom
+		v = k_star * (np.exp(-frp/RT) - np.exp(-rrp/RT)) / denom
 
 		glc = glc_association.dot(gibbs_energies)
 
@@ -283,11 +283,11 @@ def forward_reaction_rates(
 
 	denom = (
 		1
-		+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
-		+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+		+ reaction_forward_binding_association.dot(np.exp(-fbp/RT))
+		+ reaction_reverse_binding_association.dot(np.exp(-rbp/RT))
 		)
 
-	return k_star * np.exp(frp/RT) / denom
+	return k_star * np.exp(-frp/RT) / denom
 
 def reverse_reaction_rates(
 		gibbs_energies,
@@ -318,11 +318,11 @@ def reverse_reaction_rates(
 
 	denom = (
 		1
-		+ reaction_forward_binding_association.dot(np.exp(fbp/RT))
-		+ reaction_reverse_binding_association.dot(np.exp(rbp/RT))
+		+ reaction_forward_binding_association.dot(np.exp(-fbp/RT))
+		+ reaction_reverse_binding_association.dot(np.exp(-rbp/RT))
 		)
 
-	return k_star * np.exp(rrp/RT) / denom
+	return k_star * np.exp(-rrp/RT) / denom
 
 import constants
 import structure

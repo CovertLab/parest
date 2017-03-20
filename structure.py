@@ -138,11 +138,11 @@ for ind_reaction, reaction in enumerate(kb.reaction):
 	i_gte = parameters.index(GTE.format(reaction.id))
 	i_gelc = parameters.index(GELC.format(reaction.id))
 
-	frp[i_gte] = -1
-	frp[i_gelc] = +1
+	frp[i_gte] = +1
+	frp[i_gelc] = -1
 
-	rrp[i_gte] = -1
-	rrp[i_gelc] = +1
+	rrp[i_gte] = +1
+	rrp[i_gelc] = -1
 
 	solo_fbp = []
 	for reactant in reactants:
@@ -151,8 +151,8 @@ for ind_reaction, reaction in enumerate(kb.reaction):
 		i_gs = parameters.index(GS.format(reactant.compound))
 		i_glc = parameters.index(GLC.format(reactant.compound))
 
-		frp[i_gs] += +s
-		frp[i_glc] += +s
+		frp[i_gs] += -s
+		frp[i_glc] += -s
 
 		fed[i_gs] += -s
 		fed[i_glc] += -s
@@ -165,9 +165,9 @@ for ind_reaction, reaction in enumerate(kb.reaction):
 
 			i_gber = parameters.index(GBER.format(reactant.compound, i+1, reactant.reaction))
 
-			fbp[i_gs] += +1
-			fbp[i_glc] += +1
-			fbp[i_gber] += -1
+			fbp[i_gs] += -1
+			fbp[i_glc] += -1
+			fbp[i_gber] += +1
 
 			solo_fbp.append(fbp)
 
@@ -189,8 +189,8 @@ for ind_reaction, reaction in enumerate(kb.reaction):
 		i_gs = parameters.index(GS.format(product.compound))
 		i_glc = parameters.index(GLC.format(product.compound))
 
-		rrp[i_gs] += +s
-		rrp[i_glc] += +s
+		rrp[i_gs] += -s
+		rrp[i_glc] += -s
 
 		fed[i_gs] += +s
 		fed[i_glc] += +s
@@ -203,9 +203,9 @@ for ind_reaction, reaction in enumerate(kb.reaction):
 
 			i_gbep = parameters.index(GBEP.format(product.compound, i+1, product.reaction))
 
-			rbp[i_gs] += +1
-			rbp[i_glc] += +1
-			rbp[i_gbep] += -1
+			rbp[i_gs] += -1
+			rbp[i_glc] += -1
+			rbp[i_gbep] += +1
 
 			solo_rbp.append(rbp)
 
