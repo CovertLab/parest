@@ -28,12 +28,13 @@ PERTURB_FINAL = 1e-6
 OBJ_MASSEQ_WEIGHT = 1e0
 OBJ_ENERGYEQ_WEIGHT = 1e0
 OBJ_FLUX_WEIGHT = 1e0
+OBJ_FIT_WEIGHT = 1e0
 
-INIT_OBJ_FIT_WEIGHT = 1e10
-FINAL_OBJ_FIT_WEIGHT = 1e-10
-FALLOFF_RATE = 1e-1
-FALLOFF_ITERATIONS = int(np.ceil(
-	np.log(FINAL_OBJ_FIT_WEIGHT / INIT_OBJ_FIT_WEIGHT) / np.log(FALLOFF_RATE)
+INIT_CONSTRAINT_PENALTY_WEIGHT = 1e-10
+FINAL_CONSTRAINT_PENALTY_WEIGHT = 1e10
+CONSTRAINT_PENALTY_GROWTH_RATE = 1e1
+CONSTRAINT_PENALTY_GROWTH_ITERATIONS = int(np.ceil(
+	np.log(FINAL_CONSTRAINT_PENALTY_WEIGHT / INIT_CONSTRAINT_PENALTY_WEIGHT) / np.log(CONSTRAINT_PENALTY_GROWTH_RATE)
 	))
 
 TARGET_PYRUVATE_PRODUCTION = 1e-3
@@ -182,13 +183,13 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 	else:
 		print 'No nonzero fitting residuals.'
 
-	obj_fit_weight = INIT_OBJ_FIT_WEIGHT
+	constraint_penalty_weight = INIT_CONSTRAINT_PENALTY_WEIGHT
 
 	weights = (
-		OBJ_MASSEQ_WEIGHT,
-		OBJ_ENERGYEQ_WEIGHT,
-		OBJ_FLUX_WEIGHT,
-		obj_fit_weight,
+		constraint_penalty_weight * OBJ_MASSEQ_WEIGHT,
+		constraint_penalty_weight * OBJ_ENERGYEQ_WEIGHT,
+		constraint_penalty_weight * OBJ_FLUX_WEIGHT,
+		OBJ_FIT_WEIGHT,
 		)
 
 	init_obj = ObjectiveValues(
@@ -197,7 +198,7 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 
 	table = lo.Table([
 		lo.Field('Step', 'n'),
-		lo.Field('Fit weight', '.2e', 10),
+		lo.Field('Con. pen.', '.2e', 10),
 		lo.Field('Iteration', 'n'),
 		lo.Field('Cost', '.3e', 12),
 		lo.Field('Fit cost', '.3e', 12),
@@ -213,7 +214,7 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 
 	history_best_objective = []
 
-	for step in xrange(FALLOFF_ITERATIONS):
+	for step in xrange(CONSTRAINT_PENALTY_GROWTH_ITERATIONS):
 		for iteration in xrange(MAX_ITERATIONS):
 			deviation = (
 				PERTURB_INIT
@@ -272,7 +273,7 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 			if log:
 				table.write(
 					step,
-					obj_fit_weight,
+					constraint_penalty_weight,
 					iteration,
 					best_obj,
 					np.sum(np.abs(fitting_matrix.dot(best_pars) - fitting_values))
@@ -284,13 +285,13 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 			if quit:
 				break
 
-		obj_fit_weight *= FALLOFF_RATE
+		constraint_penalty_weight *= CONSTRAINT_PENALTY_GROWTH_RATE
 
 		weights = (
-			OBJ_MASSEQ_WEIGHT,
-			OBJ_ENERGYEQ_WEIGHT,
-			OBJ_FLUX_WEIGHT,
-			obj_fit_weight,
+			constraint_penalty_weight * OBJ_MASSEQ_WEIGHT,
+			constraint_penalty_weight * OBJ_ENERGYEQ_WEIGHT,
+			constraint_penalty_weight * OBJ_FLUX_WEIGHT,
+			OBJ_FIT_WEIGHT,
 			)
 
 		# must re-evaluate the objective, since the weights changed
