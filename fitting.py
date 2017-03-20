@@ -122,12 +122,12 @@ def build_fitting_tensors(*rules_and_weights):
 
 	# forward catalytic rates
 
-	kf_weights = []
+	kcat_f_weights = []
 
-	kf_rows = []
-	kf_values = []
+	kcat_f_rows = []
+	kcat_f_values = []
 
-	kf_entries = []
+	kcat_f_entries = []
 
 	for entry in kb.forward_catalytic_rate:
 		if entry.reaction not in structure.reactions:
@@ -138,7 +138,7 @@ def build_fitting_tensors(*rules_and_weights):
 		if w == 0:
 			continue
 
-		kf_weights.append(w)
+		kcat_f_weights.append(w)
 
 		row = np.zeros(structure.n_parameters)
 
@@ -160,33 +160,33 @@ def build_fitting_tensors(*rules_and_weights):
 
 				row[gb_ind] += 1
 
-		kf_rows.append(row)
+		kcat_f_rows.append(row)
 
-		kf_values.append(
+		kcat_f_values.append(
 			constants.RT * np.log(entry.k_cat / constants.K_STAR)
 			)
 
-		kf_entries.append(entry)
+		kcat_f_entries.append(entry)
 
-	kf_weights = np.array(kf_weights)
+	kcat_f_weights = np.array(kcat_f_weights)
 
-	kf_values = np.array(kf_values)
-	kf_mat = np.zeros((len(kf_rows), structure.n_parameters))
+	kcat_f_values = np.array(kcat_f_values)
+	kcat_f_mat = np.zeros((len(kcat_f_rows), structure.n_parameters))
 
-	for i, r in enumerate(kf_rows):
-		kf_mat[i, :] += r
+	for i, r in enumerate(kcat_f_rows):
+		kcat_f_mat[i, :] += r
 
-	kf_values = kf_values * kf_weights
-	kf_mat = kf_mat * kf_weights[:, None]
+	kcat_f_values = kcat_f_values * kcat_f_weights
+	kcat_f_mat = kcat_f_mat * kcat_f_weights[:, None]
 
 	# reverse catalytic rates
 
-	kr_weights = []
+	kcat_r_weights = []
 
-	kr_rows = []
-	kr_values = []
+	kcat_r_rows = []
+	kcat_r_values = []
 
-	kr_entries = []
+	kcat_r_entries = []
 
 	for entry in kb.reverse_catalytic_rate:
 		if entry.reaction not in structure.reactions:
@@ -197,7 +197,7 @@ def build_fitting_tensors(*rules_and_weights):
 		if w == 0:
 			continue
 
-		kr_weights.append(w)
+		kcat_r_weights.append(w)
 
 		row = np.zeros(structure.n_parameters)
 
@@ -219,24 +219,24 @@ def build_fitting_tensors(*rules_and_weights):
 
 				row[gb_ind] += 1
 
-		kr_rows.append(row)
+		kcat_r_rows.append(row)
 
-		kr_values.append(
+		kcat_r_values.append(
 			constants.RT * np.log(entry.k_cat / constants.K_STAR)
 			)
 
-		kr_entries.append(entry)
+		kcat_r_entries.append(entry)
 
-	kr_weights = np.array(kr_weights)
+	kcat_r_weights = np.array(kcat_r_weights)
 
-	kr_values = np.array(kr_values)
-	kr_mat = np.zeros((len(kr_rows), structure.n_parameters))
+	kcat_r_values = np.array(kcat_r_values)
+	kcat_r_mat = np.zeros((len(kcat_r_rows), structure.n_parameters))
 
-	for i, r in enumerate(kr_rows):
-		kr_mat[i, :] += r
+	for i, r in enumerate(kcat_r_rows):
+		kcat_r_mat[i, :] += r
 
-	kr_values = kr_values * kr_weights
-	kr_mat = kr_mat * kr_weights[:, None]
+	kcat_r_values = kcat_r_values * kcat_r_weights
+	kcat_r_mat = kcat_r_mat * kcat_r_weights[:, None]
 
 	# saturation constants
 
@@ -308,24 +308,24 @@ def build_fitting_tensors(*rules_and_weights):
 	fitting_values = np.concatenate([
 		gs_values,
 		glc_values,
-		kf_values,
-		kr_values,
+		kcat_f_values,
+		kcat_r_values,
 		KM_values
 		])
 
 	fitting_mat = np.concatenate([
 		gs_mat,
 		glc_mat,
-		kf_mat,
-		kr_mat,
+		kcat_f_mat,
+		kcat_r_mat,
 		KM_mat
 		])
 
 	fitting_entries = sum([
 		gs_entries,
 		glc_entries,
-		kf_entries,
-		kr_entries,
+		kcat_f_entries,
+		kcat_r_entries,
 		KM_entries
 		], [])
 
@@ -396,6 +396,9 @@ def build_relative_fitting_tensor_sets(*rules_and_weights):
 
 	return tensor_sets
 
-if __name__ == '__main__':
+def test():
 	(fv, fm, fe) = build_fitting_tensors()
 	tensor_sets = build_relative_fitting_tensor_sets()
+
+if __name__ == '__main__':
+	test()
