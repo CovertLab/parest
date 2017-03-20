@@ -349,11 +349,6 @@ for i, reaction in enumerate(reactions):
 
 		Keq_matrix[i, j] += product.stoichiometry
 
-gibbs_energy_of_reaction_matrix = (
-	reverse_reaction_potential_matrix
-	- forward_reaction_potential_matrix
-	)
-
 KM_f_matrix = np.zeros((
 	solo_forward_binding_potential_matrix.shape[0],
 	n_parameters
@@ -435,7 +430,7 @@ standard_parameter_matrix = np.concatenate([
 	gelc_association_matrix,
 	kcat_f_matrix,
 	# kcat_r_matrix,
-	gibbs_energy_of_reaction_matrix,
+	free_energy_difference_matrix,
 	KM_f_matrix,
 	KM_r_matrix
 	])
