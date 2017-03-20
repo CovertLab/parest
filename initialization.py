@@ -10,6 +10,12 @@ from utils.linalg import nullspace_projector
 
 import structure
 
+BOUNDS_TOLERANCE = 1e-6 # used to slightly tighten the bounds to account for small numerical errors
+
+LP_SCALE = 1e-1 # linear program problem scale
+
+FIT_TOLERANCE = 1e-6 # acceptable adjustment to fit following second stage
+
 def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets = ()):
 
 	(fitting_matrix, fitting_values) = fitting_tensors[:2]
@@ -24,8 +30,7 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 	h = np.concatenate([
 		-bounds.LOWERBOUNDS,
 		bounds.UPPERBOUNDS
-		]) - 1e-6 # tighten the bounds slightly
-	# I believe this to be an issue with the precision of the solver
+		]) - BOUNDS_TOLERANCE
 
 	if fitting_matrix.size == 0:
 		res = minimize(
@@ -48,8 +53,6 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 		fitness = 0.0
 
 	else:
-
-		SCALE = 1e-1
 
 		(n_abs, n_pars) = fitting_matrix.shape
 		n_rel_sets = len(relative_fitting_tensor_sets)
@@ -74,7 +77,7 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 			)
 
 		# from utils.l1min import linear_least_l1_regression
-		# fit_pars, fitness = linear_least_l1_regression(SCALE*A, SCALE*b, G, h)
+		# fit_pars, fitness = linear_least_l1_regression(LP_SCALE*A, LP_SCALE*b, G, h)
 
 		(n, m) = A.shape
 
@@ -89,17 +92,17 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 			G, np.zeros((G.shape[0], n_rel_sets))
 			], 1)
 
-		A_scaled = SCALE*A
-		b_scaled = SCALE*b
+		A_scaled = LP_SCALE*A
+		b_scaled = LP_SCALE*b
 
 		A_ub = np.concatenate([
 			np.concatenate([-A_scaled, -I], 1),
 			np.concatenate([+A_scaled, -I], 1),
-			np.concatenate([+SCALE*G, np.zeros((G.shape[0], n))], 1)
+			np.concatenate([+LP_SCALE*G, np.zeros((G.shape[0], n))], 1)
 			],
 			0)
 
-		b_ub = np.concatenate([-b_scaled, +b_scaled, SCALE*h])
+		b_ub = np.concatenate([-b_scaled, +b_scaled, LP_SCALE*h])
 
 		result = linprog(
 			c,
@@ -115,7 +118,7 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 
 		fit_pars = z[:m]
 
-		fitness /= SCALE
+		fitness /= LP_SCALE
 
 		fitting_residuals = A.dot(fit_pars) - b
 
@@ -153,7 +156,7 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 			- np.sum(np.abs(A.dot(init_pars) - b))
 			)
 
-		assert init_fit < 1e-6, 'init parameters not fit'
+		assert init_fit < FIT_TOLERANCE, 'init parameters not fit'
 
 		init_pars = init_pars[:n_pars]
 
@@ -164,7 +167,7 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 
 	return (init_pars, fitness, fitting_residuals)
 
-if __name__ == '__main__':
+def test():
 	import fitting
 	import problems
 
@@ -182,3 +185,6 @@ if __name__ == '__main__':
 				problem,
 				e
 				)
+
+if __name__ == '__main__':
+	test()
