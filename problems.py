@@ -28,31 +28,7 @@ for entry in kb.standard_energy_of_formation:
 
 		DEFINITIONS[problem_name] = exclude_entry(entry)
 
-# kinetics_sources = set()
-
-# for entry in kb.forward_catalytic_rate:
-# 	if entry.reaction in structure.reactions:
-# 		kinetics_sources.add(entry.source)
-
-# for entry in kb.reverse_catalytic_rate:
-# 	if entry.reaction in structure.reactions:
-# 		kinetics_sources.add(entry.source)
-
-# for entry in kb.substrate_saturation:
-# 	if entry.reaction in structure.reactions:
-# 		kinetics_sources.add(entry.source)
-
-# def exclude_source(source):
-# 	return (
-# 		(lambda entry: entry.source == source, 0),
-# 		(lambda entry: True, 1)
-# 		)
-
-# for source in kinetics_sources:
-# 	problem_name = 'exclude_kinetics_{}'.format(source)
-# 	DEFINITIONS[problem_name] = exclude_source(source)
-
-if __name__ == '__main__':
+def test():
 	print '{} problem definitions:'.format(len(DEFINITIONS))
 	print '\n'.join(DEFINITIONS.viewkeys())
 
@@ -60,3 +36,7 @@ if __name__ == '__main__':
 
 	for name, rules_and_weights in DEFINITIONS.viewitems():
 		build_fitting_tensors(*rules_and_weights)
+		build_relative_fitting_tensor_sets(*rules_and_weights)
+
+if __name__ == '__main__':
+	test()
