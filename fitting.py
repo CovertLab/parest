@@ -218,7 +218,7 @@ def build_fitting_tensors(*rules_and_weights):
 			for s in xrange(product.stoichiometry):
 				gs_ind = structure.parameters.index(
 					structure.GS.format(
-						reactant.compound,
+						product.compound,
 						)
 					)
 
@@ -230,8 +230,8 @@ def build_fitting_tensors(*rules_and_weights):
 						)
 					)
 
-				row[gs_ind] += 1
-				row[gb_ind] += 1
+				row[gs_ind] -= 1
+				row[gb_ind] -= 1
 
 		kcat_r_rows.append(row)
 
