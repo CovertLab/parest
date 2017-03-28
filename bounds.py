@@ -9,9 +9,15 @@ import structure
 BOUNDS_MATRIX = structure.activity_matrix
 INVERSE_BOUNDS_MATRIX = np.linalg.pinv(BOUNDS_MATRIX)
 
+LOWER_VMAX = 1e-12
+UPPER_VMAX = 1e3
+
+LOWER_CONC = 1e-12
+UPPER_CONC = 1e3
+
 BOUNDS_SATURATED_REACTION_POTENTIAL = (
-	-constants.RT * np.log(1e3/constants.K_STAR),
-	-constants.RT * np.log(1e-12/constants.K_STAR),
+	-constants.RT * np.log(UPPER_VMAX/constants.K_STAR),
+	-constants.RT * np.log(LOWER_VMAX/constants.K_STAR),
 	)
 
 BOUNDS_BINDING_POTENTIAL = (
@@ -20,8 +26,8 @@ BOUNDS_BINDING_POTENTIAL = (
 	)
 
 BOUNDS_GIBBS_LOG_CONC = (
-	constants.RT * np.log(1e-12),
-	constants.RT * np.log(1e3),
+	constants.RT * np.log(LOWER_CONC),
+	constants.RT * np.log(UPPER_CONC),
 	)
 
 (LOWERBOUNDS, UPPERBOUNDS) = np.column_stack(
