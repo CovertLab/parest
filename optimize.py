@@ -34,7 +34,8 @@ INIT_CONSTRAINT_PENALTY_WEIGHT = 1e-10
 FINAL_CONSTRAINT_PENALTY_WEIGHT = 1e10
 CONSTRAINT_PENALTY_GROWTH_RATE = 1e1
 CONSTRAINT_PENALTY_GROWTH_ITERATIONS = int(np.ceil(
-	np.log(FINAL_CONSTRAINT_PENALTY_WEIGHT / INIT_CONSTRAINT_PENALTY_WEIGHT) / np.log(CONSTRAINT_PENALTY_GROWTH_RATE)
+	np.log(FINAL_CONSTRAINT_PENALTY_WEIGHT / INIT_CONSTRAINT_PENALTY_WEIGHT)
+	/ np.log(CONSTRAINT_PENALTY_GROWTH_RATE)
 	))
 
 TARGET_PYRUVATE_PRODUCTION = 1e-3
@@ -197,7 +198,7 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 		).total(*weights)
 
 	table = lo.Table([
-		lo.Field('Step', 'n'),
+		lo.Field('Epoch', 'n'),
 		lo.Field('Con. pen.', '.2e', 10),
 		lo.Field('Iteration', 'n'),
 		lo.Field('Cost', '.3e', 12),
@@ -214,7 +215,9 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 
 	history_best_objective = []
 
-	for step in xrange(CONSTRAINT_PENALTY_GROWTH_ITERATIONS):
+	# temp = []
+
+	for epoch in xrange(CONSTRAINT_PENALTY_GROWTH_ITERATIONS+1):
 		for iteration in xrange(MAX_ITERATIONS):
 			deviation = (
 				PERTURB_INIT
@@ -235,9 +238,11 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 				)
 
 			new_pars += bounds.INVERSE_BOUNDS_MATRIX.dot(bounded_acts - new_acts)
-			new_obj = ObjectiveValues(
+			new_obj_components = ObjectiveValues(
 				new_pars, fitting_tensors, relative_fitting_tensor_sets
-				).total(*weights)
+				)
+
+			new_obj = new_obj_components.total(*weights)
 
 			did_accept = (new_obj < best_obj)
 
@@ -248,6 +253,16 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 			if did_accept:
 				best_obj = new_obj
 				best_pars = new_pars
+
+				# temp.append([
+				# 	epoch,
+				# 	iteration,
+				# 	new_obj_components.mass_eq,
+				# 	new_obj_components.energy_eq,
+				# 	new_obj_components.flux,
+				# 	new_obj_components.fit,
+				# 	constraint_penalty_weight
+				# 	])
 
 			log = False
 			quit = False
@@ -272,7 +287,7 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 
 			if log:
 				table.write(
-					step,
+					epoch,
 					constraint_penalty_weight,
 					iteration,
 					best_obj,
@@ -302,6 +317,8 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 
 	final_pars = best_pars
 	final_obj = ObjectiveValues(final_pars, fitting_tensors, relative_fitting_tensor_sets)
+
+	# np.save('temp.npy', np.array(temp))
 
 	return final_pars, final_obj
 
