@@ -82,7 +82,7 @@ F16P, 170e-6
 F16P, 140e-6
 
 # multiple TPI entries with near-identical parameters - using the oldest
-@forward_catalytic_rate(reaction = TPI, source = 8309937)
+@reverse_catalytic_rate(reaction = TPI, source = 8309937)
 8700
 @substrate_saturation(reaction = TPI, source = 8309937)
 GAP, 1030e-6
