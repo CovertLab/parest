@@ -165,7 +165,6 @@ for ind_reaction, reaction in enumerate(kb.reaction):
 
 			i_gber = parameters.index(GBER.format(reactant.compound, i+1, reactant.reaction))
 
-			fbp[i_gs] += -1
 			fbp[i_glc] += -1
 			fbp[i_gber] += +1
 
@@ -203,7 +202,6 @@ for ind_reaction, reaction in enumerate(kb.reaction):
 
 			i_gbep = parameters.index(GBEP.format(product.compound, i+1, product.reaction))
 
-			rbp[i_gs] += -1
 			rbp[i_glc] += -1
 			rbp[i_gbep] += +1
 
@@ -295,16 +293,24 @@ activity_matrix = np.concatenate([
 
 n_activities = activity_matrix.shape[0]
 
+# kcat_f = exp(-kcat_f_matrix.dot(x)/RT)
+
 kcat_f_matrix = np.zeros((n_reactions, n_parameters))
 
 for i, reaction in enumerate(reactions):
 	gt_ind = parameters.index(GTE.format(reaction))
 
-	kcat_f_matrix[i, gt_ind] = -1
+	kcat_f_matrix[i, gt_ind] = +1
 
 	for reactant in reactants_by_reaction[reaction]:
 		for s in xrange(reactant.stoichiometry):
-			j = parameters.index(
+			gs_ind = parameters.index(
+				GS.format(
+					reactant.compound,
+					)
+				)
+
+			gb_ind = parameters.index(
 				GBER.format(
 					reactant.compound,
 					s+1,
@@ -312,18 +318,27 @@ for i, reaction in enumerate(reactions):
 					)
 				)
 
-			kcat_f_matrix[i, j] += 1
+			kcat_f_matrix[i, gs_ind] -= 1
+			kcat_f_matrix[i, gb_ind] -= 1
+
+# kcat_r = exp(-kcat_r_matrix.dot(x)/RT)
 
 kcat_r_matrix = np.zeros((n_reactions, n_parameters))
 
 for i, reaction in enumerate(reactions):
 	gt_ind = parameters.index(GTE.format(reaction))
 
-	kcat_r_matrix[i, gt_ind] = -1
+	kcat_r_matrix[i, gt_ind] = +1
 
 	for product in products_by_reaction[reaction]:
 		for s in xrange(product.stoichiometry):
-			j = parameters.index(
+			gs_ind = parameters.index(
+				GS.format(
+					product.compound,
+					)
+				)
+
+			gb_ind = parameters.index(
 				GBEP.format(
 					product.compound,
 					s+1,
@@ -331,7 +346,10 @@ for i, reaction in enumerate(reactions):
 					)
 				)
 
-			kcat_r_matrix[i, j] += 1
+			kcat_r_matrix[i, gs_ind] -= 1
+			kcat_r_matrix[i, gb_ind] -= 1
+
+# Keq = exp(-Keq_matrix.dot(x)/RT)
 
 Keq_matrix = np.zeros((n_reactions, n_parameters))
 
@@ -349,6 +367,8 @@ for i, reaction in enumerate(reactions):
 
 		Keq_matrix[i, j] += product.stoichiometry
 
+# KM_f = exp(-KM_f_matrix.dot(x)/RT)
+
 KM_f_matrix = np.zeros((
 	solo_forward_binding_potential_matrix.shape[0],
 	n_parameters
@@ -360,12 +380,6 @@ i = 0
 for reaction in reactions:
 	for reactant in reactants_by_reaction[reaction]:
 		for s in xrange(reactant.stoichiometry):
-			gs_ind = parameters.index(
-				GS.format(
-					reactant.compound,
-					)
-				)
-
 			gb_ind = parameters.index(
 				GBER.format(
 					reactant.compound,
@@ -374,7 +388,6 @@ for reaction in reactions:
 					)
 				)
 
-			KM_f_matrix[i, gs_ind] = +1
 			KM_f_matrix[i, gb_ind] = -1
 
 			KM_f_ids.append(
@@ -387,6 +400,8 @@ for reaction in reactions:
 
 			i += 1
 
+# KM_r = exp(-KM_r_matrix.dot(x)/RT)
+
 KM_r_matrix = np.zeros((
 	solo_reverse_binding_potential_matrix.shape[0],
 	n_parameters
@@ -398,12 +413,6 @@ i = 0
 for reaction in reactions:
 	for product in products_by_reaction[reaction]:
 		for s in xrange(product.stoichiometry):
-			gs_ind = parameters.index(
-				GS.format(
-					product.compound,
-					)
-				)
-
 			gb_ind = parameters.index(
 				GBEP.format(
 					product.compound,
@@ -412,7 +421,6 @@ for reaction in reactions:
 					)
 				)
 
-			KM_r_matrix[i, gs_ind] = +1
 			KM_r_matrix[i, gb_ind] = -1
 
 			KM_r_ids.append(

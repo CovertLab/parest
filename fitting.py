@@ -146,10 +146,16 @@ def build_fitting_tensors(*rules_and_weights):
 			structure.GTE.format(entry.reaction)
 			)
 
-		row[gt_ind] = -1
+		row[gt_ind] = +1
 
 		for reactant in structure.reactants_by_reaction[entry.reaction]:
 			for s in xrange(reactant.stoichiometry):
+				gs_ind = structure.parameters.index(
+					structure.GS.format(
+						reactant.compound,
+						)
+					)
+
 				gb_ind = structure.parameters.index(
 					structure.GBER.format(
 						reactant.compound,
@@ -158,12 +164,13 @@ def build_fitting_tensors(*rules_and_weights):
 						)
 					)
 
-				row[gb_ind] += 1
+				row[gs_ind] -= 1
+				row[gb_ind] -= 1
 
 		kcat_f_rows.append(row)
 
 		kcat_f_values.append(
-			constants.RT * np.log(entry.k_cat / constants.K_STAR)
+			-constants.RT * np.log(entry.k_cat / constants.K_STAR)
 			)
 
 		kcat_f_entries.append(entry)
@@ -205,10 +212,16 @@ def build_fitting_tensors(*rules_and_weights):
 			structure.GTE.format(entry.reaction)
 			)
 
-		row[gt_ind] = -1
+		row[gt_ind] = +1
 
 		for product in structure.products_by_reaction[entry.reaction]:
 			for s in xrange(product.stoichiometry):
+				gs_ind = structure.parameters.index(
+					structure.GS.format(
+						reactant.compound,
+						)
+					)
+
 				gb_ind = structure.parameters.index(
 					structure.GBEP.format(
 						product.compound,
@@ -217,12 +230,13 @@ def build_fitting_tensors(*rules_and_weights):
 						)
 					)
 
+				row[gs_ind] += 1
 				row[gb_ind] += 1
 
 		kcat_r_rows.append(row)
 
 		kcat_r_values.append(
-			constants.RT * np.log(entry.k_cat / constants.K_STAR)
+			-constants.RT * np.log(entry.k_cat / constants.K_STAR)
 			)
 
 		kcat_r_entries.append(entry)
@@ -242,7 +256,8 @@ def build_fitting_tensors(*rules_and_weights):
 
 	# things are a little hokey here because saturations in given rate laws don't
 	# specify the identity of a given substrate in a saturation term
-	# improving the data format would make this logic cleaner
+	# improving the data format would make this logic cleaner and place the
+	# burden on curation
 
 	KM_weights = []
 
@@ -280,16 +295,13 @@ def build_fitting_tensors(*rules_and_weights):
 			except ValueError:
 				raise Exception('could not find a corresponding parameter for {}'.format(entry))
 
-		gs_ind = structure.parameters.index(structure.GS.format(entry.compound))
-
 		row = np.zeros(structure.n_parameters)
 
 		row[gb_ind] = -1
-		row[gs_ind] = +1
 
 		KM_rows.append(row)
 
-		KM_values.append(constants.RT * np.log(entry.K_M))
+		KM_values.append(-constants.RT * np.log(entry.K_M))
 
 		KM_entries.append(entry)
 
