@@ -281,7 +281,7 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 					(
 						1-best_obj / history_best_objective[-CONVERGENCE_TIME]
 						) < CONVERGENCE_RATE
-					):
+					) and (epoch < CONSTRAINT_PENALTY_GROWTH_ITERATIONS):
 				log = True
 				quit = True
 
