@@ -103,43 +103,52 @@ def unit_basis(index, size, dtype = None):
 
 	return vec
 
-PERTURB_NAIVE = False
+def build_perturbation_vectors(naive = False):
+	if naive:
+		perturbation_vectors = [
+			unit_basis(i, structure.n_parameters)
+			for i in xrange(structure.n_parameters)
+			]
 
-if PERTURB_NAIVE:
-	perturbation_vectors = [
-		unit_basis(i, structure.n_parameters)
-		for i in xrange(structure.n_parameters)
-		]
+	else:
+		dynamic_conc_indices = {
+			structure.parameters.index(
+				structure.GLC.format(compound)
+				)
+			for compound in structure.DYNAMIC_COMPOUNDS
+			}
 
-else:
-	dynamic_conc_indices = {
-		structure.parameters.index(
-			structure.GLC.format(compound)
-			)
-		for compound in structure.DYNAMIC_COMPOUNDS
-		}
-
-	perturbation_vectors = [
-		vector
-		for vector in la.bilevel_elementwise_pseudoinverse(
-			np.concatenate([
-				[
-					unit_basis(i, structure.n_parameters)
-					for i in xrange(structure.n_parameters)
-					if i not in dynamic_conc_indices
-					],
+		perturbation_vectors = [
+			vector
+			for vector in la.bilevel_elementwise_pseudoinverse(
+				np.concatenate([
+					[
+						unit_basis(i, structure.n_parameters)
+						for i in xrange(structure.n_parameters)
+						if i not in dynamic_conc_indices # excluded because these are already in the system
+						],
+					structure.activity_matrix
+					]),
 				structure.activity_matrix
-				]),
-			structure.activity_matrix
-			).T
-		]
+				).T
+			]
 
-n_perturb = len(perturbation_vectors)
+	return perturbation_vectors
 
-FIT_INIT = True
 RESIDUAL_CUTOFF = 1e-5
 
-def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.random):
+def empty_callback(epoch, iteration, constraint_penalty_weight, obj_components):
+	pass
+
+def estimate_parameters(
+		fitting_rules_and_weights = tuple(),
+		random_state = None,
+		naive_perturbations = False,
+		callback = empty_callback
+		):
+
+	if random_state is None:
+		random_state = np.random.RandomState()
 
 	fitting_tensors = (
 		fitting_matrix,
@@ -151,20 +160,11 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 		*fitting_rules_and_weights
 		)
 
-	if FIT_INIT:
-
-		(
-			init_pars,
-			init_fitness,
-			init_residuals
-			) = build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets)
-
-	else:
-		(
-			init_pars,
-			init_fitness,
-			init_residuals
-			) = build_initial_parameter_values(np.empty((0, 0)), np.empty((0,)))
+	(
+		init_pars,
+		init_fitness,
+		init_residuals
+		) = build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets)
 
 	if np.any(np.abs(init_residuals) > RESIDUAL_CUTOFF):
 
@@ -215,7 +215,8 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 
 	history_best_objective = []
 
-	# temp = []
+	perturbation_vectors = build_perturbation_vectors(naive_perturbations)
+	n_perturb = len(perturbation_vectors)
 
 	for epoch in xrange(CONSTRAINT_PENALTY_GROWTH_ITERATIONS+1):
 		for iteration in xrange(MAX_ITERATIONS):
@@ -263,6 +264,11 @@ def estimate_parameters(fitting_rules_and_weights = tuple(), random_state = np.r
 				# 	new_obj_components.fit,
 				# 	constraint_penalty_weight
 				# 	])
+
+				callback(
+					epoch, iteration, constraint_penalty_weight,
+					new_obj_components
+					)
 
 			log = False
 			quit = False
