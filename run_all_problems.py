@@ -20,7 +20,7 @@ for name in DEFINITIONS.viewkeys():
 
 	check_call([
 		'sbatch',
-		'--array=0-{}%5'.format(
+		'--array=0-{}'.format(
 			N_JOBS_PER_PROBLEM-1
 			),
 		# '--dependency=singleton',
