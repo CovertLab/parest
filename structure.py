@@ -433,12 +433,18 @@ for reaction in reactions:
 
 			i += 1
 
+gs_association_matrix = np.zeros((len(compounds), n_parameters))
+
+for (i, compound) in enumerate(compounds):
+	j = parameters.index(GS.format(compound))
+
+	gs_association_matrix[i, j] = +1
+
 standard_parameter_matrix = np.concatenate([
 	full_glc_association_matrix,
 	gelc_association_matrix,
 	kcat_f_matrix,
-	# kcat_r_matrix,
-	free_energy_difference_matrix,
+	gs_association_matrix,
 	KM_f_matrix,
-	KM_r_matrix
+	KM_r_matrix,
 	])
