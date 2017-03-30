@@ -15,13 +15,6 @@ ATP, 88e-6
 @forward_catalytic_rate(reaction = PFK, source = 12767227)
 61
 
-# PfkB
-@forward_catalytic_rate(reaction = PFK, source = 20887711)
-62
-@substrate_saturation(reaction = PFK, source = 20887711)
-F6P, 18e-6
-ATP, 12e-6
-
 # PfkA
 @forward_catalytic_rate(reaction = PFK, source = K1989)
 185
@@ -61,12 +54,6 @@ F16P, 240e-6
 8.2
 @substrate_saturation(reaction = FBA, source = 9878448_fbaA)
 F16P, 190e-6
-
-#fbaB, gluconeogenesis
-@forward_catalytic_rate(reaction = FBA, source = 9878448_fbaB)
-0.35
-@substrate_saturation(reaction = FBA, source = 9878448_fbaB)
-F16P, 20e-6
 
 # fbaA, constitutive
 # duplicate values with PMID 11779234
