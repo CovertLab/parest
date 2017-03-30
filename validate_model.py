@@ -16,6 +16,8 @@ import equations
 import structure
 from utils.linalg import approx_jac
 
+FORCE = False
+
 CONC_FOLD_PERTURBATION = 2
 CONC_FOLD_CONVERGENCE = 1.01
 
@@ -66,7 +68,7 @@ stable_path = pa.join('out', problem, 'stable.npy')
 equ_path = pa.join('out', problem, 'equ.npy')
 lre_path = pa.join('out', problem, 'lre.npy')
 
-if pa.exists(stable_path) and pa.exists(equ_path) and pa.exists(lre_path):
+if not FORCE and pa.exists(stable_path) and pa.exists(equ_path) and pa.exists(lre_path):
 	print 'skipping {}, output already exists'.format(problem)
 
 else:
