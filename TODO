@@ -1,12 +1,8 @@
-flip fitting weight dropoff to a constraint weight increase
-
 faster stopping conditions with staggered perturbation size decrease, instead of exp dropoff
 - will need extensive testing
 
-options for alternative perturbation vectors, unfit initialization
-- need to add args, but is currently possible
-
 review included kinetics, esp. for isozymes
+- worth another pass but this is mostly done
 
 test for hitting bounds in initialization
 - easy, just run twice
