@@ -11,13 +11,6 @@ N_JOBS_PER_PROBLEM = 20 # total jobs to submit
 assert (remainder == 0)
 
 for name in DEFINITIONS.viewkeys():
-	seed = '$SLURM_ARRAY_TASK_ID'
-	outdir = join(
-		'out',
-		name,
-		'seed-{}'.format(seed)
-		)
-
 	check_call([
 		'sbatch',
 		'--array=0-{}'.format(
