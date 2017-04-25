@@ -4,7 +4,7 @@ from __future__ import division
 import numpy as np
 from scipy.optimize import minimize, linprog
 
-import bounds
+# import bounds
 from utils.linalg import nullspace_projector
 # from utils.l1min import linear_least_l1_regression
 
@@ -12,30 +12,33 @@ import structure
 
 BOUNDS_TOLERANCE = 1e-6 # used to slightly tighten the bounds to account for small numerical errors
 
-LP_SCALE = 1e-1 # linear program problem scale
+LP_SCALE = 1e-2 # linear program problem scale
 
 FIT_TOLERANCE = 1e-6 # acceptable adjustment to fit following second stage
 
-def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets = ()):
+def build_initial_parameter_values(
+		fitting_tensors, relative_fitting_tensor_sets,
+		bounds_matrix, lowerbounds, upperbounds
+		):
 
 	(fitting_matrix, fitting_values) = fitting_tensors[:2]
 
-	init_bounded = (bounds.LOWERBOUNDS + bounds.UPPERBOUNDS)/2
+	init_bounded = (lowerbounds + upperbounds)/2
 
 	G = np.concatenate([
-		-bounds.BOUNDS_MATRIX,
-		+bounds.BOUNDS_MATRIX
+		-bounds_matrix,
+		+bounds_matrix
 		])
 
 	h = np.concatenate([
-		-bounds.LOWERBOUNDS,
-		bounds.UPPERBOUNDS
+		-lowerbounds,
+		upperbounds
 		]) - BOUNDS_TOLERANCE
 
 	if fitting_matrix.size == 0:
 		res = minimize(
 			lambda x: np.sum(np.square(
-				bounds.BOUNDS_MATRIX.dot(x) - init_bounded
+				bounds_matrix.dot(x) - init_bounded
 				)),
 			np.zeros(structure.n_parameters),
 			constraints = dict(
@@ -122,21 +125,21 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 
 		fitting_residuals = A.dot(fit_pars) - b
 
-		bounds_matrix = np.concatenate([
-			bounds.BOUNDS_MATRIX,
-			np.zeros((bounds.BOUNDS_MATRIX.shape[0], n_rel_sets))
+		augmented_bounds_matrix = np.concatenate([
+			bounds_matrix,
+			np.zeros((bounds_matrix.shape[0], n_rel_sets))
 			], 1)
 
 		assert (
-			(bounds_matrix.dot(fit_pars) >= bounds.LOWERBOUNDS)
-			& (bounds_matrix.dot(fit_pars) <= bounds.UPPERBOUNDS)
+			(augmented_bounds_matrix.dot(fit_pars) >= lowerbounds)
+			& (augmented_bounds_matrix.dot(fit_pars) <= upperbounds)
 			).all(), 'fit parameters not within bounds'
 
 		N = nullspace_projector(A)
 
 		res = minimize(
 			lambda z: np.sum(np.square(
-				bounds_matrix.dot(fit_pars + N.dot(z)) - init_bounded
+				augmented_bounds_matrix.dot(fit_pars + N.dot(z)) - init_bounded
 				)),
 			np.zeros(N.shape[1]),
 			constraints = dict(
@@ -161,8 +164,8 @@ def build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets
 		init_pars = init_pars[:n_pars]
 
 	assert (
-		(bounds.BOUNDS_MATRIX.dot(init_pars) >= bounds.LOWERBOUNDS)
-		& (bounds.BOUNDS_MATRIX.dot(init_pars) <= bounds.UPPERBOUNDS)
+		(bounds_matrix.dot(init_pars) >= lowerbounds)
+		& (bounds_matrix.dot(init_pars) <= upperbounds)
 		).all(), 'init parameters not within bounds'
 
 	return (init_pars, fitness, fitting_residuals)

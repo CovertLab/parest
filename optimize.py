@@ -7,16 +7,12 @@ import numpy as np
 
 import liveout as lo
 
-from utils.bounds import unbounded_to_random
-
-import constants
 import structure
 import fitting
 import equations
 import utils.linalg as la
 
 from initialization import build_initial_parameter_values
-import bounds
 
 MAX_ITERATIONS = int(1e6)
 CONVERGENCE_RATE = 1e-4
@@ -97,43 +93,137 @@ class ObjectiveValues(object):
 			+ weight_fit * self.fit
 			)
 
-def unit_basis(index, size, dtype = None):
-	vec = np.zeros(size, dtype)
-	vec[index] = 1
+def nonredundant_vectors(vectors, tolerance = 1e-15):
+	# Discards vectors that are equivalent to subsequent vectors under scaling.
 
-	return vec
+	retained = []
+
+	normed = [v / np.sqrt(v.dot(v)) for v in vectors]
+
+	for i, vi in enumerate(normed):
+		for ij, vj in enumerate(normed[i+1:]):
+			if 1 - np.abs(vi.dot(vj)) < 1e-15:
+				break
+
+		else:
+			retained.append(vectors[i])
+
+	return retained
 
 def build_perturbation_vectors(naive = False):
 	if naive:
 		perturbation_vectors = [
-			unit_basis(i, structure.n_parameters)
-			for i in xrange(structure.n_parameters)
+			vector
+			for vector in np.linalg.pinv(structure.standard_parameter_matrix).T
 			]
 
-	else:
-		dynamic_conc_indices = {
-			structure.parameters.index(
-				structure.GLC.format(compound)
-				)
-			for compound in structure.DYNAMIC_COMPOUNDS
-			}
+		# The standard parameter matrix corresponds to the 'usual'
+		# parameterization of a kinetic model, in terms of kcat's, metabolite
+		# and enzyme concentrations, saturation constants (KM's), and Gibbs
+		# standard energies of formation.
 
+		# These perturbations are 'simple' in the sense that a perturbation to
+		# a given 'standard' parameter does not influence the value of any
+		# other 'standard' parameter.
+
+	else:
 		perturbation_vectors = [
 			vector
 			for vector in la.bilevel_elementwise_pseudoinverse(
 				np.concatenate([
-					[
-						unit_basis(i, structure.n_parameters)
-						for i in xrange(structure.n_parameters)
-						if i not in dynamic_conc_indices # excluded because these are already in the system
-						],
+					np.identity(structure.n_parameters),
 					structure.activity_matrix
 					]),
 				structure.activity_matrix
 				).T
 			]
 
+		perturbation_vectors = nonredundant_vectors(perturbation_vectors)
+
+		# Many of the basic parameter perturbation vectors end up being
+		# identical to the 'activity matrix' perturbation vectors, so I detect
+		# and strip those from the set.
+
 	return perturbation_vectors
+
+def build_bounds(naive = False):
+	if naive:
+		import constants
+
+		lower_conc = 1e-10 # avg 1/10 molecules per e. coli cell
+		upper_conc = 1e2 # water conc is around 40 M
+
+		lower_enz_conc = 1e-10 # avg 1/10 molecules per cell
+		upper_enz_conc = 1e-2 # total protein conc in e. coli is about 1-10 mM
+
+		lower_kcat = 1e-5 # some mutants/unusual substrates can be very low
+		upper_kcat = 1e6 # catalase is around 1e5 /s
+
+		lower_KM = lower_conc
+		upper_KM = upper_conc
+
+		lower_glc = constants.RT * np.log(lower_conc)
+		upper_glc = constants.RT * np.log(upper_conc)
+
+		lower_gelc = constants.RT * np.log(lower_enz_conc)
+		upper_gelc = constants.RT * np.log(upper_enz_conc)
+
+		lower_log_kcat = -constants.RT * np.log(upper_kcat)
+		upper_log_kcat = -constants.RT * np.log(lower_kcat)
+
+		lower_log_KM = -constants.RT * np.log(upper_KM)
+		upper_log_KM = -constants.RT * np.log(lower_KM)
+
+		bounds_matrix = np.concatenate([
+			structure.full_glc_association_matrix,
+			structure.gelc_association_matrix,
+			structure.kcat_f_matrix,
+			structure.KM_f_matrix,
+			structure.KM_r_matrix,
+			])
+
+		lowerbounds = np.concatenate([
+			[lower_glc] * structure.full_glc_association_matrix.shape[0],
+			[lower_gelc] * structure.gelc_association_matrix.shape[0],
+			[lower_log_kcat] * structure.kcat_f_matrix.shape[0],
+			[lower_log_KM] * structure.KM_f_matrix.shape[0],
+			[lower_log_KM] * structure.KM_r_matrix.shape[0],
+			])
+
+		upperbounds = np.concatenate([
+			[upper_glc] * structure.full_glc_association_matrix.shape[0],
+			[upper_gelc] * structure.gelc_association_matrix.shape[0],
+			[upper_log_kcat] * structure.kcat_f_matrix.shape[0],
+			[upper_log_KM] * structure.KM_f_matrix.shape[0],
+			[upper_log_KM] * structure.KM_r_matrix.shape[0],
+			])
+
+		# I'm excluding reverse kcat's because it adds some non-trivial (that
+		# is, not 'naive') bounding logic, which in turn allows for non-naive
+		# perturbations on the system.
+
+		# Including reverse kcat bounds does improve the frequency of
+		# convergence to some extent, but I want a clean separation between
+		# the 'naive' system and my augmented approach.
+
+		# I can't include Keq bounds because those are interdependent (and
+		# therefore not 'naive').  Removing the relationship between reverse
+		# and forward kcat's would fundamentally change the model in such a
+		# fashion that the energy balance (non-decreasing entropy) is not
+		# enforced.
+
+		# Unlike all other 'standard' parameters, I do not bound Gibbs standard
+		# energies of formation.  There are no obvious or useful bounds on
+		# those values.
+
+	else:
+		import bounds
+
+		bounds_matrix = bounds.BOUNDS_MATRIX
+		lowerbounds = bounds.LOWERBOUNDS
+		upperbounds = bounds.UPPERBOUNDS
+
+	return bounds_matrix, lowerbounds, upperbounds
 
 RESIDUAL_CUTOFF = 1e-5
 
@@ -143,7 +233,7 @@ def empty_callback(epoch, iteration, constraint_penalty_weight, obj_components):
 def estimate_parameters(
 		fitting_rules_and_weights = tuple(),
 		random_state = None,
-		naive_perturbations = False,
+		naive = False,
 		callback = empty_callback
 		):
 
@@ -160,11 +250,13 @@ def estimate_parameters(
 		*fitting_rules_and_weights
 		)
 
-	(
-		init_pars,
-		init_fitness,
-		init_residuals
-		) = build_initial_parameter_values(fitting_tensors, relative_fitting_tensor_sets)
+	(bounds_matrix, lowerbounds, upperbounds) = build_bounds(naive)
+	inverse_bounds_matrix = np.linalg.pinv(bounds_matrix)
+
+	(init_pars, init_fitness, init_residuals) = build_initial_parameter_values(
+		fitting_tensors, relative_fitting_tensor_sets,
+		bounds_matrix, lowerbounds, upperbounds
+		)
 
 	if np.any(np.abs(init_residuals) > RESIDUAL_CUTOFF):
 
@@ -215,8 +307,12 @@ def estimate_parameters(
 
 	history_best_objective = []
 
-	perturbation_vectors = build_perturbation_vectors(naive_perturbations)
+	perturbation_vectors = build_perturbation_vectors(naive)
 	n_perturb = len(perturbation_vectors)
+
+	bounds_range = upperbounds - lowerbounds
+
+	ibm_v = [v for v in inverse_bounds_matrix.T]
 
 	for epoch in xrange(CONSTRAINT_PENALTY_GROWTH_ITERATIONS+1):
 		for iteration in xrange(MAX_ITERATIONS):
@@ -229,16 +325,19 @@ def estimate_parameters(
 
 			dimension = random_state.randint(n_perturb)
 
-			new_pars = best_pars + scale * perturbation_vectors[dimension]
+			perturbation = scale * perturbation_vectors[dimension]
 
-			new_acts = bounds.BOUNDS_MATRIX.dot(new_pars)
-			bounded_acts = unbounded_to_random(
-				new_acts,
-				bounds.UPPERBOUNDS, bounds.LOWERBOUNDS,
-				random_state
-				)
+			new_pars = best_pars + perturbation
 
-			new_pars += bounds.INVERSE_BOUNDS_MATRIX.dot(bounded_acts - new_acts)
+			new_acts = bounds_matrix.dot(new_pars)
+
+			unbounded = (lowerbounds > new_acts) | (upperbounds < new_acts)
+
+			for i in np.where(unbounded)[0]:
+				bounded = lowerbounds[i] + bounds_range[i] * random_state.random_sample()
+
+				new_pars += (bounded - new_acts[i]) * ibm_v[i]
+
 			new_obj_components = ObjectiveValues(
 				new_pars, fitting_tensors, relative_fitting_tensor_sets
 				)
@@ -254,16 +353,6 @@ def estimate_parameters(
 			if did_accept:
 				best_obj = new_obj
 				best_pars = new_pars
-
-				# temp.append([
-				# 	epoch,
-				# 	iteration,
-				# 	new_obj_components.mass_eq,
-				# 	new_obj_components.energy_eq,
-				# 	new_obj_components.flux,
-				# 	new_obj_components.fit,
-				# 	constraint_penalty_weight
-				# 	])
 
 				callback(
 					epoch, iteration, constraint_penalty_weight,
@@ -287,7 +376,9 @@ def estimate_parameters(
 					(
 						1-best_obj / history_best_objective[-CONVERGENCE_TIME]
 						) < CONVERGENCE_RATE
-					) and (epoch < CONSTRAINT_PENALTY_GROWTH_ITERATIONS):
+					) and (
+						epoch < CONSTRAINT_PENALTY_GROWTH_ITERATIONS
+					):
 				log = True
 				quit = True
 
