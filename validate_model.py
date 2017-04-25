@@ -35,9 +35,9 @@ DT = 1e1
 T_INIT = 0
 INTEGRATOR = 'lsoda'
 
-def load_pars(problem):
-	obj = np.load(pa.join('out', problem, 'obj.npy'))
-	pars = np.load(pa.join('out', problem, 'pars.npy'))
+def load_pars(target_dir):
+	obj = np.load(pa.join(target_dir, 'obj.npy'))
+	pars = np.load(pa.join(target_dir, 'pars.npy'))
 
 	return obj, pars
 
@@ -62,19 +62,19 @@ def init_dg_dt(pars):
 
 # for problem in problems.DEFINITIONS.viewkeys():
 
-problem = problems.DEFINITIONS.keys()[int(sys.argv[1])]
+target_dir = sys.argv[1]
 
-stable_path = pa.join('out', problem, 'stable.npy')
-equ_path = pa.join('out', problem, 'equ.npy')
-lre_path = pa.join('out', problem, 'lre.npy')
+stable_path = pa.join(target_dir, 'stable.npy')
+equ_path = pa.join(target_dir, 'equ.npy')
+lre_path = pa.join(target_dir, 'lre.npy')
 
 if not FORCE and pa.exists(stable_path) and pa.exists(equ_path) and pa.exists(lre_path):
-	print 'skipping {}, output already exists'.format(problem)
+	print 'Skipping {}, output already exists'.format(target_dir)
 
 else:
-	print 'validating {} parameters'.format(problem)
+	print 'Validating {} parameters'.format(target_dir)
 
-	(all_obj, all_pars) = load_pars(problem)
+	(all_obj, all_pars) = load_pars(target_dir)
 
 	equ = []
 	lre = []
@@ -83,8 +83,6 @@ else:
 	for (i, pars) in enumerate(all_pars.T):
 		# print '-'*79
 		# print i, all_obj[:, i]
-
-		print i
 
 	# for pars in [all_pars[:, 214]]:
 
@@ -196,8 +194,8 @@ else:
 		else:
 			stable.append(True)
 
+		print i, np.mean(stable), np.mean(equ)
+
 	np.save(stable_path, np.array(stable, np.bool))
 	np.save(equ_path, np.array(equ, np.bool))
 	np.save(lre_path, np.array(lre, np.float64))
-
-	print np.mean(equ), np.mean(stable)
