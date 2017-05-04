@@ -444,7 +444,7 @@ standard_parameter_matrix = np.concatenate([
 	full_glc_association_matrix,
 	gelc_association_matrix,
 	kcat_f_matrix,
-	gs_association_matrix,
 	KM_f_matrix,
 	KM_r_matrix,
+	gs_association_matrix,
 	])

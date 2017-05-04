@@ -7,6 +7,9 @@ from data import kb
 import constants
 import structure
 
+# TODO: one-sided penalties
+# i.e. negative delta g for expected-forward reactions, c/KM > 1
+
 def find_weight(rules_and_weights, entry):
 	for rule, weight in rules_and_weights:
 		if rule(entry):

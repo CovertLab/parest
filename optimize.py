@@ -101,7 +101,7 @@ def nonredundant_vectors(vectors, tolerance = 1e-15):
 	normed = [v / np.sqrt(v.dot(v)) for v in vectors]
 
 	for i, vi in enumerate(normed):
-		for ij, vj in enumerate(normed[i+1:]):
+		for vj in normed[i+1:]:
 			if 1 - np.abs(vi.dot(vj)) < 1e-15:
 				break
 
@@ -131,8 +131,8 @@ def build_perturbation_vectors(naive = False):
 			vector
 			for vector in la.bilevel_elementwise_pseudoinverse(
 				np.concatenate([
+					structure.activity_matrix,
 					np.identity(structure.n_parameters),
-					structure.activity_matrix
 					]),
 				structure.activity_matrix
 				).T
