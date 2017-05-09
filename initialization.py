@@ -27,15 +27,16 @@ def build_initial_parameter_values(
 
 	G = np.concatenate([
 		-bounds_matrix,
-		+bounds_matrix
+		+bounds_matrix,
 		])
 
 	h = np.concatenate([
 		-lowerbounds,
-		upperbounds
+		upperbounds,
 		]) - BOUNDS_TOLERANCE
 
 	if fitting_matrix.size == 0:
+		raise Exception('this has not been tested in a long time, and does not properly check for relative fitting stuff')
 		res = minimize(
 			lambda x: np.sum(np.square(
 				bounds_matrix.dot(x) - init_bounded
@@ -67,20 +68,30 @@ def build_initial_parameter_values(
 
 			return out
 
-		A = np.concatenate([
-			np.concatenate([fitting_matrix, np.zeros([n_abs, n_rel_sets])], 1),
-			] + [
-			np.concatenate([fm, -ones_col(i, fv.size, n_rel_sets)], 1)
-			for (i, (fm, fv, fe)) in enumerate(relative_fitting_tensor_sets)
-			], 0)
-		b = np.concatenate(
-			[fitting_values]
-			+ [fv for (fm, fv, fe) in relative_fitting_tensor_sets],
+		A = np.concatenate(
+			[
+				np.concatenate([
+					fitting_matrix,
+					np.zeros([n_abs, n_rel_sets])],
+					1),
+				]
+			+ [
+				np.concatenate([
+					fm, -ones_col(i, fv.size, n_rel_sets)
+					], 1)
+					for (i, (fm, fv, fe)) in enumerate(relative_fitting_tensor_sets)
+				],
 			0
 			)
-
-		# from utils.l1min import linear_least_l1_regression
-		# fit_pars, fitness = linear_least_l1_regression(LP_SCALE*A, LP_SCALE*b, G, h)
+		b = np.concatenate(
+			[
+				fitting_values
+				]
+			+ [
+				fv for (fm, fv, fe) in relative_fitting_tensor_sets
+				],
+			0
+			)
 
 		(n, m) = A.shape
 
@@ -101,11 +112,15 @@ def build_initial_parameter_values(
 		A_ub = np.concatenate([
 			np.concatenate([-A_scaled, -I], 1),
 			np.concatenate([+A_scaled, -I], 1),
-			np.concatenate([+LP_SCALE*G, np.zeros((G.shape[0], n))], 1)
+			np.concatenate([+LP_SCALE*G, np.zeros((G.shape[0], n))], 1),
 			],
 			0)
 
-		b_ub = np.concatenate([-b_scaled, +b_scaled, LP_SCALE*h])
+		b_ub = np.concatenate([
+			-b_scaled,
+			+b_scaled,
+			LP_SCALE*h,
+			])
 
 		result = linprog(
 			c,
