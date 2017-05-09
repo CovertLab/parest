@@ -54,11 +54,16 @@ median1d = (
 	fast_shortarray_median1d
 	)
 
-def compute_relative_fit(x, tensor_sets):
+def compute_abs_fit(pars, fitting_tensors):
+	(fitting_matrix, fitting_values) = fitting_tensors[:2]
+
+	return np.sum(np.abs(fitting_matrix.dot(pars) - fitting_values))
+
+def compute_relative_fit(pars, relative_fitting_tensor_sets):
 	cost = 0
 
-	for (fm, fv, fe) in tensor_sets:
-		predicted = fm.dot(x)
+	for (fm, fv, fe) in relative_fitting_tensor_sets:
+		predicted = fm.dot(pars)
 		d = predicted - fv
 
 		m = median1d(d)
@@ -66,6 +71,12 @@ def compute_relative_fit(x, tensor_sets):
 		cost += np.sum(np.abs(d - m))
 
 	return cost
+
+def compute_overall_fit(pars, fitting_tensors, relative_fitting_tensor_sets):
+	return (
+		compute_abs_fit(pars, fitting_tensors)
+		+ compute_relative_fit(pars, relative_fitting_tensor_sets)
+		)
 
 class ObjectiveValues(object):
 	def __init__(self, pars, fitting_tensors, relative_fitting_tensor_sets = ()):
@@ -78,12 +89,7 @@ class ObjectiveValues(object):
 
 		self.flux = (net_pyruvate_production / TARGET_PYRUVATE_PRODUCTION - 1)**2
 
-		(fitting_matrix, fitting_values) = fitting_tensors[:2]
-
-		self.fit = (
-			np.sum(np.abs(fitting_matrix.dot(pars) - fitting_values))
-			+ compute_relative_fit(pars, relative_fitting_tensor_sets)
-			)
+		self.fit = compute_overall_fit(pars, fitting_tensors, relative_fitting_tensor_sets)
 
 	def total(self, weight_mass_eq, weight_energy_eq, weight_flux, weight_fit):
 		return (
@@ -388,8 +394,7 @@ def estimate_parameters(
 					constraint_penalty_weight,
 					iteration,
 					best_obj,
-					np.sum(np.abs(fitting_matrix.dot(best_pars) - fitting_values))
-					+ compute_relative_fit(best_pars, relative_fitting_tensor_sets)
+					compute_overall_fit(best_pars, fitting_tensors, relative_fitting_tensor_sets)
 					)
 
 				last_log_time = time.time()
@@ -415,9 +420,11 @@ def estimate_parameters(
 	final_pars = best_pars
 	final_obj = ObjectiveValues(final_pars, fitting_tensors, relative_fitting_tensor_sets)
 
-	# np.save('temp.npy', np.array(temp))
-
 	return final_pars, final_obj
 
 if __name__ == '__main__':
-	(pars, obj) = estimate_parameters(random_state = np.random.RandomState(0))
+	(pars, obj) = estimate_parameters(
+		# random_state = np.random.RandomState(0)
+		)
+
+	np.save('optimize_pars.npy', pars)
