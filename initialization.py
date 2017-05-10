@@ -79,85 +79,88 @@ def build_initial_parameter_values2( # TODO: meaningful defaults
 	# G, h: linear inequality constraints s.t. Gx <= h
 	# there is no equality constraints i.e. Ax = b
 
-	I_abs = np.identity(n_absolute_penalties)
-	I_upper = np.identity(n_upper_penalties)
-	I_rel = np.identity(n_relative_penalties)
+	# TODO: separate upper and lower bounds for a better interface
+	# TODO: same for lower penalty thresholds
 
-	endat = np.cumsum(n_each_relative_penalties)
-	startat = np.concatenate([[0], endat])[:-1]
+	A_bounds = np.column_stack([
+		upper_bounds_matrix,
+		np.zeros((n_basic_bounds, n_free_parameters))
+		])
+	h_bounds = upper_bounds_values
 
-	G_blocks = [
-		# Basic upper bounds
-		[
-			upper_bounds_matrix,
-			np.zeros((n_basic_bounds, n_free_parameters+n_hidden_parameters))
-			],
+	A_absolute_penalty_pos = np.column_stack([
+		+absolute_penalty_matrix,
+		np.zeros((n_absolute_penalties, n_free_parameters)),
+		])
+	h_absolute_penalty_pos = +absolute_penalty_values
 
-		# Absolute penalties
-		[
-			-absolute_penalty_matrix,
-			np.zeros((n_absolute_penalties, n_free_parameters)),
-			-I_abs,
-			np.zeros((n_absolute_penalties, n_upper_penalties+n_relative_penalties))
-			],
-		[
-			+absolute_penalty_matrix,
-			np.zeros((n_absolute_penalties, n_free_parameters)),
-			-I_abs,
-			np.zeros((n_absolute_penalties, n_upper_penalties+n_relative_penalties))
-			],
+	A_absolute_penalty_neg = -A_absolute_penalty_pos
+	h_absolute_penalty_neg = -h_absolute_penalty_pos
 
-		# Penalties for values above some threshold
-		[
-			+upper_penalty_matrix,
-			np.zeros((n_upper_penalties, n_free_parameters+n_absolute_penalties)),
-			-I_upper,
-			np.zeros((n_upper_penalties, n_relative_penalties))
-			],
-		[
-			np.zeros_like(upper_penalty_matrix),
-			np.zeros((n_upper_penalties, n_free_parameters+n_absolute_penalties)),
-			-I_upper,
-			np.zeros((n_upper_penalties, n_relative_penalties))
-			],
-		] + [
-		# Penalties for relative errors (lower)
-		[
-			-relative_penalty_matrix,
-			+column_of_ones_matrix(i, relative_penalty_matrix.shape[0], n_relative_penalty_sets),
-			np.zeros((relative_penalty_matrix.shape[0], n_absolute_penalties+n_upper_penalties)),
-			-I_rel[startat[i]:endat[i], :]
-			]
-		for i, (relative_penalty_matrix, relative_penalty_values)
-		in enumerate(relative_penalty_matrices_and_values)
-		] + [
-		# Penalties for relative errors (upper)
-		[
+	A_upper_penalty_pos = np.column_stack([
+		+upper_penalty_matrix,
+		np.zeros((n_upper_penalties, n_free_parameters))
+		])
+	h_upper_penalty_pos = upper_penalty_values
+
+	 # exceptional case because penalty is not symmetric
+	A_upper_penalty_neg = np.zeros_like(A_upper_penalty_pos)
+	h_upper_penalty_neg = np.zeros_like(h_upper_penalty_pos)
+
+	A_relative_penalty_pos = np.row_stack([np.column_stack([
 			+relative_penalty_matrix,
 			-column_of_ones_matrix(i, relative_penalty_matrix.shape[0], n_relative_penalty_sets),
-			np.zeros((relative_penalty_matrix.shape[0], n_absolute_penalties+n_upper_penalties)),
-			-I_rel[startat[i]:endat[i], :]
-			]
+			])
 		for i, (relative_penalty_matrix, relative_penalty_values)
 		in enumerate(relative_penalty_matrices_and_values)
-		]
+		])
+	h_relative_penalty_pos = np.concatenate([
+		relative_penalty_values
+		for relative_penalty_matrix, relative_penalty_values
+		in relative_penalty_matrices_and_values
+		])
 
-	G = compose_block_matrix(G_blocks)
+	A_relative_penalty_neg = -A_relative_penalty_pos
+	h_relative_penalty_neg = -h_relative_penalty_pos
 
+	A_pos = np.row_stack([
+		A_absolute_penalty_pos,
+		A_upper_penalty_pos,
+		A_relative_penalty_pos,
+		])
+	A_neg = np.row_stack([
+		A_absolute_penalty_neg,
+		A_upper_penalty_neg,
+		A_relative_penalty_neg,
+		])
+
+	I = np.identity(n_hidden_parameters)
+
+	G_bounds = np.column_stack([A_bounds, np.zeros((n_basic_bounds, n_hidden_parameters))])
+
+	G_pos = np.column_stack([A_pos, -I])
+	h_pos = np.concatenate([
+		h_absolute_penalty_pos,
+		h_upper_penalty_pos,
+		h_relative_penalty_pos,
+		])
+
+	G_neg = np.column_stack([A_neg, -I])
+	h_neg = np.concatenate([
+		h_absolute_penalty_neg,
+		h_upper_penalty_neg,
+		h_relative_penalty_neg,
+		])
+
+	G = np.row_stack([
+		G_bounds,
+		G_pos,
+		G_neg
+		])
 	h = np.concatenate([
-		upper_bounds_values,
-		-absolute_penalty_values,
-		+absolute_penalty_values,
-		+upper_penalty_values,
-		np.zeros(n_upper_penalties),
-		] + [
-		-relative_penalty_values
-		for relative_penalty_matrix, relative_penalty_values
-		in relative_penalty_matrices_and_values
-		] + [
-		+relative_penalty_values
-		for relative_penalty_matrix, relative_penalty_values
-		in relative_penalty_matrices_and_values
+		h_bounds,
+		h_pos,
+		h_neg
 		])
 
 	c = np.concatenate([
@@ -165,7 +168,7 @@ def build_initial_parameter_values2( # TODO: meaningful defaults
 		np.ones(n_hidden_parameters)
 		])
 
-	result_linprog = linprog(
+	result_stage1 = linprog(
 		c,
 		G, h,
 		bounds = (None, None),
@@ -174,53 +177,60 @@ def build_initial_parameter_values2( # TODO: meaningful defaults
 			)
 		)
 
-	z0 = result_linprog.x
-	f = result_linprog.fun
+	z0 = result_stage1.x
+	x0_aug = z0[:n_basic_parameters+n_free_parameters]
 
-	assert result_linprog.success
+	f = result_stage1.fun
+
+	assert result_stage1.success
 
 	# Step 2: regularize the choice of x in the nullspace of the solution for the LP
-	# this isn't perfect, but it's not terribly important either
-	# arguably all regularization should be implemented as some sort of (low value) penalty term
+	# TODO: explain the problem being solved
 
-	# N = nullspace_projector(G) # shouldn't be G - need to fix!
-	# N[np.abs(N) < 1e-3] = 0
+	is_positive = A_upper_penalty_pos.dot(x0_aug) > h_upper_penalty_pos
 
-	# A = np.concatenate(
-	# 	[
-	# 		init_matrix,
-	# 		np.zeros((init_values.size, n_free_parameters+n_hidden_parameters))
-	# 		],
-	# 	1
-	# 	)
-	# b = init_values
+	A_active = np.row_stack([
+		A_absolute_penalty_pos,
+		A_upper_penalty_pos[is_positive, :],
+		A_relative_penalty_pos,
+		])
 
-	# h2 = upper_bounds_values
-	# G2 = np.concatenate(
-	# 	[
-	# 		upper_bounds_matrix,
-	# 		np.zeros((upper_bounds_values.size, n_free_parameters+n_hidden_parameters))
-	# 		],
-	# 	1
-	# 	)
+	N = nullspace_projector(A_active)
 
-	# result_minimize = minimize(
-	# 	lambda z: np.sum(np.square(
-	# 		A.dot(z0 + N.dot(z)) - b
-	# 		)),
-	# 	np.zeros(n_parameters),
-	# 	constraints = dict(
-	# 		type = 'ineq',
-	# 		fun = lambda z: h2 - G2.dot(z0 + N.dot(z))
-	# 		)
-	# 	)
+	A_stage2 = np.column_stack([
+			init_matrix,
+			np.zeros((init_values.size, n_free_parameters))
+			])
+	b_stage2 = init_values - A_stage2.dot(x0_aug)
+	AN_stage2 = A_stage2.dot(N)
 
-	# z = z0 + N.dot(result_minimize.x)
-	# x = z[:n_basic_parameters]
+	G_stage2 = np.row_stack([
+		A_bounds,
+		A_upper_penalty_pos[~is_positive, :]
+		])
+	h_stage2 = np.concatenate([
+		h_bounds,
+		h_upper_penalty_pos[~is_positive]
+		]) - G_stage2.dot(x0_aug)
+	GN_stage2 = G_stage2.dot(N)
 
-	# assert result_minimize.success
+	result_stage2 = minimize(
+		lambda dx_aug: np.sum(np.square(
+			AN_stage2.dot(dx_aug) - b_stage2
+			)),
+		np.zeros_like(x0_aug),
+		constraints = dict(
+			type = 'ineq',
+			fun = lambda dx_aug: h_stage2 - GN_stage2.dot(dx_aug)
+			)
+		)
 
-	x = z0[:n_basic_parameters]
+	x_aug = x0_aug + N.dot(result_stage2.x)
+	x = x_aug[:n_basic_parameters]
+
+	assert result_stage2.success
+
+	# TODO: error checking on stage 1, 2 output
 
 	return x, f
 
@@ -335,8 +345,6 @@ def build_initial_parameter_values(
 		np.save('h_old.npy', b_ub)
 		np.save('c_old.npy', c)
 
-		import ipdb; ipdb.set_trace()
-
 		result = linprog(
 			c,
 			A_ub, b_ub,
@@ -392,6 +400,8 @@ def build_initial_parameter_values(
 		assert init_fit < FIT_TOLERANCE, 'init parameters not fit'
 
 		init_pars = init_pars[:n_pars]
+
+		import ipdb; ipdb.set_trace()
 
 	assert (
 		(bounds_matrix.dot(init_pars) >= lowerbounds)
