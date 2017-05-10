@@ -12,7 +12,8 @@ import fitting
 import equations
 import utils.linalg as la
 
-from initialization import build_initial_parameter_values
+# from initialization import build_initial_parameter_values
+from initialization import build_initial_parameter_values2 as build_initial_parameter_values
 
 MAX_ITERATIONS = int(1e6)
 CONVERGENCE_RATE = 1e-4
@@ -76,6 +77,10 @@ def compute_overall_fit(pars, fitting_tensors, relative_fitting_tensor_sets):
 	return (
 		compute_abs_fit(pars, fitting_tensors)
 		+ compute_relative_fit(pars, relative_fitting_tensor_sets)
+		# + np.sum(np.fmax(-np.concatenate([
+		# 	structure.solo_forward_binding_potential_matrix,
+		# 	structure.solo_reverse_binding_potential_matrix
+		# 	]).dot(pars), 0)) * 1e2
 		)
 
 class ObjectiveValues(object):
@@ -231,8 +236,6 @@ def build_bounds(naive = False):
 
 	return bounds_matrix, lowerbounds, upperbounds
 
-RESIDUAL_CUTOFF = 1e-5
-
 def empty_callback(epoch, iteration, constraint_penalty_weight, obj_components):
 	pass
 
@@ -259,28 +262,18 @@ def estimate_parameters(
 	(bounds_matrix, lowerbounds, upperbounds) = build_bounds(naive)
 	inverse_bounds_matrix = np.linalg.pinv(bounds_matrix)
 
-	(init_pars, init_fitness, init_residuals) = build_initial_parameter_values(
-		fitting_tensors, relative_fitting_tensor_sets,
-		bounds_matrix, lowerbounds, upperbounds
+	# (init_pars, init_fitness, init_residuals) = build_initial_parameter_values(
+	# 	fitting_tensors, relative_fitting_tensor_sets,
+	# 	bounds_matrix, lowerbounds, upperbounds
+	# 	)
+
+	(init_pars, init_fitness) = build_initial_parameter_values(
+		bounds_matrix, (lowerbounds + upperbounds)/2,
+		np.concatenate([-bounds_matrix, +bounds_matrix]), np.concatenate([-lowerbounds, upperbounds]),
+		fitting_matrix, fitting_values,
+		np.zeros((0, structure.n_parameters)), np.zeros((0,)),
+		*[(fm, fv) for (fm, fv, fe) in relative_fitting_tensor_sets]
 		)
-
-	if np.any(np.abs(init_residuals) > RESIDUAL_CUTOFF):
-
-		print 'Nonzero fitting residuals:'
-
-		print '\n'.join(
-			'{} : {:0.2e}'.format(
-				entry.id,
-				residual
-				)
-			for entry, residual in zip(fitting_entries, init_residuals)
-			if np.abs(residual) > RESIDUAL_CUTOFF
-			)
-
-		print 'Overall fit score: {:0.2e}'.format(init_fitness)
-
-	else:
-		print 'No nonzero fitting residuals.'
 
 	constraint_penalty_weight = INIT_CONSTRAINT_PENALTY_WEIGHT
 

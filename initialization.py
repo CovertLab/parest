@@ -16,6 +16,215 @@ LP_SCALE = 1e-2 # linear program problem scale
 
 FIT_TOLERANCE = 1e-6 # acceptable adjustment to fit following second stage
 
+def column_of_ones_matrix(column, n_rows, n_columns, dtype = None):
+	out = np.zeros((n_rows, n_columns), dtype)
+
+	out[:, column] = 1
+
+	return out
+
+def compose_block_matrix(list_of_lists_of_matrices):
+	return np.concatenate([
+		np.concatenate(list_of_matrices, 1)
+		for list_of_matrices in list_of_lists_of_matrices
+		])
+
+def build_initial_parameter_values2( # TODO: meaningful defaults
+		init_matrix, init_values, # target values secondary to penalties
+		upper_bounds_matrix, upper_bounds_values, # linear bounding
+		absolute_penalty_matrix, absolute_penalty_values,
+		upper_penalty_matrix, upper_penalty_values,
+		*relative_penalty_matrices_and_values # matrix-value pairs
+		):
+
+	# TODO: documentation
+	# TODO: thorough error checking on dimensions of inputs and outputs
+
+	# Stage 1: set up and solve the linear program
+
+	n_basic_bounds = upper_bounds_values.size
+	n_absolute_penalties = absolute_penalty_values.size
+	n_upper_penalties = upper_penalty_values.size
+	n_each_relative_penalties = [
+		relative_penalty_matrix.shape[0]
+		for relative_penalty_matrix, relative_penalty_values
+		in relative_penalty_matrices_and_values
+		]
+	n_relative_penalties = sum(n_each_relative_penalties)
+	n_relative_penalty_sets = len(relative_penalty_matrices_and_values)
+
+	n_basic_parameters = init_matrix.shape[1]
+	n_free_parameters = n_relative_penalty_sets
+	n_hidden_parameters = (
+		n_absolute_penalties
+		+ n_upper_penalties
+		+ n_relative_penalties
+		)
+
+	n_parameters = (
+		n_basic_parameters
+		+ n_free_parameters
+		+ n_hidden_parameters
+		)
+
+	n_hidden_bounds = 2*n_hidden_parameters
+
+	n_bounds = (
+		n_basic_bounds
+		+ n_hidden_bounds
+		)
+
+	# following basic LP abstraction names:
+	# c: objective coefficients
+	# G, h: linear inequality constraints s.t. Gx <= h
+	# there is no equality constraints i.e. Ax = b
+
+	I_abs = np.identity(n_absolute_penalties)
+	I_upper = np.identity(n_upper_penalties)
+	I_rel = np.identity(n_relative_penalties)
+
+	endat = np.cumsum(n_each_relative_penalties)
+	startat = np.concatenate([[0], endat])[:-1]
+
+	G_blocks = [
+		# Basic upper bounds
+		[
+			upper_bounds_matrix,
+			np.zeros((n_basic_bounds, n_free_parameters+n_hidden_parameters))
+			],
+
+		# Absolute penalties
+		[
+			-absolute_penalty_matrix,
+			np.zeros((n_absolute_penalties, n_free_parameters)),
+			-I_abs,
+			np.zeros((n_absolute_penalties, n_upper_penalties+n_relative_penalties))
+			],
+		[
+			+absolute_penalty_matrix,
+			np.zeros((n_absolute_penalties, n_free_parameters)),
+			-I_abs,
+			np.zeros((n_absolute_penalties, n_upper_penalties+n_relative_penalties))
+			],
+
+		# Penalties for values above some threshold
+		[
+			+upper_penalty_matrix,
+			np.zeros((n_upper_penalties, n_free_parameters+n_absolute_penalties)),
+			-I_upper,
+			np.zeros((n_upper_penalties, n_relative_penalties))
+			],
+		[
+			np.zeros_like(upper_penalty_matrix),
+			np.zeros((n_upper_penalties, n_free_parameters+n_absolute_penalties)),
+			-I_upper,
+			np.zeros((n_upper_penalties, n_relative_penalties))
+			],
+		] + [
+		# Penalties for relative errors (lower)
+		[
+			-relative_penalty_matrix,
+			+column_of_ones_matrix(i, relative_penalty_matrix.shape[0], n_relative_penalty_sets),
+			np.zeros((relative_penalty_matrix.shape[0], n_absolute_penalties+n_upper_penalties)),
+			-I_rel[startat[i]:endat[i], :]
+			]
+		for i, (relative_penalty_matrix, relative_penalty_values)
+		in enumerate(relative_penalty_matrices_and_values)
+		] + [
+		# Penalties for relative errors (upper)
+		[
+			+relative_penalty_matrix,
+			-column_of_ones_matrix(i, relative_penalty_matrix.shape[0], n_relative_penalty_sets),
+			np.zeros((relative_penalty_matrix.shape[0], n_absolute_penalties+n_upper_penalties)),
+			-I_rel[startat[i]:endat[i], :]
+			]
+		for i, (relative_penalty_matrix, relative_penalty_values)
+		in enumerate(relative_penalty_matrices_and_values)
+		]
+
+	G = compose_block_matrix(G_blocks)
+
+	h = np.concatenate([
+		upper_bounds_values,
+		-absolute_penalty_values,
+		+absolute_penalty_values,
+		+upper_penalty_values,
+		np.zeros(n_upper_penalties),
+		] + [
+		-relative_penalty_values
+		for relative_penalty_matrix, relative_penalty_values
+		in relative_penalty_matrices_and_values
+		] + [
+		+relative_penalty_values
+		for relative_penalty_matrix, relative_penalty_values
+		in relative_penalty_matrices_and_values
+		])
+
+	c = np.concatenate([
+		np.zeros(n_basic_parameters + n_free_parameters),
+		np.ones(n_hidden_parameters)
+		])
+
+	result_linprog = linprog(
+		c,
+		G, h,
+		bounds = (None, None),
+		options = dict(
+			tol = 1e-6
+			)
+		)
+
+	z0 = result_linprog.x
+	f = result_linprog.fun
+
+	assert result_linprog.success
+
+	# Step 2: regularize the choice of x in the nullspace of the solution for the LP
+	# this isn't perfect, but it's not terribly important either
+	# arguably all regularization should be implemented as some sort of (low value) penalty term
+
+	# N = nullspace_projector(G) # shouldn't be G - need to fix!
+	# N[np.abs(N) < 1e-3] = 0
+
+	# A = np.concatenate(
+	# 	[
+	# 		init_matrix,
+	# 		np.zeros((init_values.size, n_free_parameters+n_hidden_parameters))
+	# 		],
+	# 	1
+	# 	)
+	# b = init_values
+
+	# h2 = upper_bounds_values
+	# G2 = np.concatenate(
+	# 	[
+	# 		upper_bounds_matrix,
+	# 		np.zeros((upper_bounds_values.size, n_free_parameters+n_hidden_parameters))
+	# 		],
+	# 	1
+	# 	)
+
+	# result_minimize = minimize(
+	# 	lambda z: np.sum(np.square(
+	# 		A.dot(z0 + N.dot(z)) - b
+	# 		)),
+	# 	np.zeros(n_parameters),
+	# 	constraints = dict(
+	# 		type = 'ineq',
+	# 		fun = lambda z: h2 - G2.dot(z0 + N.dot(z))
+	# 		)
+	# 	)
+
+	# z = z0 + N.dot(result_minimize.x)
+	# x = z[:n_basic_parameters]
+
+	# assert result_minimize.success
+
+	x = z0[:n_basic_parameters]
+
+	return x, f
+
+
 def build_initial_parameter_values(
 		fitting_tensors, relative_fitting_tensor_sets,
 		bounds_matrix, lowerbounds, upperbounds
@@ -121,6 +330,12 @@ def build_initial_parameter_values(
 			+b_scaled,
 			LP_SCALE*h,
 			])
+
+		np.save('G_old.npy', A_ub)
+		np.save('h_old.npy', b_ub)
+		np.save('c_old.npy', c)
+
+		import ipdb; ipdb.set_trace()
 
 		result = linprog(
 			c,
