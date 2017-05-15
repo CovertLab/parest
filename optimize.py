@@ -12,8 +12,7 @@ import fitting
 import equations
 import utils.linalg as la
 
-# from initialization import build_initial_parameter_values
-from initialization import build_initial_parameter_values2 as build_initial_parameter_values
+from initialization import build_initial_parameter_values
 
 MAX_ITERATIONS = int(1e6)
 CONVERGENCE_RATE = 1e-4
@@ -261,11 +260,6 @@ def estimate_parameters(
 
 	(bounds_matrix, lowerbounds, upperbounds) = build_bounds(naive)
 	inverse_bounds_matrix = np.linalg.pinv(bounds_matrix)
-
-	# (init_pars, init_fitness, init_residuals) = build_initial_parameter_values(
-	# 	fitting_tensors, relative_fitting_tensor_sets,
-	# 	bounds_matrix, lowerbounds, upperbounds
-	# 	)
 
 	(init_pars, init_fitness) = build_initial_parameter_values(
 		bounds_matrix, (lowerbounds + upperbounds)/2,
