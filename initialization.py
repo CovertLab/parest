@@ -173,7 +173,7 @@ def build_initial_parameter_values2( # TODO: meaningful defaults
 		G, h,
 		bounds = (None, None),
 		options = dict(
-			tol = 1e-6
+			tol = 1e-6 # default tolerance (1e-15?) is very easy to break - underlying linprog precision issue?
 			)
 		)
 
@@ -185,7 +185,20 @@ def build_initial_parameter_values2( # TODO: meaningful defaults
 	assert result_stage1.success
 
 	# Step 2: regularize the choice of x in the nullspace of the solution for the LP
-	# TODO: explain the problem being solved
+
+	# The goal is to find a specific solution (or a more specific solution) to
+	# the initialization problem found in step 1.  Linear programming,
+	# particularly with the simplex algorithm, tends to find solutions in the
+	# corners of the solution space, where parmeter values are at their
+	# extremes.  However, we're generally interested in the middle of the
+	# bounded space, so I use a second stage optimization to push any free
+	# variables (those in the nullspace of the initialization problem) towards
+	# a more `regularized' solution.
+
+	# Arguably this regularization could be accomplished by a weakly weighted
+	# term in the fitting problem, but I'd need to search for the critical
+	# weight.  I also logically prefer the second-order penalty used in this
+	# constrained quadratic program.
 
 	is_positive = A_upper_penalty_pos.dot(x0_aug) > h_upper_penalty_pos
 
@@ -400,8 +413,6 @@ def build_initial_parameter_values(
 		assert init_fit < FIT_TOLERANCE, 'init parameters not fit'
 
 		init_pars = init_pars[:n_pars]
-
-		import ipdb; ipdb.set_trace()
 
 	assert (
 		(bounds_matrix.dot(init_pars) >= lowerbounds)
