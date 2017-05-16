@@ -7,9 +7,6 @@ from data import kb
 import constants
 import structure
 
-# TODO: one-sided penalties
-# i.e. negative delta g for expected-forward reactions, c/KM > 1
-
 def find_weight(rules_and_weights, entry):
 	for rule, weight in rules_and_weights:
 		if rule(entry):
@@ -325,7 +322,7 @@ def build_fitting_tensors(*rules_and_weights):
 		glc_values,
 		kcat_f_values,
 		kcat_r_values,
-		KM_values
+		KM_values,
 		])
 
 	fitting_mat = np.concatenate([
@@ -333,7 +330,7 @@ def build_fitting_tensors(*rules_and_weights):
 		glc_mat,
 		kcat_f_mat,
 		kcat_r_mat,
-		KM_mat
+		KM_mat,
 		])
 
 	fitting_entries = sum([
@@ -341,7 +338,7 @@ def build_fitting_tensors(*rules_and_weights):
 		glc_entries,
 		kcat_f_entries,
 		kcat_r_entries,
-		KM_entries
+		KM_entries,
 		], [])
 
 	return fitting_mat, fitting_values, fitting_entries
