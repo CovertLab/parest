@@ -111,10 +111,23 @@ _loader.add_datatype(loader.DataType(
 	))
 
 _loader.add_datatype(loader.DataType(
-	'substrate_saturation',
+	'reactant_saturation',
 	(
 		loader.Field('reaction'),
 		loader.Field('compound'),
+		loader.Field('index', int),
+		loader.Field('K_M', float),
+		loader.Field('source')
+		),
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'compound', 'source')
+	))
+
+_loader.add_datatype(loader.DataType(
+	'product_saturation',
+	(
+		loader.Field('reaction'),
+		loader.Field('compound'),
+		loader.Field('index', int),
 		loader.Field('K_M', float),
 		loader.Field('source')
 		),
@@ -140,6 +153,18 @@ _loader.add_datatype(loader.DataType(
 		),
 	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'source')
 	))
+
+# _loader.add_datatype(loader.DataType(
+# 	'upper_saturation_limit',
+# 	(
+# 		loader.Field('reaction'),
+# 		loader.Field('compound'),
+# 		loader.Field('index', int),
+# 		loader.Field('ratio', float),
+# 		loader.Field('source')
+# 		),
+# 	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'compound', 'index', 'source')
+# 	))
 
 _paths = list(
 	os.path.join(d[0], f)

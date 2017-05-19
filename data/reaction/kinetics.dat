@@ -1,14 +1,14 @@
 # PfkA
 @forward_catalytic_rate(reaction = PFK, source = 1429704)
 111
-@substrate_saturation(reaction = PFK, source = 1429704)
+@reactant_saturation(reaction = PFK, index = 1, source = 1429704)
 F6P, 90e-6
 ATP, 110e-6
 
 # PfkA
 @forward_catalytic_rate(reaction = PFK, source = 11300773)
 88
-@substrate_saturation(reaction = PFK, source = 11300773)
+@reactant_saturation(reaction = PFK, index = 1, source = 11300773)
 ATP, 88e-6
 
 # PfkA
@@ -22,54 +22,62 @@ ATP, 88e-6
 # TODO: source
 @forward_catalytic_rate(reaction = FBP, source = 11825604)
 14.6
-@substrate_saturation(reaction = FBP, source = 11825604)
+@reactant_saturation(reaction = FBP, index = 1, source = 11825604)
 F16P, 15.4e-6
 
 # TODO: source
 @forward_catalytic_rate(reaction = FBP, source = 15767255)
 20
-@substrate_saturation(reaction = FBP, source = 15767255)
+@reactant_saturation(reaction = FBP, index = 1, source = 15767255)
 F16P, 2.4e-6
 
 # TODO: source
 @forward_catalytic_rate(reaction = FBP, source = 17314096)
 24
-@substrate_saturation(reaction = FBP, source = 17314096)
+@reactant_saturation(reaction = FBP, index = 1, source = 17314096)
 F16P, 1.7e-6
 
 # TODO: source
 @forward_catalytic_rate(reaction = FBP, source = 19073594)
 14.6
-@substrate_saturation(reaction = FBP, source = 19073594)
+@reactant_saturation(reaction = FBP, index = 1, source = 19073594)
 F16P, 20e-6
 
 # fbaA, consitutive
 @forward_catalytic_rate(reaction = FBA, source = 8436219)
 10.3
-@substrate_saturation(reaction = FBA, source = 8436219)
+@reactant_saturation(reaction = FBA, index = 1, source = 8436219)
 F16P, 240e-6
 
 # fbaA, constitutive
 @forward_catalytic_rate(reaction = FBA, source = 9878448_fbaA)
 8.2
-@substrate_saturation(reaction = FBA, source = 9878448_fbaA)
+@reactant_saturation(reaction = FBA, index = 1, source = 9878448_fbaA)
 F16P, 190e-6
 
 # fbaA, constitutive
 # duplicate values with PMID 11779234
 @forward_catalytic_rate(reaction = FBA, source = 10712619)
 10.5
-@substrate_saturation(reaction = FBA, source = 10712619)
+@reactant_saturation(reaction = FBA, index = 1, source = 10712619)
 F16P, 170e-6
 
 # fbaA, constitutive
 @forward_catalytic_rate(reaction = FBA, source = 15531627)
 14.17
-@substrate_saturation(reaction = FBA, source = 15531627)
+@reactant_saturation(reaction = FBA, index = 1, source = 15531627)
 F16P, 140e-6
 
 # multiple TPI entries with near-identical parameters - using the oldest
 @reverse_catalytic_rate(reaction = TPI, source = 8309937)
 8700
-@substrate_saturation(reaction = TPI, source = 8309937)
+@product_saturation(reaction = TPI, index = 1, source = 8309937)
 GAP, 1030e-6
+
+@forward_catalytic_rate(reaction = GAP, source = 10190977)
+268
+@reactant_saturation(reaction = GAP, index = 1, source = 10190977)
+NAD, 0.045e-3
+GAP, 0.89e-3
+Pi, 0.53e-3
+

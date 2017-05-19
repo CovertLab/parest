@@ -252,21 +252,16 @@ def build_fitting_tensors(*rules_and_weights):
 	kcat_r_values = kcat_r_values * kcat_r_weights
 	kcat_r_mat = kcat_r_mat * kcat_r_weights[:, None]
 
-	# saturation constants
+	# forward saturation constants (reactants)
 
-	# things are a little hokey here because saturations in given rate laws don't
-	# specify the identity of a given substrate in a saturation term
-	# improving the data format would make this logic cleaner and place the
-	# burden on curation
+	KM_f_weights = []
 
-	KM_weights = []
+	KM_f_rows = []
+	KM_f_values = []
 
-	KM_rows = []
-	KM_values = []
+	KM_f_entries = []
 
-	KM_entries = []
-
-	for entry in kb.substrate_saturation:
+	for entry in kb.reactant_saturation:
 		if entry.reaction not in structure.reactions:
 			continue
 
@@ -275,54 +270,91 @@ def build_fitting_tensors(*rules_and_weights):
 		if w == 0:
 			continue
 
-		KM_weights.append(w)
+		KM_f_weights.append(w)
 
-		try:
-			gb_ind = structure.parameters.index(structure.GBER.format(
-				entry.compound,
-				1,
-				entry.reaction,
-				))
-
-		except ValueError:
-			try:
-				gb_ind = structure.parameters.index(structure.GBEP.format(
-					entry.compound,
-					1,
-					entry.reaction
-					))
-
-			except ValueError:
-				raise Exception('could not find a corresponding parameter for {}'.format(entry))
+		gb_ind = structure.parameters.index(structure.GBER.format(
+			entry.compound,
+			entry.index,
+			entry.reaction,
+			))
 
 		row = np.zeros(structure.n_parameters)
 
 		row[gb_ind] = 1
 
-		KM_rows.append(row)
+		KM_f_rows.append(row)
 
-		KM_values.append(constants.RT * np.log(entry.K_M))
+		KM_f_values.append(constants.RT * np.log(entry.K_M))
 
-		KM_entries.append(entry)
+		KM_f_entries.append(entry)
 
-	KM_weights = np.array(KM_weights)
+	KM_f_weights = np.array(KM_f_weights)
 
-	KM_values = np.array(KM_values)
+	KM_f_values = np.array(KM_f_values)
 
-	KM_mat = np.zeros((len(KM_rows), structure.n_parameters))
+	KM_f_mat = np.zeros((len(KM_f_rows), structure.n_parameters))
 
-	for i, r in enumerate(KM_rows):
-		KM_mat[i] += r
+	for i, r in enumerate(KM_f_rows):
+		KM_f_mat[i] += r
 
-	KM_values = KM_values * KM_weights
-	KM_mat = KM_mat * KM_weights[:, None]
+	KM_f_values = KM_f_values * KM_f_weights
+	KM_f_mat = KM_f_mat * KM_f_weights[:, None]
+
+	# reverse saturation constants (products)
+
+	KM_r_weights = []
+
+	KM_r_rows = []
+	KM_r_values = []
+
+	KM_r_entries = []
+
+	for entry in kb.product_saturation:
+		if entry.reaction not in structure.reactions:
+			continue
+
+		w = find_weight(rules_and_weights, entry)
+
+		if w == 0:
+			continue
+
+		KM_r_weights.append(w)
+
+		gb_ind = structure.parameters.index(structure.GBEP.format(
+			entry.compound,
+			entry.index,
+			entry.reaction
+			))
+
+		row = np.zeros(structure.n_parameters)
+
+		row[gb_ind] = 1
+
+		KM_r_rows.append(row)
+
+		KM_r_values.append(constants.RT * np.log(entry.K_M))
+
+		KM_r_entries.append(entry)
+
+	KM_r_weights = np.array(KM_r_weights)
+
+	KM_r_values = np.array(KM_r_values)
+
+	KM_r_mat = np.zeros((len(KM_r_rows), structure.n_parameters))
+
+	for i, r in enumerate(KM_r_rows):
+		KM_r_mat[i] += r
+
+	KM_r_values = KM_r_values * KM_r_weights
+	KM_r_mat = KM_r_mat * KM_r_weights[:, None]
 
 	fitting_values = np.concatenate([
 		gs_values,
 		glc_values,
 		kcat_f_values,
 		kcat_r_values,
-		KM_values,
+		KM_f_values,
+		KM_r_values,
 		])
 
 	fitting_mat = np.concatenate([
@@ -330,7 +362,8 @@ def build_fitting_tensors(*rules_and_weights):
 		glc_mat,
 		kcat_f_mat,
 		kcat_r_mat,
-		KM_mat,
+		KM_f_mat,
+		KM_r_mat,
 		])
 
 	fitting_entries = sum([
@@ -338,7 +371,8 @@ def build_fitting_tensors(*rules_and_weights):
 		glc_entries,
 		kcat_f_entries,
 		kcat_r_entries,
-		KM_entries,
+		KM_f_entries,
+		KM_r_entries,
 		], [])
 
 	return fitting_mat, fitting_values, fitting_entries
