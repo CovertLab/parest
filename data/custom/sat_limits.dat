@@ -51,5 +51,5 @@ PPS, AMP, 1.0
 PPS, Pi, 1.0
 
 # rare instance of a double substrate
-@upper_product_saturation_limit(source = custom_saturation_limits)
-PPS, H, 2, 1.0
+@upper_product_saturation_limit(index = 2, source = custom_saturation_limits)
+PPS, H, 1.0
