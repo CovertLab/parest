@@ -4,11 +4,15 @@ from collections import OrderedDict
 from data import kb
 import structure
 
+DEFAULT_RULES = (
+	(lambda entry: entry.source == 'custom_saturation_limits', 0),
+	)
+
 DEFINITIONS = OrderedDict()
 
-DEFINITIONS['data_agnostic'] = tuple()
+DEFINITIONS['data_agnostic'] = DEFAULT_RULES + ((lambda entry: True, 1.0),)
 
-DEFINITIONS['no_data'] = ((lambda entry: True, 0),)
+DEFINITIONS['no_data'] = DEFAULT_RULES + ((lambda entry: True, 0),)
 
 def exclude_entry(excluded_entry):
 	return (
@@ -20,13 +24,13 @@ for entry in kb.concentration:
 	if entry.compound in structure.compounds:
 		problem_name = 'exclude_{}'.format(entry.id).replace(':', '_')
 
-		DEFINITIONS[problem_name] = exclude_entry(entry)
+		DEFINITIONS[problem_name] = DEFAULT_RULES + exclude_entry(entry)
 
 for entry in kb.standard_energy_of_formation:
 	if entry.compound in structure.compounds:
 		problem_name = 'exclude_{}'.format(entry.id).replace(':', '_')
 
-		DEFINITIONS[problem_name] = exclude_entry(entry)
+		DEFINITIONS[problem_name] = DEFAULT_RULES + exclude_entry(entry)
 
 import fitting
 
@@ -36,7 +40,7 @@ _KINETICS_TYPES = (
 	'substrate_saturation'
 	)
 
-DEFINITIONS['custom'] = (
+DEFINITIONS['custom'] = DEFAULT_RULES + (
 	(
 		fitting.field_value_rule(
 			datatype = ('concentration', 'standard_energy_of_formation'),
@@ -64,7 +68,7 @@ DEFINITIONS['custom'] = (
 		),
 	)
 
-DEFINITIONS['custom2'] = (
+DEFINITIONS['custom2'] = DEFAULT_RULES + (
 	(
 		fitting.field_value_rule(
 			datatype = ('concentration', 'standard_energy_of_formation'),
@@ -92,7 +96,7 @@ DEFINITIONS['custom2'] = (
 		),
 	)
 
-DEFINITIONS['no_kinetics'] = (
+DEFINITIONS['no_kinetics'] = DEFAULT_RULES + (
 	(
 		fitting.field_value_rule(
 			datatype = _KINETICS_TYPES,
@@ -105,7 +109,7 @@ DEFINITIONS['no_kinetics'] = (
 		)
 	)
 
-DEFINITIONS['no_proteomics'] = (
+DEFINITIONS['no_proteomics'] = DEFAULT_RULES + (
 	(
 		fitting.field_value_rule(
 			datatype = ('relative_protein_count'),
@@ -118,7 +122,7 @@ DEFINITIONS['no_proteomics'] = (
 		)
 	)
 
-DEFINITIONS['promote_fba_kinetics'] = (
+DEFINITIONS['promote_fba_kinetics'] = DEFAULT_RULES + (
 	(
 		fitting.field_value_rule(
 			datatype = _KINETICS_TYPES,
@@ -132,7 +136,7 @@ DEFINITIONS['promote_fba_kinetics'] = (
 		)
 	)
 
-DEFINITIONS['promote_fba_kinetics2'] = (
+DEFINITIONS['promote_fba_kinetics2'] = DEFAULT_RULES + (
 	(
 		fitting.field_value_rule(
 			datatype = _KINETICS_TYPES,
