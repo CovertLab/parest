@@ -105,18 +105,23 @@ def build_initial_parameter_values( # TODO: meaningful defaults
 	A_upper_penalty_neg = np.zeros_like(A_upper_penalty_pos)
 	h_upper_penalty_neg = np.zeros_like(h_upper_penalty_pos)
 
-	A_relative_penalty_pos = np.row_stack([np.column_stack([
-			+relative_penalty_matrix,
-			-column_of_ones_matrix(i, relative_penalty_matrix.shape[0], n_relative_penalty_sets),
+	if (n_relative_penalty_sets == 0):
+		A_relative_penalty_pos = np.zeros((0, n_basic_parameters + n_free_parameters))
+		h_relative_penalty_pos = np.zeros((0,))
+
+	else:
+		A_relative_penalty_pos = np.row_stack([np.column_stack([
+				+relative_penalty_matrix,
+				-column_of_ones_matrix(i, relative_penalty_matrix.shape[0], n_relative_penalty_sets),
+				])
+			for i, (relative_penalty_matrix, relative_penalty_values)
+			in enumerate(relative_penalty_matrices_and_values)
 			])
-		for i, (relative_penalty_matrix, relative_penalty_values)
-		in enumerate(relative_penalty_matrices_and_values)
-		])
-	h_relative_penalty_pos = np.concatenate([
-		relative_penalty_values
-		for relative_penalty_matrix, relative_penalty_values
-		in relative_penalty_matrices_and_values
-		])
+		h_relative_penalty_pos = np.concatenate([
+			relative_penalty_values
+			for relative_penalty_matrix, relative_penalty_values
+			in relative_penalty_matrices_and_values
+			])
 
 	A_relative_penalty_neg = -A_relative_penalty_pos
 	h_relative_penalty_neg = -h_relative_penalty_pos
@@ -206,7 +211,11 @@ def build_initial_parameter_values( # TODO: meaningful defaults
 		A_relative_penalty_pos,
 		])
 
-	N = nullspace_projector(A_active)
+	if A_active.size == 0:
+		N = np.identity(n_basic_parameters+n_free_parameters)
+
+	else:
+		N = nullspace_projector(A_active)
 
 	A_stage2 = np.column_stack([
 			init_matrix,
