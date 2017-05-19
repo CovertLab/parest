@@ -8,7 +8,7 @@ DEFINITIONS = OrderedDict()
 
 DEFINITIONS['data_agnostic'] = tuple()
 
-# DEFINITIONS['no_data'] = ((lambda entry: True, 0),)
+DEFINITIONS['no_data'] = ((lambda entry: True, 0),)
 
 def exclude_entry(excluded_entry):
 	return (
