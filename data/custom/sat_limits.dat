@@ -1,0 +1,55 @@
+@description
+This is a semi-quantitative set of fitting data used to test a hypothesis; it
+was suspected that upper limits on reactant and product saturation improved
+stability.
+
+@upper_reactant_saturation_limit(index = 1, source = custom_saturation_limits)
+PGI, G6P, 1.0
+PFK, ATP, 1.0
+PFK, F6P, 1.0
+FBP, F16P, 1.0
+FBP, H2O, 1.0
+FBA, F16P, 1.0
+TPI, DHAP, 1.0
+GAP, Pi, 1.0
+GAP, GAP, 1.0
+GAP, NAD, 1.0
+PGK, 13DPG, 1.0
+PGK, ADP, 1.0
+GPM, 3PG, 1.0
+ENO, 2PG, 1.0
+PYK, PEP, 1.0
+PYK, ADP, 1.0
+PYK, H, 1.0
+PPS, PYR, 1.0
+PPS, ATP, 1.0
+PPS, H2O, 1.0
+
+@upper_product_saturation_limit(index = 1, source = custom_saturation_limits)
+PGI, F6P, 1.0
+PFK, ADP, 1.0
+PFK, H, 1.0
+PFK, F16P, 1.0
+FBP, F6P, 1.0
+FBP, Pi, 1.0
+FBA, GAP, 1.0
+FBA, DHAP, 1.0
+TPI, GAP, 1.0
+GAP, 13DPG, 1.0
+GAP, H, 1.0
+GAP, NADH, 1.0
+PGK, ATP, 1.0
+PGK, 3PG, 1.0
+GPM, 2PG, 1.0
+ENO, PEP, 1.0
+ENO, H2O, 1.0
+PYK, PYR, 1.0
+PYK, ATP, 1.0
+PPS, PEP, 1.0
+PPS, H, 1.0
+PPS, AMP, 1.0
+PPS, Pi, 1.0
+
+# rare instance of a double substrate
+@upper_product_saturation_limit(source = custom_saturation_limits)
+PPS, H, 2, 1.0

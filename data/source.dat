@@ -35,3 +35,5 @@ K1989: Kruger\, N.J. Effects of temperature on the kinetic properties of phospho
 S2015: Schmidt 2015\, Glucose column
 T2010T6: Table 6 from Taniguchi 2010
 W2014S2: Suppliment 2 from Wisniewski 2014 (average of three replicates)
+
+custom_saturation_limits: Used to test a hypothesis regarding substrate saturation and how it determines stability.  Semi-quantitative; not used to fit the model by default.

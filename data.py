@@ -154,17 +154,29 @@ _loader.add_datatype(loader.DataType(
 	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'source')
 	))
 
-# _loader.add_datatype(loader.DataType(
-# 	'upper_saturation_limit',
-# 	(
-# 		loader.Field('reaction'),
-# 		loader.Field('compound'),
-# 		loader.Field('index', int),
-# 		loader.Field('ratio', float),
-# 		loader.Field('source')
-# 		),
-# 	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'compound', 'index', 'source')
-# 	))
+_loader.add_datatype(loader.DataType(
+	'upper_reactant_saturation_limit',
+	(
+		loader.Field('reaction'),
+		loader.Field('compound'),
+		loader.Field('index', int),
+		loader.Field('ratio', float),
+		loader.Field('source')
+		),
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'compound', 'index', 'source')
+	))
+
+_loader.add_datatype(loader.DataType(
+	'upper_product_saturation_limit',
+	(
+		loader.Field('reaction'),
+		loader.Field('compound'),
+		loader.Field('index', int),
+		loader.Field('ratio', float),
+		loader.Field('source')
+		),
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'compound', 'index', 'source')
+	))
 
 _paths = list(
 	os.path.join(d[0], f)
