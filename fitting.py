@@ -377,6 +377,140 @@ def build_fitting_tensors(*rules_and_weights):
 
 	return fitting_mat, fitting_values, fitting_entries
 
+def build_upper_fitting_tensors(*rules_and_weights):
+	# Similar to normal fitting, except we only penalize for values above
+	# some threshold.
+
+	if len(rules_and_weights) == 0:
+		rules_and_weights = ((lambda entry: True, 1.0),)
+
+	if any((weight < 0) for rule, weight in rules_and_weights):
+		raise Exception('Weights must be non-negative.')
+
+	# forward upper saturation limits (reactants)
+
+	sat_f_weights = []
+
+	sat_f_rows = []
+	sat_f_values = []
+
+	sat_f_entries = []
+
+	for entry in kb.upper_reactant_saturation_limit:
+		if entry.reaction not in structure.reactions:
+			continue
+
+		w = find_weight(rules_and_weights, entry)
+
+		if w == 0:
+			continue
+
+		sat_f_weights.append(w)
+
+		glc_ind = structure.parameters.index(
+			structure.GLC.format(entry.compound)
+			)
+
+		gb_ind = structure.parameters.index(structure.GBER.format(
+			entry.compound,
+			entry.index,
+			entry.reaction,
+			))
+
+		row = np.zeros(structure.n_parameters)
+
+		row[glc_ind] = +1
+		row[gb_ind] = -1
+
+		sat_f_rows.append(row)
+
+		sat_f_values.append(constants.RT * np.log(entry.ratio))
+
+		sat_f_entries.append(entry)
+
+	sat_f_weights = np.array(sat_f_weights)
+
+	sat_f_values = np.array(sat_f_values)
+
+	sat_f_mat = np.zeros((len(sat_f_rows), structure.n_parameters))
+
+	for i, r in enumerate(sat_f_rows):
+		sat_f_mat[i] += r
+
+	sat_f_values = sat_f_values * sat_f_weights
+	sat_f_mat = sat_f_mat * sat_f_weights[:, None]
+
+	# reverse upper saturation limits (products)
+
+	sat_r_weights = []
+
+	sat_r_rows = []
+	sat_r_values = []
+
+	sat_r_entries = []
+
+	for entry in kb.upper_product_saturation_limit:
+		if entry.reaction not in structure.reactions:
+			continue
+
+		w = find_weight(rules_and_weights, entry)
+
+		if w == 0:
+			continue
+
+		sat_r_weights.append(w)
+
+		glc_ind = structure.parameters.index(
+			structure.GLC.format(entry.compound)
+			)
+
+		gb_ind = structure.parameters.index(structure.GBEP.format(
+			entry.compound,
+			entry.index,
+			entry.reaction,
+			))
+
+		row = np.zeros(structure.n_parameters)
+
+		row[glc_ind] = +1
+		row[gb_ind] = -1
+
+		sat_r_rows.append(row)
+
+		sat_r_values.append(constants.RT * np.log(entry.ratio))
+
+		sat_r_entries.append(entry)
+
+	sat_r_weights = np.array(sat_r_weights)
+
+	sat_r_values = np.array(sat_r_values)
+
+	sat_r_mat = np.zeros((len(sat_r_rows), structure.n_parameters))
+
+	for i, r in enumerate(sat_r_rows):
+		sat_r_mat[i] += r
+
+	sat_r_values = sat_r_values * sat_r_weights
+	sat_r_mat = sat_r_mat * sat_r_weights[:, None]
+
+	fitting_values = np.concatenate([
+		sat_f_values,
+		sat_r_values
+		])
+
+	fitting_mat = np.concatenate([
+		sat_f_mat,
+		sat_r_mat
+		])
+
+	fitting_entries = sum([
+		sat_f_entries,
+		sat_r_entries
+		], [])
+
+	return fitting_mat, fitting_values, fitting_entries
+
+
 def build_relative_fitting_tensor_sets(*rules_and_weights):
 	if len(rules_and_weights) == 0:
 		rules_and_weights = ((lambda entry: True, 1.0),)

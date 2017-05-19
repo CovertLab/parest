@@ -150,6 +150,8 @@ DEFINITIONS['promote_fba_kinetics2'] = DEFAULT_RULES + (
 		)
 	)
 
+DEFINITIONS['upper_sat_limits'] = tuple()
+
 def test():
 	print '{} problem definitions:'.format(len(DEFINITIONS))
 	print '\n'.join(DEFINITIONS.viewkeys())

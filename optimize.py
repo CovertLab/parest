@@ -59,6 +59,11 @@ def compute_abs_fit(pars, fitting_tensors):
 
 	return np.sum(np.abs(fitting_matrix.dot(pars) - fitting_values))
 
+def compute_upper_fit(pars, upper_fitting_tensors):
+	(fitting_matrix, fitting_values) = upper_fitting_tensors[:2]
+
+	return np.sum(np.fmax(fitting_matrix.dot(pars) - fitting_values, 0))
+
 # TODO: compute onesided fit
 
 def compute_relative_fit(pars, relative_fitting_tensor_sets):
@@ -74,17 +79,15 @@ def compute_relative_fit(pars, relative_fitting_tensor_sets):
 
 	return cost
 
-def compute_overall_fit(pars, fitting_tensors, relative_fitting_tensor_sets):
+def compute_overall_fit(pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets):
 	return (
 		compute_abs_fit(pars, fitting_tensors)
+		+ compute_upper_fit(pars, upper_fitting_tensors)
 		+ compute_relative_fit(pars, relative_fitting_tensor_sets)
-		# + np.sum(np.fmax(
-		# 	sr_ul_mat.dot(pars) - sr_ul_values, 0
-		# 	))
 		)
 
 class ObjectiveValues(object):
-	def __init__(self, pars, fitting_tensors, relative_fitting_tensor_sets = ()):
+	def __init__(self, pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets = ()):
 		(v, dc_dt, dglc_dt) = equations.compute_all(pars, *equations.args)
 
 		self.mass_eq = np.sum(np.square(structure.dynamic_molar_masses * dc_dt))
@@ -94,7 +97,7 @@ class ObjectiveValues(object):
 
 		self.flux = (net_pyruvate_production / TARGET_PYRUVATE_PRODUCTION - 1)**2
 
-		self.fit = compute_overall_fit(pars, fitting_tensors, relative_fitting_tensor_sets)
+		self.fit = compute_overall_fit(pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets)
 
 	def total(self, weight_mass_eq, weight_energy_eq, weight_flux, weight_fit):
 		return (
@@ -239,87 +242,6 @@ def build_bounds(naive = False):
 def empty_callback(epoch, iteration, constraint_penalty_weight, obj_components):
 	pass
 
-#### HACK!!!
-
-import constants
-
-SR_UL_WEIGHT = 1.0
-SR_UL_VALUE = 1.0
-
-sr_ul_weights = [] # saturation ratio upper limits
-
-sr_ul_rows = []
-sr_ul_values = []
-
-sr_ul_entries = []
-
-for reaction in structure.reactions:
-	for reactant in structure.reactants_by_reaction[reaction]:
-		gc_ind = structure.parameters.index(
-			structure.GLC.format(reactant.compound)
-			)
-
-		for i in xrange(reactant.stoichiometry):
-			gb_ind = structure.parameters.index(structure.GBER.format(
-				reactant.compound,
-				i+1,
-				reactant.reaction,
-				))
-
-			row = np.zeros(structure.n_parameters)
-
-			# using the C/KM = exp(row*pars/RT) convention
-
-			row[gc_ind] = +1
-			row[gb_ind] = -1
-
-			sr_ul_weights.append(SR_UL_WEIGHT)
-
-			sr_ul_rows.append(row)
-			sr_ul_values.append(constants.RT * np.log(SR_UL_VALUE))
-
-			sr_ul_entries.append(('custom',))
-
-	for product in structure.products_by_reaction[reaction]:
-		gc_ind = structure.parameters.index(
-			structure.GLC.format(product.compound)
-			)
-
-		for i in xrange(product.stoichiometry):
-			gb_ind = structure.parameters.index(structure.GBEP.format(
-				product.compound,
-				i+1,
-				product.reaction,
-				))
-
-			row = np.zeros(structure.n_parameters)
-
-			# using the C/KM = exp(row*pars/RT) convention
-
-			row[gc_ind] = +1
-			row[gb_ind] = -1
-
-			sr_ul_weights.append(SR_UL_WEIGHT)
-
-			sr_ul_rows.append(row)
-			sr_ul_values.append(constants.RT * np.log(SR_UL_VALUE))
-
-			sr_ul_entries.append(('custom',))
-
-sr_ul_weights = np.array(sr_ul_weights)
-
-sr_ul_values = np.array(sr_ul_values)
-
-sr_ul_mat = np.zeros((len(sr_ul_rows), structure.n_parameters))
-
-for i, r in enumerate(sr_ul_rows):
-	sr_ul_mat[i] += r
-
-sr_ul_values = sr_ul_values * sr_ul_weights
-sr_ul_mat = sr_ul_mat * sr_ul_weights[:, None]
-
-#### END HACK
-
 def estimate_parameters(
 		fitting_rules_and_weights = tuple(),
 		random_state = None,
@@ -336,6 +258,12 @@ def estimate_parameters(
 		fitting_entries
 		) = fitting.build_fitting_tensors(*fitting_rules_and_weights)
 
+	upper_fitting_tensors = (
+		upper_fitting_matrix,
+		upper_fitting_values,
+		upper_fitting_entries
+		) = fitting.build_upper_fitting_tensors(*fitting_rules_and_weights)
+
 	relative_fitting_tensor_sets = fitting.build_relative_fitting_tensor_sets(
 		*fitting_rules_and_weights
 		)
@@ -347,8 +275,7 @@ def estimate_parameters(
 		bounds_matrix, (lowerbounds + upperbounds)/2,
 		np.concatenate([-bounds_matrix, +bounds_matrix]), np.concatenate([-lowerbounds, upperbounds]),
 		fitting_matrix, fitting_values,
-		np.zeros((0, structure.n_parameters)), np.zeros((0,)),
-		# sr_ul_mat, sr_ul_values,
+		upper_fitting_matrix, upper_fitting_values,
 		*[(fm, fv) for (fm, fv, fe) in relative_fitting_tensor_sets]
 		)
 
@@ -364,7 +291,7 @@ def estimate_parameters(
 		)
 
 	init_obj_components = ObjectiveValues(
-		init_pars, fitting_tensors, relative_fitting_tensor_sets
+		init_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets
 		)
 
 	init_obj = init_obj_components.total(*weights)
@@ -419,7 +346,7 @@ def estimate_parameters(
 				new_pars += (bounded - new_acts[i]) * ibm_v[i]
 
 			new_obj_components = ObjectiveValues(
-				new_pars, fitting_tensors, relative_fitting_tensor_sets
+				new_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets
 				)
 
 			new_obj = new_obj_components.total(*weights)
@@ -468,7 +395,7 @@ def estimate_parameters(
 					constraint_penalty_weight,
 					iteration,
 					best_obj,
-					compute_overall_fit(best_pars, fitting_tensors, relative_fitting_tensor_sets)
+					compute_overall_fit(best_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets)
 					)
 
 				last_log_time = time.time()
@@ -488,11 +415,11 @@ def estimate_parameters(
 		# must re-evaluate the objective, since the weights changed
 		# TODO: store the values instead of the weighted sum
 		best_obj = ObjectiveValues(
-				best_pars, fitting_tensors, relative_fitting_tensor_sets
+				best_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets
 				).total(*weights)
 
 	final_pars = best_pars
-	final_obj = ObjectiveValues(final_pars, fitting_tensors, relative_fitting_tensor_sets)
+	final_obj = ObjectiveValues(final_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets)
 
 	return final_pars, final_obj
 
