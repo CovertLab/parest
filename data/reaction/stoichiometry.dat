@@ -81,9 +81,14 @@ Pi, 1
 H, 2
 PEP, 1
 
-@reactant(source = BR09S, reaction = FBA_TPI)
+@reactant(source = BR09S, reaction = TPI_reverse)
+GAP, 1
+@product(source = BR09S, reaction = TPI_reverse)
+DHAP, 1
+
+@reactant(source = BR09S, reaction = FBA_TPI_reverse)
 F16P, 1
-@product(source = BR09S, reaction = FBA_TPI)
+@product(source = BR09S, reaction = FBA_TPI_reverse)
 DHAP, 2
 
 @reactant(source = BR09S, reaction = PFK_no_H)

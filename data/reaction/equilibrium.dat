@@ -5,22 +5,22 @@ stoichiometry\, and some represent equilibrium over a set of reactions rather
 than one.
 
 @equilibrium
-TPI, 24, MJ1943_1
-TPI, 25, MJ1943_2
-TPI, 21, MJ1943_3
-TPI, 17, MO1947
-TPI, 22, BW1968
-TPI, 22, LRK1988
-TPI, 22, OM1950
-TPI, 22, VRDK1969
-TPI, 19, K1975
+TPI_reverse, 24, MJ1943_1
+TPI_reverse, 25, MJ1943_2
+TPI_reverse, 21, MJ1943_3
+TPI_reverse, 17, MO1947
+TPI_reverse, 22, BW1968
+TPI_reverse, 22, LRK1988
+TPI_reverse, 22, OM1950
+TPI_reverse, 22, VRDK1969
+TPI_reverse, 19, K1975
 
-FBA_TPI, 0.0064, UW1941
-FBA_TPI, 0.003, MJ1943
-FBA_TPI, 0.013, ML1934_1
-FBA_TPI, 0.0015, ML1934_2
-FBA_TPI, 0.019, M1935_1
-FBA_TPI, 0.00014, M1935_2
+FBA_TPI_reverse, 0.0064, UW1941
+FBA_TPI_reverse, 0.003, MJ1943
+FBA_TPI_reverse, 0.013, ML1934_1
+FBA_TPI_reverse, 0.0015, ML1934_2
+FBA_TPI_reverse, 0.019, M1935_1
+FBA_TPI_reverse, 0.00014, M1935_2
 
 FBA, 1.18e-4, 1
 FBA, 1.19e-4, 2
