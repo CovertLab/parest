@@ -2,6 +2,7 @@
 # Binary types
 *.npy
 *.pdf
+*.png
 
 # Output
 out*
