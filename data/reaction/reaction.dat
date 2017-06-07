@@ -13,3 +13,11 @@ GPM: phosphoglycerate mutase
 ENO: enolase
 PYK: pyruvate kinase
 PPS: phosphoenolpyruvate synthetase
+
+@reaction(source = BR09S)
+FBA_TPI: fba-tpi net reaction
+PFK_no_H: pfk reaction without H+
+PGK_reverse: pgk reverse reaction
+GAP_PGK: gap-pgk net reaction
+GPM_reverse: gpm reverse reaction
+PYK_no_H_reverse: pyk reverse reaction without H+

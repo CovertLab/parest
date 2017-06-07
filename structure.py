@@ -6,6 +6,7 @@ import numpy as np
 from data import kb
 
 DYNAMIC_COMPOUNDS = ('F6P', 'F16P', 'DHAP', 'GAP', '13DPG', '3PG', '2PG', 'PEP')
+ACTIVE_REACTIONS = ('PGI', 'PFK', 'FBP', 'FBA', 'TPI', 'GAP', 'PGK', 'GPM', 'ENO', 'PYK', 'PPS')
 N_DYNAMIC = len(DYNAMIC_COMPOUNDS)
 
 GS = 'Gibbs standard molar energy for compound:{}'
@@ -17,25 +18,16 @@ GBEP = 'Gibbs molar binding energy for product compound:{}, #{} in reaction:{}'
 
 # Filter for active reactions, compounds
 
-_active_reactions = set()
-for reactant in kb.reactant:
-	if reactant.compound in DYNAMIC_COMPOUNDS:
-		_active_reactions.add(reactant.reaction)
-
-for product in kb.product:
-	if product.compound in DYNAMIC_COMPOUNDS:
-		_active_reactions.add(product.reaction)
-
 _active_compounds = set()
 for reactant in kb.reactant:
-	if reactant.reaction in _active_reactions:
+	if reactant.reaction in ACTIVE_REACTIONS:
 		_active_compounds.add(reactant.compound)
 
 for product in kb.product:
-	if product.reaction in _active_reactions:
+	if product.reaction in ACTIVE_REACTIONS:
 		_active_compounds.add(product.compound)
 
-n_reactions = len(_active_reactions)
+n_reactions = len(ACTIVE_REACTIONS)
 
 # Gather parameters
 
@@ -51,17 +43,17 @@ for compound in kb.compound:
 		compounds.append(compound.id)
 
 for reaction in kb.reaction:
-	if reaction.id in _active_reactions:
+	if reaction.id in ACTIVE_REACTIONS:
 		parameters.append(GTE.format(reaction.id))
 		parameters.append(GELC.format(reaction.id))
 
 for reactant in kb.reactant:
-	if reactant.reaction in _active_reactions:
+	if reactant.reaction in ACTIVE_REACTIONS:
 		for i in xrange(reactant.stoichiometry):
 			parameters.append(GBER.format(reactant.compound, i+1, reactant.reaction))
 
 for product in kb.product:
-	if product.reaction in _active_reactions:
+	if product.reaction in ACTIVE_REACTIONS:
 		for i in xrange(product.stoichiometry):
 			parameters.append(GBEP.format(product.compound, i+1, product.reaction))
 
@@ -121,7 +113,7 @@ reactions = []
 ind_fbp = 0
 ind_rbp = 0
 for ind_reaction, reaction in enumerate(kb.reaction):
-	if reaction.id not in _active_reactions:
+	if reaction.id not in ACTIVE_REACTIONS:
 		continue
 
 	reactions.append(reaction.id)

@@ -178,6 +178,16 @@ _loader.add_datatype(loader.DataType(
 	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'compound', 'index', 'source')
 	))
 
+_loader.add_datatype(loader.DataType(
+	'equilibrium',
+	(
+		loader.Field('reaction'),
+		loader.Field('equilibrium_constant', float),
+		loader.Field('source')
+		),
+	loader.idfunc_from_fields(loader.DATATYPE, 'reaction', 'source')
+	))
+
 _paths = list(
 	os.path.join(d[0], f)
 	for d in os.walk(DIR)

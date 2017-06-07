@@ -1,6 +1,9 @@
 @description
-Every reaction has reactants and products.  Catalysts like enzymes are both
-reactants and products.
+Every reaction has reactants and products.  Catalysts\, like enzymes\, are both
+reactants and products\, but are not included here.  Standard reactions
+stoichiometries should be mass-balanced\, but some alternative\,
+often unbalanced stoichiometries are included because they are used in chemical
+equillibrium measurements.
 
 @reactant(source = EcoCyc, reaction = PGI)
 G6P, 1
@@ -77,3 +80,44 @@ AMP, 1
 Pi, 1
 H, 2
 PEP, 1
+
+@reactant(source = BR09S, reaction = FBA_TPI)
+F16P, 1
+@product(source = BR09S, reaction = FBA_TPI)
+DHAP, 2
+
+@reactant(source = BR09S, reaction = PFK_no_H)
+F6P, 1
+ATP, 1
+@product(source = BR09S, reaction = PFK_no_H)
+ADP, 1
+F16P, 1
+
+@reactant(source = BR09S, reaction = PGK_reverse)
+ATP, 1
+3PG, 1
+@product(source = BR09S, reaction = PGK_reverse)
+13DPG, 1
+ADP, 1
+
+@reactant(source = BR09S, reaction = GAP_PGK)
+GAP, 1
+ADP, 1
+NAD, 1
+Pi, 1
+@product(source = BR09S, reaction = GAP_PGK)
+ATP, 1
+3PG, 1
+NADH, 1
+
+@reactant(source = BR09S, reaction = GPM_reverse)
+2PG, 1
+@product(source = BR09S, reaction = GPM_reverse)
+3PG, 1
+
+@reactant(source = BR09S, reaction = PYK_no_H_reverse)
+ATP, 1
+PYR, 1
+@product(source = BR09S, reaction = PYK_no_H_reverse)
+PEP, 1
+ADP, 1

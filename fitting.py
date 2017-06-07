@@ -348,6 +348,60 @@ def build_fitting_tensors(*rules_and_weights):
 	KM_r_values = KM_r_values * KM_r_weights
 	KM_r_mat = KM_r_mat * KM_r_weights[:, None]
 
+	# chemical equilibrium constants
+
+	Keq_weights = []
+
+	Keq_rows = []
+	Keq_values = []
+
+	Keq_entries = []
+
+	for entry in kb.equilibrium:
+		# if entry.reaction not in structure.reactions:
+		# 	continue
+
+		w = find_weight(rules_and_weights, entry)
+
+		if w == 0:
+			continue
+
+		Keq_weights.append(w)
+
+		row = np.zeros(structure.n_parameters)
+
+		for reactant in structure.reactants_by_reaction[entry.reaction]:
+			gs_ind = structure.parameters.index(structure.GS.format(
+				reactant.compound
+				))
+
+			row[gs_ind] += reactant.stoichiometry
+
+		for product in structure.products_by_reaction[entry.reaction]:
+			gs_ind = structure.parameters.index(structure.GS.format(
+				product.compound
+				))
+
+			row[gs_ind] -= product.stoichiometry
+
+		Keq_rows.append(row)
+
+		Keq_values.append(constants.RT * np.log(entry.equilibrium_constant))
+
+		Keq_entries.append(entry)
+
+	Keq_weights = np.array(Keq_weights)
+
+	Keq_values = np.array(Keq_values)
+
+	Keq_mat = np.zeros((len(Keq_rows), structure.n_parameters))
+
+	for i, r in enumerate(Keq_rows):
+		Keq_mat[i] += r
+
+	Keq_values = Keq_values * Keq_weights
+	Keq_mat = Keq_mat * Keq_weights[:, None]
+
 	fitting_values = np.concatenate([
 		gs_values,
 		glc_values,
@@ -355,6 +409,7 @@ def build_fitting_tensors(*rules_and_weights):
 		kcat_r_values,
 		KM_f_values,
 		KM_r_values,
+		Keq_values,
 		])
 
 	fitting_mat = np.concatenate([
@@ -364,6 +419,7 @@ def build_fitting_tensors(*rules_and_weights):
 		kcat_r_mat,
 		KM_f_mat,
 		KM_r_mat,
+		Keq_mat,
 		])
 
 	fitting_entries = sum([
@@ -373,6 +429,7 @@ def build_fitting_tensors(*rules_and_weights):
 		kcat_r_entries,
 		KM_f_entries,
 		KM_r_entries,
+		Keq_entries
 		], [])
 
 	return fitting_mat, fitting_values, fitting_entries

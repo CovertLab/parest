@@ -1,8 +1,8 @@
 @description
-The standard energies of formation are the amount of heat needed (or more
-commonly\, the amount of heat released) to form 1 M of a compound from 1 M of
-the elemental molecular form of its constituent atoms.  Often these are
-inferred and they may generally be inaccurate for the cell interior.
+The standard energies of formation are the amount of free energy needed (or
+more commonly\, the amount of free energy released) to form 1 M of a compound
+from 1 M of the elemental molecular form of its constituent atoms.  Often these
+are inferred and they may generally be inaccurate for the cell interior.
 
 @standard_energy_of_formation(source = EcoCyc)
 G6P, -430.78
