@@ -10,15 +10,32 @@ import numpy as np
 FORCE = False
 
 def load_pars(target_dir, n):
-	dirs = [pa.join(target_dir, 'seed-{}'.format(i)) for i in xrange(n)]
+	obj = []
+	pars = []
 
-	obj = np.column_stack([
-		np.load(pa.join(d, 'obj.npy')) for d in dirs
-		])
+	errors = []
 
-	pars = np.column_stack([
-			np.load(pa.join(d, 'pars.npy')) for d in dirs
-			])
+	for d in [pa.join(target_dir, 'seed-{}'.format(i)) for i in xrange(n)]:
+		for filename, collection in (
+				('obj.npy', obj),
+				('pars.npy', pars)
+				):
+			path = pa.join(d, filename)
+
+			try:
+				a = np.load(path)
+
+			except IOError:
+				errors.append(path)
+
+			else:
+				collection.append(a)
+
+	if errors:
+		raise Exception('Failed to open files:\n'+'\n'.join(errors))
+
+	obj = np.column_stack(obj)
+	pars = np.column_stack(pars)
 
 	return obj, pars
 

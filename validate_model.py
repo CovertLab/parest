@@ -58,17 +58,18 @@ def dg_dt(glc, pars):
 def init_dg_dt(pars):
 	return structure.glc_association_matrix.dot(pars)
 
-# data_agnostic, 67 & 214 - high initial concentration of F6P leads to NaN errors
-
-# for problem in problems.DEFINITIONS.viewkeys():
-
 target_dir = sys.argv[1]
 
 stable_path = pa.join(target_dir, 'stable.npy')
 equ_path = pa.join(target_dir, 'equ.npy')
 lre_path = pa.join(target_dir, 'lre.npy')
+valid_path = pa.join(target_dir, 'valid.npy')
 
-if not FORCE and pa.exists(stable_path) and pa.exists(equ_path) and pa.exists(lre_path):
+paths = [stable_path, equ_path, lre_path, valid_path]
+
+TARGET_PYRUVATE_PRODUCTION = 1e-3
+
+if not FORCE and all(pa.exists(path) for path in paths):
 	print 'Skipping {}, output already exists'.format(target_dir)
 
 else:
@@ -118,6 +119,17 @@ else:
 
 		EQU_CONC_THRESHOLD = 1.5
 
+		pars_final = structure.glc_association_matrix.T.dot(x_eq)
+		pars_final[is_static] = pars[is_static]
+
+		v = equations.reaction_rates(pars_final, *equations.args)
+
+		net_pyruvate_production = v[-2] - v[-1]
+
+		flux_fit = (net_pyruvate_production / TARGET_PYRUVATE_PRODUCTION - 1)**2
+
+		flux_is_fit = (flux_fit < 1e-3)
+
 		if not ode.successful() or not (np.linalg.norm(x_eq - x_start, 2) < constants.RT * np.log(EQU_CONC_THRESHOLD)):
 			equ.append(False)
 			lre.append(None)
@@ -125,7 +137,7 @@ else:
 			continue
 
 		else:
-			equ.append(True)
+			equ.append(flux_is_fit)
 
 		# import ipdb; ipdb.set_trace()
 
@@ -194,8 +206,15 @@ else:
 		else:
 			stable.append(True)
 
-		print i, np.mean(stable), np.mean(equ)
+		print i, np.mean(equ), np.mean(stable)
 
-	np.save(stable_path, np.array(stable, np.bool))
-	np.save(equ_path, np.array(equ, np.bool))
-	np.save(lre_path, np.array(lre, np.float64))
+	stable = np.array(stable, np.bool)
+	equ = np.array(equ, np.bool)
+	lre = np.array(lre, np.float64)
+
+	valid = (stable & equ)
+
+	np.save(stable_path, stable)
+	np.save(equ_path, equ)
+	np.save(lre_path, lre)
+	np.save(valid_path,valid)
