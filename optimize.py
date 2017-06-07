@@ -279,7 +279,7 @@ def estimate_parameters(
 		*[(fm, fv) for (fm, fv, fe) in relative_fitting_tensor_sets]
 		)
 
-	print init_fitness
+	# print init_fitness
 
 	constraint_penalty_weight = INIT_CONSTRAINT_PENALTY_WEIGHT
 
