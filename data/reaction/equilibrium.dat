@@ -1,0 +1,90 @@
+@description
+Chemical equilibrium constants for various reactions.  Some reactions are not
+mass-balanced\, some operate in the reverse direction of the standard
+stoichiometry\, and some represent equilibrium over a set of reactions rather
+than one.
+
+@equilibrium
+TPI, 24, MJ1943_1
+TPI, 25, MJ1943_2
+TPI, 21, MJ1943_3
+TPI, 17, MO1947
+TPI, 22, BW1968
+TPI, 22, LRK1988
+TPI, 22, OM1950
+TPI, 22, VRDK1969
+TPI, 19, K1975
+
+FBA_TPI, 0.0064, UW1941
+FBA_TPI, 0.003, MJ1943
+FBA_TPI, 0.013, ML1934_1
+FBA_TPI, 0.0015, ML1934_2
+FBA_TPI, 0.019, M1935_1
+FBA_TPI, 0.00014, M1935_2
+
+FBA, 1.18e-4, 1
+FBA, 1.19e-4, 2
+FBA, 5.20e-4, 3
+FBA, 1.10e-4, 4
+FBA, 9.3e-5, 5
+FBA, 9.9e-5, 6
+FBA, 5.6e-5, 7
+FBA, 2.8e-6, 8
+FBA, 2.8e-6, 9
+
+FBP, 227, 1
+FBP, 174, 2
+FBP, 47, 3
+
+PFK_no_H, 2.7e3, 1
+PFK_no_H, 4.8e3, 2
+PFK_no_H, 2900, 3
+PFK_no_H, 232, 4
+PFK_no_H, 734, 5
+PFK_no_H, 2.29e3, 6
+
+PGK_reverse, 3.18e-4, 1
+PGK_reverse, 2.25e-4, 2
+PGK_reverse, 1.50e-4, 3
+PGK_reverse, 3.10e-4, 4
+PGK_reverse, 3.00e-4, 5
+PGK_reverse, 2.30e-3, 6
+
+GAP_PGK, 2.17e3, 1
+GAP_PGK, 7.10e1, 2
+GAP_PGK, 2.80e1, 3
+GAP_PGK, 1.93e3, 4
+GAP_PGK, 3.06e2, 5
+GAP_PGK, 1.21e2, 6
+GAP_PGK, 6.06e2, 7
+
+GPM_reverse, 8, 1
+GPM_reverse, 11.3, 2
+GPM_reverse, 9.8, 3
+GPM_reverse, 4, 4
+GPM_reverse, 3.45, 5
+GPM_reverse, 7.9, 6
+GPM_reverse, 6, 7
+GPM_reverse, 4.9, 8
+GPM_reverse, 5.35, 9
+GPM_reverse, 5, 10
+GPM_reverse, 5, 11
+GPM_reverse, 5.8, 12
+GPM_reverse, 6.8, 13
+GPM_reverse, 1.13e1, 14
+GPM_reverse, 1.04e1, 15
+GPM_reverse, 8.65, 16
+GPM_reverse, 11.65, 17
+GPM_reverse, 6.1, 18
+
+ENO, 2.3, 1
+ENO, 0.54, 2
+ENO, 2.9, 3
+ENO, 4.6, 4
+ENO, 1.43, 5
+ENO, 5.15, 6
+ENO, 2.15, 7
+
+PYK_no_H_reverse, 1.55e-4, 1
+PYK_no_H_reverse, 1.1e-3, 2
+PYK_no_H_reverse, 3e-4, 3
