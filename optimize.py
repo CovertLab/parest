@@ -14,27 +14,29 @@ import utils.linalg as la
 
 from initialization import build_initial_parameter_values
 
-MAX_ITERATIONS = int(1e6)
-CONVERGENCE_RATE = 1e-4
-CONVERGENCE_TIME = int(1e4)
+# TODO: some way to pass these as optional arguments
 
-PERTURB_INIT = 1e1
-PERTURB_FINAL = 1e-6
+MAX_ITERATIONS = int(1e6) # maximum number of iteration steps per epoch
+CONVERGENCE_RATE = 1e-4 # if the objective fails to improve at this rate, assume convergence and move on to the next step
+CONVERGENCE_TIME = int(1e4) # number of iterations between checks to compare - should probably scale with problem size
 
-OBJ_MASSEQ_WEIGHT = 1e0
-OBJ_ENERGYEQ_WEIGHT = 1e0
-OBJ_FLUX_WEIGHT = 1e0
-OBJ_FIT_WEIGHT = 1e0
+PERTURB_INIT = 1e1 # initial size of perturbations to variables
+PERTURB_FINAL = 1e-6 # final size of perturbations to variables (at the iteration limit)
 
-INIT_CONSTRAINT_PENALTY_WEIGHT = 1e-10
-FINAL_CONSTRAINT_PENALTY_WEIGHT = 1e10
-CONSTRAINT_PENALTY_GROWTH_RATE = 1e1
+OBJ_MASSEQ_WEIGHT = 1e0 # basal penalty weight on mass disequilibrium L2(dm/dt)
+OBJ_ENERGYEQ_WEIGHT = 1e0 # basal penalty weight on energy disequilibrium L2(dg/dt)
+OBJ_FLUX_WEIGHT = 1e0 # basal penalty weight on output pyruvate flux (1 - v/v0)**2
+OBJ_FIT_WEIGHT = 1e0 # basal penalty weight on fit
+
+INIT_CONSTRAINT_PENALTY_WEIGHT = 1e-10 # the constraint penalty used during the first epoch
+FINAL_CONSTRAINT_PENALTY_WEIGHT = 1e10 # the constraint penalty used during the last epoch
+CONSTRAINT_PENALTY_GROWTH_RATE = 10**1 # the rate at which the constraint penalty increases, per epoch
 CONSTRAINT_PENALTY_GROWTH_ITERATIONS = int(np.ceil(
 	np.log(FINAL_CONSTRAINT_PENALTY_WEIGHT / INIT_CONSTRAINT_PENALTY_WEIGHT)
 	/ np.log(CONSTRAINT_PENALTY_GROWTH_RATE)
-	))
+	)) # total number of epochs
 
-TARGET_PYRUVATE_PRODUCTION = 1e-3
+TARGET_PYRUVATE_PRODUCTION = 1e-3 # the target rate at which the system produces pyruvate
 
 def fast_shortarray_median1d(x):
 	# faster 1d median than np.median for short arrays (100 or less elements, up to 10x speed-up)
@@ -63,8 +65,6 @@ def compute_upper_fit(pars, upper_fitting_tensors):
 	(fitting_matrix, fitting_values) = upper_fitting_tensors[:2]
 
 	return np.sum(np.fmax(fitting_matrix.dot(pars) - fitting_values, 0))
-
-# TODO: compute onesided fit
 
 def compute_relative_fit(pars, relative_fitting_tensor_sets):
 	cost = 0
