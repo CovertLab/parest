@@ -20,7 +20,7 @@ MAX_ITERATIONS = int(1e6) # maximum number of iteration steps per epoch
 CONVERGENCE_RATE = 1e-4 # if the objective fails to improve at this rate, assume convergence and move on to the next step
 CONVERGENCE_TIME = int(1e4) # number of iterations between checks to compare - should probably scale with problem size
 
-PERTURB_INIT = 1e1 # initial size of perturbations to variables
+PERTURB_INIT = 1e2 # initial size of perturbations to variables
 PERTURB_FINAL = 1e-6 # final size of perturbations to variables (at the iteration limit)
 
 OBJ_MASSEQ_WEIGHT = 1e0 # basal penalty weight on mass disequilibrium L2(dm/dt)
@@ -30,7 +30,7 @@ OBJ_FIT_WEIGHT = 1e0 # basal penalty weight on fit
 
 INIT_CONSTRAINT_PENALTY_WEIGHT = 1e-10 # the constraint penalty used during the first epoch
 FINAL_CONSTRAINT_PENALTY_WEIGHT = 1e10 # the constraint penalty used during the last epoch
-CONSTRAINT_PENALTY_GROWTH_RATE = 10**1 # the rate at which the constraint penalty increases, per epoch
+CONSTRAINT_PENALTY_GROWTH_RATE = 10**0.5 # the rate at which the constraint penalty increases, per epoch
 CONSTRAINT_PENALTY_GROWTH_ITERATIONS = int(np.ceil(
 	np.log(FINAL_CONSTRAINT_PENALTY_WEIGHT / INIT_CONSTRAINT_PENALTY_WEIGHT)
 	/ np.log(CONSTRAINT_PENALTY_GROWTH_RATE)
@@ -242,12 +242,18 @@ def build_bounds(naive = False):
 def empty_callback(epoch, iteration, constraint_penalty_weight, obj_components):
 	pass
 
+import time
+
+LOG_TIME = 10
+
 def estimate_parameters(
 		fitting_rules_and_weights = tuple(),
 		random_state = None,
 		naive = False,
 		callback = empty_callback
 		):
+
+	time_start = time.time()
 
 	if random_state is None:
 		random_state = np.random.RandomState()
@@ -279,7 +285,7 @@ def estimate_parameters(
 		*[(fm, fv) for (fm, fv, fe) in relative_fitting_tensor_sets]
 		)
 
-	# print init_fitness
+	print 'Initial (minimal) fitness: {:0.2f}'.format(init_fitness)
 
 	constraint_penalty_weight = INIT_CONSTRAINT_PENALTY_WEIGHT
 
@@ -304,9 +310,6 @@ def estimate_parameters(
 		lo.Field('Fit cost', '.3e', 12),
 		])
 
-	log_time = 10
-
-	import time
 	last_log_time = time.time()
 
 	best_pars = init_pars.copy()
@@ -372,7 +375,7 @@ def estimate_parameters(
 			if iteration == 0:
 				log = True
 
-			if time.time() - last_log_time > log_time:
+			if time.time() - last_log_time > LOG_TIME:
 				log = True
 
 			if iteration > MAX_ITERATIONS:
@@ -420,6 +423,14 @@ def estimate_parameters(
 
 	final_pars = best_pars
 	final_obj = ObjectiveValues(final_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets)
+
+	time_run = time.time() - time_start
+
+	hours = time_run//3600
+	minutes = time_run//60 - 60*hours
+	seconds = time_run - 60*minutes - 3600*hours
+
+	print 'Completed in {:02n}:{:02n}:{:0.2f} (H:M:S)'.format(hours, minutes, seconds)
 
 	return final_pars, final_obj
 
