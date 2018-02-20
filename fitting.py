@@ -567,7 +567,6 @@ def build_upper_fitting_tensors(*rules_and_weights):
 
 	return fitting_mat, fitting_values, fitting_entries
 
-
 def build_relative_fitting_tensor_sets(*rules_and_weights):
 	if len(rules_and_weights) == 0:
 		rules_and_weights = ((lambda entry: True, 1.0),)
