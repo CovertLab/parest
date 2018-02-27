@@ -9,6 +9,8 @@ import numpy as np
 
 FORCE = False
 
+N = 300
+
 def load_pars(target_dir, n):
 	obj = []
 	pars = []
@@ -50,7 +52,7 @@ if not FORCE and pa.exists(obj_path) and pa.exists(pars_pars):
 else:
 	print 'Gathering data for {}'.format(target_dir)
 
-	(obj, pars) = load_pars(target_dir, 300)
+	(obj, pars) = load_pars(target_dir, N)
 
 	np.save(obj_path, obj)
 	np.save(pars_pars, pars)
