@@ -16,7 +16,7 @@ PPS: phosphoenolpyruvate synthetase
 
 @reaction(source = BR09S)
 TPI_reverse: tpi reverse reaction
-FBA_TPI: fba-tpi (reverse) net reaction
+FBA_TPI_reverse: fba-tpi (reverse) net reaction
 PFK_no_H: pfk reaction without H+
 PGK_reverse: pgk reverse reaction
 GAP_PGK: gap-pgk net reaction
