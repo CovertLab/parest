@@ -1,3 +1,40 @@
+priority
+--------
+
+collect/annotate all data sources
+
+verify equations on figure 1
+
+recolor symbols on figure 1
+
+plot data for figure 2
+
+separate and organize figure 3 plots
+
+finalize data for figure 4
+
+choose timescale, organization for plotting histograms + PRDs for figure 4
+
+better main.py interface
+
+structure with options for optimize
+
+choose which files to include/exclude from repo
+
+unify pipeline
+
+unify ODE evaluation
+
+ongoing
+-------
+
+repository clean-up (delete unused code)
+
+comments
+
+deferred
+--------
+
 faster stopping conditions with staggered perturbation size decrease, instead of exp dropoff
 - will need extensive testing
 
@@ -7,12 +44,13 @@ review included kinetics, esp. for isozymes
 test for hitting bounds in initialization
 - easy, just run twice
 
-repository clean-up (delete unused code)
-- ongoing
-
 interactive jupyter notebook for selecting weights
 - later...
 
 random init
 
 profiling
+
+selective job launching (check for output prior to scheduling)
+
+tests
