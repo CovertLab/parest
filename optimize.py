@@ -14,29 +14,22 @@ import utils.linalg as la
 
 from initialization import build_initial_parameter_values
 
+import time
+
 # TODO: some way to pass these as optional arguments
 
+DISEQU_WEIGHTS = np.logspace(-10, +10, 41)
+
 MAX_ITERATIONS = int(1e6) # maximum number of iteration steps per epoch
+
+PERTURBATION_SCALE = np.logspace(+2, -6, MAX_ITERATIONS)
+
 CONVERGENCE_RATE = 1e-4 # if the objective fails to improve at this rate, assume convergence and move on to the next step
 CONVERGENCE_TIME = int(1e4) # number of iterations between checks to compare - should probably scale with problem size
 
-PERTURB_INIT = 1e2 # initial size of perturbations to variables
-PERTURB_FINAL = 1e-6 # final size of perturbations to variables (at the iteration limit)
-
-OBJ_MASSEQ_WEIGHT = 1e0 # basal penalty weight on mass disequilibrium L2(dm/dt)
-OBJ_ENERGYEQ_WEIGHT = 1e0 # basal penalty weight on energy disequilibrium L2(dg/dt)
-OBJ_FLUX_WEIGHT = 1e0 # basal penalty weight on output pyruvate flux (1 - v/v0)**2
-OBJ_FIT_WEIGHT = 1e0 # basal penalty weight on fit
-
-INIT_CONSTRAINT_PENALTY_WEIGHT = 1e-10 # the constraint penalty used during the first epoch
-FINAL_CONSTRAINT_PENALTY_WEIGHT = 1e10 # the constraint penalty used during the last epoch
-CONSTRAINT_PENALTY_GROWTH_RATE = 10**0.5 # the rate at which the constraint penalty increases, per epoch
-CONSTRAINT_PENALTY_GROWTH_ITERATIONS = int(np.ceil(
-	np.log(FINAL_CONSTRAINT_PENALTY_WEIGHT / INIT_CONSTRAINT_PENALTY_WEIGHT)
-	/ np.log(CONSTRAINT_PENALTY_GROWTH_RATE)
-	)) # total number of epochs
-
 TARGET_PYRUVATE_PRODUCTION = 1e-3 # the target rate at which the system produces pyruvate
+
+LOG_TIME = 10
 
 def fast_shortarray_median1d(x):
 	# faster 1d median than np.median for short arrays (100 or less elements, up to 10x speed-up)
@@ -99,13 +92,15 @@ class ObjectiveValues(object):
 
 		self.fit = compute_overall_fit(pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets)
 
-	def total(self, weight_mass_eq, weight_energy_eq, weight_flux, weight_fit):
-		return (
-			weight_mass_eq * self.mass_eq
-			+ weight_energy_eq * self.energy_eq
-			+ weight_flux * self.flux
-			+ weight_fit * self.fit
-			)
+	def misfit_error(self):
+		return self.fit
+
+	def disequilibrium_error(self):
+		return self.mass_eq + self.energy_eq + self.flux
+
+	def total(self, disequ_weight):
+		return self.misfit_error() + disequ_weight * self.disequilibrium_error()
+
 
 def nonredundant_vectors(vectors, tolerance = 1e-15):
 	# Discards vectors that are equivalent to subsequent vectors under scaling.
@@ -158,10 +153,11 @@ def build_perturbation_vectors(naive = False):
 		# identical to the 'activity matrix' perturbation vectors, so I detect
 		# and strip those from the set.
 
-	return perturbation_vectors
+	return np.array(perturbation_vectors)
 
 def build_bounds(naive = False):
 	if naive:
+		# TODO: move this to bounds.py
 		import constants
 
 		lower_conc = 1e-10 # avg 1/10 molecules per e. coli cell
@@ -192,6 +188,7 @@ def build_bounds(naive = False):
 			structure.full_glc_association_matrix,
 			structure.gelc_association_matrix,
 			structure.kcat_f_matrix,
+			# structure.kcat_r_matrix,
 			structure.KM_f_matrix,
 			structure.KM_r_matrix,
 			])
@@ -200,6 +197,7 @@ def build_bounds(naive = False):
 			[lower_glc] * structure.full_glc_association_matrix.shape[0],
 			[lower_gelc] * structure.gelc_association_matrix.shape[0],
 			[lower_log_kcat] * structure.kcat_f_matrix.shape[0],
+			# [lower_log_kcat] * structure.kcat_r_matrix.shape[0],
 			[lower_log_KM] * structure.KM_f_matrix.shape[0],
 			[lower_log_KM] * structure.KM_r_matrix.shape[0],
 			])
@@ -208,6 +206,7 @@ def build_bounds(naive = False):
 			[upper_glc] * structure.full_glc_association_matrix.shape[0],
 			[upper_gelc] * structure.gelc_association_matrix.shape[0],
 			[upper_log_kcat] * structure.kcat_f_matrix.shape[0],
+			# [upper_log_kcat] * structure.kcat_r_matrix.shape[0],
 			[upper_log_KM] * structure.KM_f_matrix.shape[0],
 			[upper_log_KM] * structure.KM_r_matrix.shape[0],
 			])
@@ -242,20 +241,21 @@ def build_bounds(naive = False):
 def empty_callback(epoch, iteration, constraint_penalty_weight, obj_components):
 	pass
 
-import time
-
-LOG_TIME = 10
-
 def estimate_parameters(
 		fitting_rules_and_weights = tuple(),
 		random_state = None,
 		naive = False,
+		force_better_init = False,
+		random_direction = False,
 		callback = empty_callback
 		):
+
+	print 'Initializing optimization.'
 
 	time_start = time.time()
 
 	if random_state is None:
+		print 'No random state provided.'
 		random_state = np.random.RandomState()
 
 	fitting_tensors = (
@@ -277,9 +277,27 @@ def estimate_parameters(
 	(bounds_matrix, lowerbounds, upperbounds) = build_bounds(naive)
 	inverse_bounds_matrix = np.linalg.pinv(bounds_matrix)
 
+	if not force_better_init:
+		init_bounds_matrix = bounds_matrix
+		init_lowerbounds = lowerbounds
+		init_upperbounds = upperbounds
+
+	else:
+		# The naive parameter bounds do a poor job of regularizing the
+		# ranges of the initial values.  Subsequently the initial
+		# parameters have an extremely large associated disequilibrium
+		# error.  Using this option leads to 'fairer' initialization,
+		# in the sense that both 'naive' and 'parsimonious' start from
+		# the same position.
+		(
+			init_bounds_matrix,
+			init_lowerbounds,
+			init_upperbounds
+			) = build_bounds(naive = False)
+
 	(init_pars, init_fitness) = build_initial_parameter_values(
-		bounds_matrix, (lowerbounds + upperbounds)/2,
-		np.concatenate([-bounds_matrix, +bounds_matrix]), np.concatenate([-lowerbounds, upperbounds]),
+		init_bounds_matrix, (init_lowerbounds + init_upperbounds)/2,
+		np.concatenate([-init_bounds_matrix, +init_bounds_matrix]), np.concatenate([-init_lowerbounds, init_upperbounds]),
 		fitting_matrix, fitting_values,
 		upper_fitting_matrix, upper_fitting_values,
 		*[(fm, fv) for (fm, fv, fe) in relative_fitting_tensor_sets]
@@ -287,33 +305,26 @@ def estimate_parameters(
 
 	print 'Initial (minimal) fitness: {:0.2f}'.format(init_fitness)
 
-	constraint_penalty_weight = INIT_CONSTRAINT_PENALTY_WEIGHT
-
-	weights = (
-		constraint_penalty_weight * OBJ_MASSEQ_WEIGHT,
-		constraint_penalty_weight * OBJ_ENERGYEQ_WEIGHT,
-		constraint_penalty_weight * OBJ_FLUX_WEIGHT,
-		OBJ_FIT_WEIGHT,
-		)
-
 	init_obj_components = ObjectiveValues(
-		init_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets
+		init_pars,
+		fitting_tensors,
+		upper_fitting_tensors,
+		relative_fitting_tensor_sets
 		)
-
-	init_obj = init_obj_components.total(*weights)
 
 	table = lo.Table([
 		lo.Field('Epoch', 'n'),
 		lo.Field('Con. pen.', '.2e', 10),
 		lo.Field('Iteration', 'n'),
-		lo.Field('Cost', '.3e', 12),
-		lo.Field('Fit cost', '.3e', 12),
+		lo.Field('Total error', '.3e', 12),
+		lo.Field('Misfit error', '.3e', 12),
+		lo.Field('Diseq. error', '.3e', 12),
 		])
 
 	last_log_time = time.time()
 
 	best_pars = init_pars.copy()
-	best_obj = init_obj
+	best_obj_components = init_obj_components
 
 	history_best_objective = []
 
@@ -324,18 +335,24 @@ def estimate_parameters(
 
 	ibm_v = [v for v in inverse_bounds_matrix.T]
 
-	for epoch in xrange(CONSTRAINT_PENALTY_GROWTH_ITERATIONS+1):
-		for iteration in xrange(MAX_ITERATIONS):
-			deviation = (
-				PERTURB_INIT
-				* (PERTURB_FINAL/PERTURB_INIT) ** (iteration / MAX_ITERATIONS)
-				)
+	for (epoch, disequ_weight) in enumerate(DISEQU_WEIGHTS):
+		# Re-evaluate the objective, since the weight changes
+		best_obj = best_obj_components.total(disequ_weight)
 
+		for (iteration, deviation) in enumerate(PERTURBATION_SCALE):
 			scale = deviation * random_state.normal()
 
-			dimension = random_state.randint(n_perturb)
+			if not random_direction:
+				dimension = random_state.randint(n_perturb)
+				direction = perturbation_vectors[dimension]
 
-			perturbation = scale * perturbation_vectors[dimension]
+			else:
+				coeffs = np.random.normal(size = n_perturb)
+				coeffs /= np.sqrt(np.sum(np.square(coeffs)))
+
+				direction = perturbation_vectors.T.dot(coeffs) # dot product on transposed matrix is probably slow
+
+			perturbation = scale * direction
 
 			new_pars = best_pars + perturbation
 
@@ -349,10 +366,13 @@ def estimate_parameters(
 				new_pars += (bounded - new_acts[i]) * ibm_v[i]
 
 			new_obj_components = ObjectiveValues(
-				new_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets
+				new_pars,
+				fitting_tensors,
+				upper_fitting_tensors,
+				relative_fitting_tensor_sets
 				)
 
-			new_obj = new_obj_components.total(*weights)
+			new_obj = new_obj_components.total(disequ_weight)
 
 			did_accept = (new_obj < best_obj)
 
@@ -361,13 +381,9 @@ def estimate_parameters(
 				)
 
 			if did_accept:
+				best_obj_components = new_obj_components
 				best_obj = new_obj
 				best_pars = new_pars
-
-				callback(
-					epoch, iteration, constraint_penalty_weight,
-					new_obj_components
-					)
 
 			log = False
 			quit = False
@@ -378,16 +394,12 @@ def estimate_parameters(
 			if time.time() - last_log_time > LOG_TIME:
 				log = True
 
-			if iteration > MAX_ITERATIONS:
-				log = True
-				quit = True
-
 			if (iteration >= CONVERGENCE_TIME) and (
 					(
 						1-best_obj / history_best_objective[-CONVERGENCE_TIME]
 						) < CONVERGENCE_RATE
 					) and (
-						epoch < CONSTRAINT_PENALTY_GROWTH_ITERATIONS
+						epoch < len(DISEQU_WEIGHTS)-1
 					):
 				log = True
 				quit = True
@@ -395,34 +407,23 @@ def estimate_parameters(
 			if log:
 				table.write(
 					epoch,
-					constraint_penalty_weight,
+					disequ_weight,
 					iteration,
 					best_obj,
-					compute_overall_fit(best_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets)
+					best_obj_components.misfit_error(),
+					best_obj_components.disequilibrium_error()
 					)
 
 				last_log_time = time.time()
 
+			if log or did_accept:
+				callback(
+					epoch, iteration, disequ_weight,
+					new_obj_components
+					)
+
 			if quit:
 				break
-
-		constraint_penalty_weight *= CONSTRAINT_PENALTY_GROWTH_RATE
-
-		weights = (
-			constraint_penalty_weight * OBJ_MASSEQ_WEIGHT,
-			constraint_penalty_weight * OBJ_ENERGYEQ_WEIGHT,
-			constraint_penalty_weight * OBJ_FLUX_WEIGHT,
-			OBJ_FIT_WEIGHT,
-			)
-
-		# must re-evaluate the objective, since the weights changed
-		# TODO: store the values instead of the weighted sum
-		best_obj = ObjectiveValues(
-				best_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets
-				).total(*weights)
-
-	final_pars = best_pars
-	final_obj = ObjectiveValues(final_pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets)
 
 	time_run = time.time() - time_start
 
@@ -432,15 +433,18 @@ def estimate_parameters(
 
 	print 'Completed in {:02n}:{:02n}:{:0.2f} (H:M:S)'.format(hours, minutes, seconds)
 
-	return final_pars, final_obj
+	return best_pars, best_obj_components
 
 if __name__ == '__main__':
 	import problems
-	definition = problems.DEFINITIONS['data_agnostic']
+	definition = problems.DEFINITIONS['all_scaled']
 
 	(pars, obj) = estimate_parameters(
 		definition,
-		# random_state = np.random.RandomState(0)
+		random_state = np.random.RandomState(0),
+		# naive = True,
+		# force_better_init = True,
+		# random_direction = True
 		)
 
 	np.save('optimized_pars.npy', pars)
