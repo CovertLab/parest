@@ -47,6 +47,27 @@ Primary and secondary estimation interface
 Move naive bounds constants to a file
 
 Various repo cleanup tasks
+- moved/removed a lot of files
+- still needs restructuring
+
+File documentation
+
+Function documentation
+
+Readme
+
+Tests
+
+Review modules under 'utils' and consider removing
+
+Done
+----
+
+Remove redundant objective calculations
+- Shouldn't be slowing things down much (only when logging) but still not good
+
+Clean up constants
+- Lots of constants that are set to unity
 
 Possible major issue: naive opt has really poor init.
 - Appears to be a regularization problem, as the data is well-fit.
@@ -100,12 +121,3 @@ Possible major issue: naive opt has really poor init.
 	- there are other difference b/t backup and current, all appear to be subsequent of ordering differences
 - Unless I have some profound insight, I've decided to force the naive optimizations to use the parsimonious optimizations' initial values.  This seems to be the most equitable choice.
 - I *should* reevaluate the naive optimizations but I really don't want to
-
-Done
-----
-
-Remove redundant objective calculations
-- Shouldn't be slowing things down much (only when logging) but still not good
-
-Clean up constants
-- Lots of constants that are set to unity
