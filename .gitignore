@@ -7,6 +7,8 @@
 # Output
 out/*
 slurm/*
+residuals_key.txt
+kcat_predictions_key.txt
 
 # compiled python module
 *.pyc
@@ -14,8 +16,9 @@ slurm/*
 # pyenv file
 .python-version
 
-# slurm exeuction
+# slurm execution
 *.sbatch
+launch_all.sh
 
 # Outdated things (that I should really get rid of)
 old_plots/*
