@@ -5,13 +5,15 @@
 *.png
 
 # Output
-out*
-slurm*
-
-# Misc
+out/*
+slurm/*
 
 # compiled python module
 *.pyc
 
 # pyenv file
 .python-version
+
+# Outdated things (that I should really get rid of)
+old_plots/*
+old_scripts/*
