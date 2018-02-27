@@ -8,12 +8,6 @@ from utils.linalg import nullspace_projector
 
 import structure
 
-BOUNDS_TOLERANCE = 1e-6 # used to slightly tighten the bounds to account for small numerical errors
-
-LP_SCALE = 1e-2 # linear program problem scale
-
-FIT_TOLERANCE = 1e-6 # acceptable adjustment to fit following second stage
-
 def column_of_ones_matrix(column, n_rows, n_columns, dtype = None):
 	out = np.zeros((n_rows, n_columns), dtype)
 
@@ -101,7 +95,7 @@ def build_initial_parameter_values( # TODO: meaningful defaults
 		])
 	h_upper_penalty_pos = upper_penalty_values
 
-	 # exceptional case because penalty is not symmetric
+	# exceptional case because penalty is not symmetric
 	A_upper_penalty_neg = np.zeros_like(A_upper_penalty_pos)
 	h_upper_penalty_neg = np.zeros_like(h_upper_penalty_pos)
 
@@ -176,6 +170,7 @@ def build_initial_parameter_values( # TODO: meaningful defaults
 		G, h,
 		bounds = (None, None),
 		options = dict(
+			maxiter = 10000, # hit a case where I needed slightly more than the default number of iterations
 			tol = 1e-6 # default tolerance (1e-15?) is very easy to break - underlying linprog precision issue?
 			)
 		)
