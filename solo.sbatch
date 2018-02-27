@@ -9,6 +9,6 @@
 #SBATCH --mail-user="jmason42@stanford.edu"
 #SBATCH --mail-type="END,FAIL"
 
-#SBATCH --time=0:30:00
+#SBATCH --time=1:00:00
 
 srun python main.py --seed=$SLURM_ARRAY_TASK_ID --problem=$1
