@@ -7,6 +7,8 @@ from itertools import izip
 import sys
 
 import numpy as np
+np.random.seed(33)
+
 import matplotlib.pyplot as plt
 import scipy.integrate
 
@@ -16,7 +18,9 @@ import equations
 import structure
 from utils.linalg import approx_jac
 
-FORCE = False
+FORCE = True
+
+EQU_CONC_THRESHOLD = 1.5
 
 CONC_FOLD_PERTURBATION = 2
 CONC_FOLD_CONVERGENCE = 1.01
@@ -31,9 +35,14 @@ PERTURBATION_RECOVERTY_TIME_TOLERANCE = 3
 EXPECTED_RECOVERY_EPOCHS = np.log((CONC_FOLD_PERTURBATION - 1)/(CONC_FOLD_CONVERGENCE - 1))
 PERTURBATION_RECOVERY_EPOCHS = PERTURBATION_RECOVERTY_TIME_TOLERANCE * EXPECTED_RECOVERY_EPOCHS
 
+TARGET_PYRUVATE_PRODUCTION = 1e-3
+
 DT = 1e1
 T_INIT = 0
 INTEGRATOR = 'lsoda'
+INTEGRATOR_OPTIONS = dict(
+	atol = 1e-6 # Default absolute tolerance is way too low (1e-12)
+	)
 
 def load_pars(target_dir):
 	obj = np.load(pa.join(target_dir, 'obj.npy'))
@@ -67,8 +76,6 @@ valid_path = pa.join(target_dir, 'valid.npy')
 
 paths = [stable_path, equ_path, lre_path, valid_path]
 
-TARGET_PYRUVATE_PRODUCTION = 1e-3
-
 if not FORCE and all(pa.exists(path) for path in paths):
 	print 'Skipping {}, output already exists'.format(target_dir)
 
@@ -97,7 +104,10 @@ else:
 
 		ode.set_initial_value(x_start, T_INIT)
 
-		ode.set_integrator(INTEGRATOR)
+		ode.set_integrator(
+			INTEGRATOR,
+			**INTEGRATOR_OPTIONS
+			)
 
 		# x_hist = [x_start.copy()]
 
@@ -117,8 +127,6 @@ else:
 
 		x_eq = x_curr
 
-		EQU_CONC_THRESHOLD = 1.5
-
 		pars_final = structure.glc_association_matrix.T.dot(x_eq)
 		pars_final[is_static] = pars[is_static]
 
@@ -130,7 +138,9 @@ else:
 
 		flux_is_fit = (flux_fit < 1e-3)
 
-		if not ode.successful() or not (np.linalg.norm(x_eq - x_start, 2) < constants.RT * np.log(EQU_CONC_THRESHOLD)):
+		normed_log_conc_deviation = np.linalg.norm(x_eq - x_start, 2) / constants.RT
+
+		if not ode.successful() or not (normed_log_conc_deviation < np.log(EQU_CONC_THRESHOLD)):
 			equ.append(False)
 			lre.append(None)
 			stable.append(False)
@@ -138,6 +148,8 @@ else:
 
 		else:
 			equ.append(flux_is_fit)
+
+		# if not flux_is_fit: print 'bad flux: {}'.format(net_pyruvate_production)
 
 		# import ipdb; ipdb.set_trace()
 
