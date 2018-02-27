@@ -14,6 +14,9 @@ slurm/*
 # pyenv file
 .python-version
 
+# slurm exeuction
+*.sbatch
+
 # Outdated things (that I should really get rid of)
 old_plots/*
 old_scripts/*
