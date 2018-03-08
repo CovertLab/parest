@@ -28,33 +28,33 @@ class SoftMarginSVM(object):
 
 		n_inv = 1/classes.size # pre-invert for the mild performance gains
 
-		direction = np.random.normal(size = all_points.shape[1])
-		offset = 0
+		self.direction = np.random.normal(size = all_points.shape[1])
+		self.offset = 0
 
 		stepsize = self.initial_stepsize
 
-		hinge_loss = _calc_hinge_loss(classes, all_points, direction, offset)
+		hinge_loss = self._calc_hinge_loss(classes, all_points, self.direction, self.offset)
 
-		obj = _calc_objective(n_inv, hinge_loss, softness, direction)
+		obj = self._calc_objective(n_inv, hinge_loss, softness, self.direction)
 
-		(grad_obj_w, grad_obj_b) = _calc_grad(dg_dw, dg_db, hinge_loss, n_inv, softness, direction)
+		(grad_obj_w, grad_obj_b) = self._calc_grad(dg_dw, dg_db, hinge_loss, n_inv, softness, self.direction)
 
 		for iteration in xrange(self.max_iterations):
-			new_direction = direction - stepsize * grad_obj_w
-			new_offset = offset - stepsize * grad_obj_b
+			new_direction = self.direction - stepsize * grad_obj_w
+			new_offset = self.offset - stepsize * grad_obj_b
 
-			new_hinge_loss = _calc_hinge_loss(classes, all_points, new_direction, new_offset)
+			new_hinge_loss = self._calc_hinge_loss(classes, all_points, new_direction, new_offset)
 
-			new_obj = _calc_objective(n_inv, new_hinge_loss, softness, new_direction)
+			new_obj = self._calc_objective(n_inv, new_hinge_loss, softness, new_direction)
 
 			if new_obj < obj:
-				direction = new_direction
-				offset = new_offset
+				self.direction = new_direction
+				self.offset = new_offset
 
 				hinge_loss = new_hinge_loss
 				obj = new_obj
 
-				(grad_obj_w, grad_obj_b) = _calc_grad(dg_dw, dg_db, hinge_loss, n_inv, softness, direction)
+				(grad_obj_w, grad_obj_b) = self._calc_grad(dg_dw, dg_db, hinge_loss, n_inv, softness, self.direction)
 
 				stepsize *= self.stepsize_increase
 
@@ -64,8 +64,10 @@ class SoftMarginSVM(object):
 			if stepsize <= self.min_stepsize:
 				break
 
-		self.direction = direction
-		self.offset = offset
+	# These are all static methods because we don't want to override the
+	# current values before we decide to accept a step.
+
+	# TODO: separate class that handles these calculations
 
 	@staticmethod
 	def _calc_hinge_loss(classes, all_points, direction, offset):
