@@ -5,20 +5,44 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+
 def _calc_hinge_loss(classes, all_points, direction, offset):
-	return 1 - classes * (all_points.dot(direction) - offset).T
+	"""
+	Computes the hinge loss for the soft-margin SVM problem.  The soft
+	margin SVM penalizes points on the wrong side of the hyperplane
+	linearly with respect to distance from the hyperplane.
 
-def _calc_objective(n_inv, h, softness, direction):
-	return n_inv * np.sum(np.fmax(0, h)) + softness * direction.dot(direction)
+	See 'svm' function for descriptions of arguments.
 
-def _calc_grad(classes, all_points, h, n_inv, softness, direction):
-	dg_dw = - classes * all_points.T
-	dg_db = classes
+	TODO: consider using precomputed classes * all_points
+	"""
+	return np.fmax(0, 1 - classes * (all_points.dot(direction) - offset).T)
 
-	h_gtz = (h > 0)
 
-	grad_obj_w = n_inv * np.sum(dg_dw[:, h_gtz], 1) + 2 * softness * direction
-	grad_obj_b = n_inv * np.sum(dg_db[h_gtz])
+def _calc_objective(n_inv, hinge_loss, softness, direction):
+	"""
+	Calculates the objective value for the soft-margin SVM problem.
+	Makes use of the pre-computed hinge loss since we also use that
+	intermediate calculation in the gradient.
+
+	See 'svm' function for descriptions of arguments.
+	"""
+
+	return n_inv * np.sum(hinge_loss) + softness * direction.dot(direction)
+
+
+def _calc_grad(dg_dw, dg_db, hinge_loss, n_inv, softness, direction):
+	"""
+	Calculates the gradient on the direction vector ('w') and the offset
+	value ('b').  Makes use of the pre-computed hinge loss since we
+	also use that intermediate calculation in the objective.
+
+	See 'svm' function for descriptions of arguments.
+	"""
+	bad_point = (hinge_loss > 0) # points on the wrong side of the separating hyperplane
+
+	grad_obj_w = n_inv * np.sum(dg_dw[:, bad_point], 1) + 2 * softness * direction
+	grad_obj_b = n_inv * np.sum(dg_db[bad_point])
 
 	return grad_obj_w, grad_obj_b
 
@@ -27,16 +51,29 @@ def svm(
 		points_reject, points_accept,
 		softness,
 		max_iterations = 10000,
+		initial_stepsize = 0.1,
+		stepsize_increase = 1.1,
+		stepsize_decrease = 2,
+		min_stepsize = 1e-3,
 		):
 	"""
 
-	Inputs
-	------
+	Required arguments
+	------------------
 
 	points_reject: (n1 x m)-matrix of point positions
 	points_accept: (n2 x m)-matrix of point positions
 	softness: float, small positive weight on minimizing the magnitude
 		of the direction vector
+
+	Optional arguments
+	------------------
+
+	max_iterations = 10000: max number of gradient descent iterates
+	initial_stepsize = 0.1: size of first gradient descent step
+	stepsize_increase = 1.1: multiplier on stepsize following a successful step, should be >1
+	stepsize_decrease = 2: divider on stepsize following a failed step, should be >1
+	min_stepsize = 1e-3: evaluation stops if the stepsize falls below this threshold, should be >0
 
 	Outputs
 	-------
@@ -44,10 +81,12 @@ def svm(
 	direction: m-vector
 	offset: float
 
-	direction.dot(x) = offset defines the separating hyperplane
+	The equation direction.dot(x) = offset defines the hyperplane
+	that best separates the 'reject' and 'accept' points.
 
-	TODO: more optional arguments for optimization metaparameters
 	TODO: option for softmax i.e. ln(1 + exp(#)) instead of max(0, #)
+	TODO: option for weighting
+	TODO: implement as a class?
 
 	"""
 
@@ -56,44 +95,47 @@ def svm(
 	classes = np.concatenate([
 		-np.ones(points_reject.shape[0]),
 		+np.ones(points_accept.shape[0]),
-		])
+		]).astype(np.float64) # int-float multiplication will be recast to float-float
 
-	n_inv = 1/classes.size
+	dg_dw = -classes * all_points.T
+	dg_db = classes
+
+	n_inv = 1/classes.size # pre-invert for the mild performance gains
 
 	direction = np.random.normal(size = all_points.shape[1])
 	offset = 0
 
-	stepsize = 0.1
+	stepsize = initial_stepsize
 
-	h = _calc_hinge_loss(classes, all_points, direction, offset)
+	hinge_loss = _calc_hinge_loss(classes, all_points, direction, offset)
 
-	obj = _calc_objective(n_inv, h, softness, direction)
+	obj = _calc_objective(n_inv, hinge_loss, softness, direction)
 
-	(grad_obj_w, grad_obj_b) = _calc_grad(classes, all_points, h, n_inv, softness, direction)
+	(grad_obj_w, grad_obj_b) = _calc_grad(dg_dw, dg_db, hinge_loss, n_inv, softness, direction)
 
 	for iteration in xrange(max_iterations):
 		new_direction = direction - stepsize * grad_obj_w
 		new_offset = offset - stepsize * grad_obj_b
 
-		new_h = _calc_hinge_loss(classes, all_points, new_direction, new_offset)
+		new_hinge_loss = _calc_hinge_loss(classes, all_points, new_direction, new_offset)
 
-		new_obj = _calc_objective(n_inv, new_h, softness, new_direction)
+		new_obj = _calc_objective(n_inv, new_hinge_loss, softness, new_direction)
 
 		if new_obj < obj:
 			direction = new_direction
 			offset = new_offset
 
-			h = new_h
+			hinge_loss = new_hinge_loss
 			obj = new_obj
 
-			(grad_obj_w, grad_obj_b) = _calc_grad(classes, all_points, h, n_inv, softness, direction)
+			(grad_obj_w, grad_obj_b) = _calc_grad(dg_dw, dg_db, hinge_loss, n_inv, softness, direction)
 
-			stepsize *= 1.1
+			stepsize *= stepsize_increase
 
 		else:
-			stepsize /= 2
+			stepsize /= stepsize_decrease
 
-		if stepsize <= 1e-3:
+		if stepsize <= min_stepsize:
 			break
 
 	return direction, offset
