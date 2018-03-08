@@ -43,7 +43,6 @@ class SoftMarginSVM(object):
 	TODO: option for softmax i.e. ln(1 + exp(#)) instead of max(0, #)
 	TODO: option for weighting each point
 	TODO: abstract out the gradient descent?  might be hard to store intermediate calculations
-	TODO: improved initialization (e.g. difference of means)
 
 	"""
 
@@ -71,8 +70,16 @@ class SoftMarginSVM(object):
 
 		n_inv = 1/classes.size # pre-invert for the mild performance gains
 
-		self.direction = np.random.normal(size = all_points.shape[1])
-		self.offset = 0
+		n_accept = points_accept.shape[0]
+		n_reject = points_reject.shape[0]
+
+		mean_accept = np.mean(points_accept, 0)
+		mean_reject = np.mean(points_reject, 0)
+
+		mean_all = (n_accept * mean_accept + n_reject * mean_reject) / (n_accept + n_reject)
+
+		self.direction = mean_accept - mean_reject
+		self.offset = mean_all.dot(self.direction)
 
 		stepsize = self.initial_stepsize
 
@@ -149,6 +156,8 @@ class SoftMarginSVM(object):
 
 if __name__ == '__main__':
 	import matplotlib.pyplot as plt
+
+	np.random.seed(83)
 
 	def plot_class(points, color):
 		(x, y) = points.T
