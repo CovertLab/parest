@@ -14,8 +14,8 @@ class SoftMarginSVM(object):
 	Initialization arguments
 	------------------------
 
-	points_reject: (n1 x m)-matrix of point positions
-	points_accept: (n2 x m)-matrix of point positions
+	points: float-(n x m)-matrix of point positions
+	accepted: boolean-n-vector, True for each point that is in the 'accepted' class
 	softness: float, small positive weight on minimizing the magnitude
 		of the direction vector
 
@@ -57,26 +57,20 @@ class SoftMarginSVM(object):
 
 	min_stepsize = 1e-3
 
-	# TODO: instead pass all points + boolean vector of where accepted
+	def __init__(self, points, accepted, softness):
+		classes = np.ones(points.shape[0], np.float64)
+		classes[~accepted] = -1.0
 
-	def __init__(self, points_reject, points_accept, softness):
-		all_points = np.concatenate([points_reject, points_accept])
-
-		classes = np.concatenate([
-			-np.ones(points_reject.shape[0]),
-			+np.ones(points_accept.shape[0]),
-			]).astype(np.float64) # int-float multiplication will be recast to float-float
-
-		dg_dw = -classes * all_points.T
+		dg_dw = -classes * points.T
 		dg_db = classes
 
 		n_inv = 1/classes.size # pre-invert for the mild performance gains
 
-		n_accept = points_accept.shape[0]
-		n_reject = points_reject.shape[0]
+		n_accept = accepted.sum()
+		n_reject = (~accepted).sum()
 
-		mean_accept = np.mean(points_accept, 0)
-		mean_reject = np.mean(points_reject, 0)
+		mean_accept = np.mean(points[accepted], 0)
+		mean_reject = np.mean(points[~accepted], 0)
 
 		mean_all = (n_accept * mean_accept + n_reject * mean_reject) / (n_accept + n_reject)
 
@@ -85,7 +79,7 @@ class SoftMarginSVM(object):
 
 		stepsize = self.initial_stepsize
 
-		hinge_loss = self._calc_hinge_loss(classes, all_points, self.direction, self.offset)
+		hinge_loss = self._calc_hinge_loss(classes, points, self.direction, self.offset)
 
 		obj = self._calc_objective(n_inv, hinge_loss, softness, self.direction)
 
@@ -95,7 +89,7 @@ class SoftMarginSVM(object):
 			new_direction = self.direction - stepsize * grad_obj_w
 			new_offset = self.offset - stepsize * grad_obj_b
 
-			new_hinge_loss = self._calc_hinge_loss(classes, all_points, new_direction, new_offset)
+			new_hinge_loss = self._calc_hinge_loss(classes, points, new_direction, new_offset)
 
 			new_obj = self._calc_objective(n_inv, new_hinge_loss, softness, new_direction)
 
@@ -122,15 +116,15 @@ class SoftMarginSVM(object):
 	# TODO: separate class that handles these calculations?
 
 	@staticmethod
-	def _calc_hinge_loss(classes, all_points, direction, offset):
+	def _calc_hinge_loss(classes, points, direction, offset):
 		"""
 		Computes the hinge loss for the soft-margin SVM problem.  The soft
 		margin SVM penalizes points on the wrong side of the hyperplane
 		linearly with respect to distance from the hyperplane.
 
-		TODO: consider using precomputed classes * all_points
+		TODO: consider using precomputed classes * points
 		"""
-		return np.fmax(0, 1 - classes * (all_points.dot(direction) - offset).T)
+		return np.fmax(0, 1 - classes * (points.dot(direction) - offset).T)
 
 	@staticmethod
 	def _calc_objective(n_inv, hinge_loss, softness, direction):
@@ -159,6 +153,9 @@ class SoftMarginSVM(object):
 if __name__ == '__main__':
 	import matplotlib.pyplot as plt
 
+	N_REJECT = 300
+	N_ACCEPT = 300
+
 	np.random.seed(83)
 
 	def plot_class(points, color):
@@ -166,12 +163,16 @@ if __name__ == '__main__':
 
 		plt.plot(x, y, '.', color = color)
 
-	reject = np.random.normal(size = (300, 2)) - 2
-	accept = np.random.normal(size = (300, 2)) + 2
+	reject = np.random.normal(size = (N_REJECT, 2)) - 2
+	accept = np.random.normal(size = (N_ACCEPT, 2)) + 2
+
+	points = np.concatenate([reject, accept])
+	accepted = np.ones(N_REJECT + N_ACCEPT, np.bool)
+	accepted[:N_REJECT] = False
 
 	softness = 1e-2
 
-	result = SoftMarginSVM(reject, accept, softness)
+	result = SoftMarginSVM(points, accepted, softness)
 
 	plt.figure(figsize = (6, 6))
 
