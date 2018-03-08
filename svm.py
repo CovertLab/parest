@@ -161,10 +161,10 @@ if __name__ == '__main__':
 	def plot_class(points, color):
 		(x, y) = points.T
 
-		plt.plot(x, y, '.', color = color)
+		plt.plot(x, y, '.', color = color, ms = 3)
 
-	reject = np.random.normal(size = (N_REJECT, 2)) - 2
-	accept = np.random.normal(size = (N_ACCEPT, 2)) + 2
+	reject = np.random.normal(size = (N_REJECT, 2)) - 1
+	accept = np.random.normal(size = (N_ACCEPT, 2)) + 3
 
 	points = np.concatenate([reject, accept])
 	accepted = np.ones(N_REJECT + N_ACCEPT, np.bool)
@@ -179,27 +179,30 @@ if __name__ == '__main__':
 	plot_class(reject, 'r')
 	plot_class(accept, 'b')
 
+	# Draw separating hyperplane and margins
+	# TODO: ensure that ends exceed plotted region
+
 	x = np.linspace(-100, +100, 2)
 
 	plt.plot(
 		x, (result.offset - result.direction[0] * x) / result.direction[1],
 		'k-',
-		lw = 3
+		lw = 1.5
 		)
 
 	plt.plot(
 		x, (result.offset+1 - result.direction[0] * x) / result.direction[1],
-		'k-',
-		lw = 1
+		'k--',
+		lw = 0.5
 		)
 
 	plt.plot(
 		x, (result.offset-1 - result.direction[0] * x) / result.direction[1],
-		'k-',
-		lw = 1
+		'k--',
+		lw = 0.5
 		)
 
-	plt.xlim(-5, +5)
-	plt.ylim(-5, +5)
+	plt.xlim(-4, +6)
+	plt.ylim(-4, +6)
 
 	plt.savefig('svm.png')
