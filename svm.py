@@ -41,8 +41,9 @@ class SoftMarginSVM(object):
 	min_stepsize = 1e-3: evaluation stops if the stepsize falls below this threshold, should be >0
 
 	TODO: option for softmax i.e. ln(1 + exp(#)) instead of max(0, #)
-	TODO: option for weighting
+	TODO: option for weighting each point
 	TODO: abstract out the gradient descent?  might be hard to store intermediate calculations
+	TODO: improved initialization (e.g. difference of means)
 
 	"""
 
@@ -109,7 +110,7 @@ class SoftMarginSVM(object):
 	# These are all static methods because we don't want to override the
 	# current values before we decide to accept a step.
 
-	# TODO: separate class that handles these calculations
+	# TODO: separate class that handles these calculations?
 
 	@staticmethod
 	def _calc_hinge_loss(classes, all_points, direction, offset):
