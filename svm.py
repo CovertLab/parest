@@ -26,7 +26,9 @@ class SoftMarginSVM(object):
 	.offset: float
 
 	The equation direction.dot(x) = offset defines the hyperplane
-	that best separates the 'reject' and 'accept' points.
+	that best separates the 'reject' and 'accept' points.  The margins
+	are given by the same formula but with 'offset' increased or
+	decreased by 1.
 
 	Metaparameters
 	--------------
@@ -164,10 +166,10 @@ if __name__ == '__main__':
 
 		plt.plot(x, y, '.', color = color)
 
-	reject = np.random.normal(size = (300, 2)) - 1
-	accept = np.random.normal(size = (300, 2)) + 1
+	reject = np.random.normal(size = (300, 2)) - 2
+	accept = np.random.normal(size = (300, 2)) + 2
 
-	softness = 1e-1
+	softness = 1e-2
 
 	result = SoftMarginSVM(reject, accept, softness)
 
@@ -176,12 +178,24 @@ if __name__ == '__main__':
 	plot_class(reject, 'r')
 	plot_class(accept, 'b')
 
-	x = np.linspace(-10, +10, 2)
+	x = np.linspace(-100, +100, 2)
 
 	plt.plot(
 		x, (result.offset - result.direction[0] * x) / result.direction[1],
 		'k-',
 		lw = 3
+		)
+
+	plt.plot(
+		x, (result.offset+1 - result.direction[0] * x) / result.direction[1],
+		'k-',
+		lw = 1
+		)
+
+	plt.plot(
+		x, (result.offset-1 - result.direction[0] * x) / result.direction[1],
+		'k-',
+		lw = 1
 		)
 
 	plt.xlim(-5, +5)
