@@ -6,6 +6,46 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class SoftMarginSVM(object):
+	"""
+	Performs soft-margin SVM using gradient descent.  Returns an object
+	with a pair of attributes defining the optimal separating
+	hyperplane.
+
+	Initialization arguments
+	------------------------
+
+	points_reject: (n1 x m)-matrix of point positions
+	points_accept: (n2 x m)-matrix of point positions
+	softness: float, small positive weight on minimizing the magnitude
+		of the direction vector
+
+	Attributes
+	----------
+
+	.direction: m-vector
+	.offset: float
+
+	The equation direction.dot(x) = offset defines the hyperplane
+	that best separates the 'reject' and 'accept' points.
+
+	Metaparameters
+	--------------
+
+	These are the parameters associated with the gradient descent
+	operation.  Subclass to modify the default metaparameter values.
+
+	max_iterations = 10000: max number of gradient descent iterations
+	initial_stepsize = 0.1: size of first gradient descent step
+	stepsize_increase = 1.1: multiplier on stepsize following a successful step, should be >1
+	stepsize_decrease = 2: divider on stepsize following a failed step, should be >1
+	min_stepsize = 1e-3: evaluation stops if the stepsize falls below this threshold, should be >0
+
+	TODO: option for softmax i.e. ln(1 + exp(#)) instead of max(0, #)
+	TODO: option for weighting
+	TODO: abstract out the gradient descent?  might be hard to store intermediate calculations
+
+	"""
+
 	max_iterations = 10000
 
 	initial_stepsize = 0.1
@@ -14,6 +54,8 @@ class SoftMarginSVM(object):
 	stepsize_decrease = 2.0
 
 	min_stepsize = 1e-3
+
+	# TODO: instead pass all points + boolean vector of where accepted
 
 	def __init__(self, points_reject, points_accept, softness):
 		all_points = np.concatenate([points_reject, points_accept])
