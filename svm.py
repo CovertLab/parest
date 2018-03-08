@@ -91,7 +91,7 @@ class SoftMarginSVM(object):
 
 		(grad_obj_w, grad_obj_b) = self._calc_grad(dg_dw, dg_db, hinge_loss, n_inv, softness, self.direction)
 
-		for iteration in xrange(self.max_iterations):
+		for self.iteration in xrange(self.max_iterations):
 			new_direction = self.direction - stepsize * grad_obj_w
 			new_offset = self.offset - stepsize * grad_obj_b
 
