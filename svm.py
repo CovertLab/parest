@@ -72,6 +72,7 @@ class SoftMarginSVM(object):
 		mean_accept = np.mean(points[accepted], 0)
 		mean_reject = np.mean(points[~accepted], 0)
 
+		# TODO: evaluate use of weighted average - unweighted might make more sense
 		mean_all = (n_accept * mean_accept + n_reject * mean_reject) / (n_accept + n_reject)
 
 		self.direction = mean_accept - mean_reject
