@@ -36,11 +36,11 @@ class SoftMarginSVM(object):
 	These are the parameters associated with the gradient descent
 	operation.  Subclass to modify the default metaparameter values.
 
-	max_iterations = 10000: max number of gradient descent iterations
-	initial_stepsize = 0.1: size of first gradient descent step
-	stepsize_increase = 1.1: multiplier on stepsize following a successful step, should be >1
-	stepsize_decrease = 2: divider on stepsize following a failed step, should be >1
-	min_stepsize = 1e-3: evaluation stops if the stepsize falls below this threshold, should be >0
+	MAX_ITERATIONS = 10000: max number of gradient descent iterations
+	INITIAL_STEPSIZE = 0.1: size of first gradient descent step
+	STEPSIZE_INCREASE = 1.1: multiplier on stepsize following a successful step, should be >1
+	STEPESIZE_DECREASE = 2: divider on stepsize following a failed step, should be >1
+	MIN_STEPESIZE = 1e-3: evaluation stops if the stepsize falls below this threshold, should be >0
 
 	TODO: option for softmax i.e. ln(1 + exp(#)) instead of max(0, #)
 	TODO: option for weighting each point
@@ -48,14 +48,14 @@ class SoftMarginSVM(object):
 
 	"""
 
-	max_iterations = 10000
+	MAX_ITERATIONS = 10000
 
-	initial_stepsize = 0.1
+	INITIAL_STEPSIZE = 0.1
 
-	stepsize_increase = 1.1
-	stepsize_decrease = 2.0
+	STEPSIZE_INCREASE = 1.1
+	STEPESIZE_DECREASE = 2.0
 
-	min_stepsize = 1e-3
+	MIN_STEPESIZE = 1e-3
 
 	def __init__(self, points, accepted, softness):
 		classes = np.ones(points.shape[0], np.float64)
@@ -78,7 +78,7 @@ class SoftMarginSVM(object):
 		self.direction = mean_accept - mean_reject
 		self.offset = mean_all.dot(self.direction)
 
-		stepsize = self.initial_stepsize
+		stepsize = self.INITIAL_STEPSIZE
 
 		hinge_loss = self._calc_hinge_loss(classes, points, self.direction, self.offset)
 
@@ -86,7 +86,7 @@ class SoftMarginSVM(object):
 
 		(grad_obj_w, grad_obj_b) = self._calc_grad(dg_dw, dg_db, hinge_loss, n_inv, softness, self.direction)
 
-		for self.iteration in xrange(self.max_iterations):
+		for self.iteration in xrange(self.MAX_ITERATIONS):
 			new_direction = self.direction - stepsize * grad_obj_w
 			new_offset = self.offset - stepsize * grad_obj_b
 
@@ -103,12 +103,12 @@ class SoftMarginSVM(object):
 
 				(grad_obj_w, grad_obj_b) = self._calc_grad(dg_dw, dg_db, hinge_loss, n_inv, softness, self.direction)
 
-				stepsize *= self.stepsize_increase
+				stepsize *= self.STEPSIZE_INCREASE
 
 			else:
-				stepsize /= self.stepsize_decrease
+				stepsize /= self.STEPESIZE_DECREASE
 
-			if stepsize <= self.min_stepsize:
+			if stepsize <= self.MIN_STEPESIZE:
 				break
 
 	# These are all static methods because we don't want to override the
