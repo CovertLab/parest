@@ -149,7 +149,7 @@ class SoftMarginSVM(object):
 		grad_obj_w = n_inv * np.sum(dg_dw[:, bad_point], 1) + 2 * softness * direction
 		grad_obj_b = n_inv * np.sum(dg_db[bad_point])
 
-		return grad_obj_w, grad_obj_b
+		return (grad_obj_w, grad_obj_b)
 
 if __name__ == '__main__':
 	import matplotlib.pyplot as plt
