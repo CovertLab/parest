@@ -18,7 +18,7 @@ import time
 
 # TODO: some way to pass these as optional arguments
 
-DISEQU_WEIGHTS = np.logspace(-10, +10, 41)
+DISEQU_WEIGHTS = np.logspace(-10, +10, 3)
 
 MAX_ITERATIONS = int(1e6) # maximum number of iteration steps per epoch
 
@@ -31,9 +31,30 @@ TARGET_PYRUVATE_PRODUCTION = 1e-3 # the target rate at which the system produces
 
 LOG_TIME = 10
 
+class TimeAccumulator(object):
+	def __init__(self, function):
+		self.function = function
+		self.total_time = 0
+
+	def __call__(self, *args, **kwargs):
+		t = time.time()
+		out = self.function(*args, **kwargs)
+		self.total_time += time.time() - t
+		return out
+
+	def reset(self):
+		self.total_time = 0
+
+@TimeAccumulator
 def fast_shortarray_median1d(x):
-	# faster 1d median than np.median for short arrays (100 or less elements, up to 10x speed-up)
-	# I don't know why the built-in median is so slow; possibly due to Python overhead
+	'''
+	Computes the median of a vector of values.
+
+	Numpy has a median function, but for short vectors (~100 elements) it is
+	slower than sorting the vector and then taking the middle element (or, in
+	the case of an even number of elements, taking the average of the two
+	middle elements).
+	'''
 	size = x.size
 	(halfsize, remainder) = divmod(size, 2)
 	x_sorted = np.sort(x)
@@ -45,21 +66,27 @@ def fast_shortarray_median1d(x):
 		return x_sorted[halfsize]
 
 median1d = (
-	# np.median
+	# TimeAccumulator(np.median)
 	fast_shortarray_median1d
 	)
 
+@TimeAccumulator
 def compute_abs_fit(pars, fitting_tensors):
 	(fitting_matrix, fitting_values) = fitting_tensors[:2]
 
 	return np.sum(np.abs(fitting_matrix.dot(pars) - fitting_values))
 
+@TimeAccumulator
 def compute_upper_fit(pars, upper_fitting_tensors):
+	# TODO: skip if empty?
+
 	(fitting_matrix, fitting_values) = upper_fitting_tensors[:2]
 
 	return np.sum(np.fmax(fitting_matrix.dot(pars) - fitting_values, 0))
 
+@TimeAccumulator
 def compute_relative_fit(pars, relative_fitting_tensor_sets):
+	# TODO: combine dot products into one operation?  might speed up
 	cost = 0
 
 	for (fm, fv, fe) in relative_fitting_tensor_sets:
@@ -72,6 +99,7 @@ def compute_relative_fit(pars, relative_fitting_tensor_sets):
 
 	return cost
 
+@TimeAccumulator
 def compute_overall_fit(pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets):
 	return (
 		compute_abs_fit(pars, fitting_tensors)
@@ -79,9 +107,11 @@ def compute_overall_fit(pars, fitting_tensors, upper_fitting_tensors, relative_f
 		+ compute_relative_fit(pars, relative_fitting_tensor_sets)
 		)
 
+compute_all = TimeAccumulator(equations.compute_all)
+
 class ObjectiveValues(object):
 	def __init__(self, pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets = ()):
-		(v, dc_dt, dglc_dt) = equations.compute_all(pars, *equations.args)
+		(v, dc_dt, dglc_dt) = compute_all(pars, *equations.args)
 
 		self.mass_eq = np.sum(np.square(structure.dynamic_molar_masses * dc_dt))
 		self.energy_eq = np.sum(np.square(dglc_dt))
@@ -238,6 +268,13 @@ def build_bounds(naive = False):
 
 	return bounds_matrix, lowerbounds, upperbounds
 
+def seconds_to_hms(t):
+	hours = t//3600
+	minutes = t//60 - 60*hours
+	seconds = t - 60*minutes - 3600*hours
+
+	return (hours, minutes, seconds)
+
 def empty_callback(epoch, iteration, constraint_penalty_weight, obj_components):
 	pass
 
@@ -335,6 +372,8 @@ def estimate_parameters(
 
 	ibm_v = [v for v in inverse_bounds_matrix.T]
 
+	time_eval_obj = 0
+
 	for (epoch, disequ_weight) in enumerate(DISEQU_WEIGHTS):
 		# Re-evaluate the objective, since the weight changes
 		best_obj = best_obj_components.total(disequ_weight)
@@ -365,12 +404,14 @@ def estimate_parameters(
 
 				new_pars += (bounded - new_acts[i]) * ibm_v[i]
 
+			ts = time.time()
 			new_obj_components = ObjectiveValues(
 				new_pars,
 				fitting_tensors,
 				upper_fitting_tensors,
 				relative_fitting_tensor_sets
 				)
+			time_eval_obj += time.time() - ts
 
 			new_obj = new_obj_components.total(disequ_weight)
 
@@ -427,11 +468,14 @@ def estimate_parameters(
 
 	time_run = time.time() - time_start
 
-	hours = time_run//3600
-	minutes = time_run//60 - 60*hours
-	seconds = time_run - 60*minutes - 3600*hours
-
-	print 'Completed in {:02n}:{:02n}:{:0.2f} (H:M:S)'.format(hours, minutes, seconds)
+	print 'Objective evaluation time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(time_eval_obj))
+	print 'Equation compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(compute_all.total_time))
+	print 'Fit compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(compute_overall_fit.total_time))
+	print 'Median compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(median1d.total_time))
+	print 'Abs fit compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(compute_abs_fit.total_time))
+	print 'Rel fit compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(compute_relative_fit.total_time))
+	print 'Upper fit compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(compute_upper_fit.total_time))
+	print 'Total optimization time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(time_run))
 
 	return best_pars, best_obj_components
 
