@@ -530,7 +530,7 @@ def estimate_parameters(
 
 	# TODO: consider polishing via gradient descent or just be minimizing
 	# misfit using an L1 norm subject to constraints on intermediate values,
-	# either at the end of everything or the end of each epoch
+	# either at the end of the whole optimization or the end of each epoch.
 
 	return best_pars, best_obj_components
 
