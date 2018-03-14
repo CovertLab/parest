@@ -200,9 +200,10 @@ def nonredundant_vectors(vectors, tolerance = 1e-15):
 
 	normed = [v / np.sqrt(v.dot(v)) for v in vectors]
 
+	# TODO: refactor as a matrix-matrix product?
 	for i, vi in enumerate(normed):
 		for vj in normed[i+1:]:
-			if 1 - np.abs(vi.dot(vj)) < 1e-15:
+			if 1 - np.abs(vi.dot(vj)) < tolerance:
 				break
 
 		else:
