@@ -198,7 +198,7 @@ def nonredundant_vectors(vectors, tolerance = 1e-15):
 
 	retained = []
 
-	normed = [v / np.sqrt(v.dot(v)) for v in vectors]
+	normed = [v / np.sqrt(sumsq1d(v)) for v in vectors]
 
 	# TODO: refactor as a matrix-matrix product?
 	for i, vi in enumerate(normed):
@@ -446,7 +446,7 @@ def estimate_parameters(
 			else:
 				# TODO: optimize this optional approach
 				coeffs = random_state.normal(size = n_perturb)
-				coeffs /= np.sqrt(np.sum(np.square(coeffs))) # there are faster sum-square operations
+				coeffs /= np.sqrt(sumsq1d(coeffs))
 
 				direction = perturbation_vectors.T.dot(coeffs) # dot product on transposed matrix is probably slow
 
