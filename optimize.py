@@ -432,8 +432,6 @@ def estimate_parameters(
 		best_obj = best_obj_components.total(disequ_weight)
 
 		for (iteration, deviation) in enumerate(PERTURBATION_SCALE):
-			scale = deviation * random_state.normal()
-
 			if not random_direction:
 				dimension = random_state.randint(n_perturb)
 				direction = perturbation_vectors[dimension]
@@ -445,6 +443,7 @@ def estimate_parameters(
 
 				direction = perturbation_vectors.T.dot(coeffs) # dot product on transposed matrix is probably slow
 
+			scale = deviation * random_state.normal()
 			perturbation = scale * direction
 
 			new_pars = best_pars + perturbation
