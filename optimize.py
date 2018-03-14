@@ -477,9 +477,7 @@ def estimate_parameters(
 
 			did_accept = (new_obj < best_obj)
 
-			history_best_objective.append(
-				best_obj
-				)
+			history_best_objective.append(best_obj)
 
 			if did_accept:
 				best_obj_components = new_obj_components
