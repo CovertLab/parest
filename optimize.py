@@ -18,7 +18,7 @@ import time
 
 # TODO: some way to pass these as optional arguments
 
-DISEQU_WEIGHTS = np.logspace(-10, +10, 3)
+DISEQU_WEIGHTS = np.logspace(-10, +10, 41)
 
 MAX_ITERATIONS = int(1e6) # maximum number of iteration steps per epoch
 
@@ -29,23 +29,30 @@ CONVERGENCE_TIME = int(1e4) # number of iterations between checks to compare - s
 
 TARGET_PYRUVATE_PRODUCTION = 1e-3 # the target rate at which the system produces pyruvate
 
-LOG_TIME = 10
+LOG_TIME = 10 # max time between logging events
 
-class TimeAccumulator(object):
-	def __init__(self, function):
-		self.function = function
-		self.total_time = 0
+# These options are just for demonstration purposes (enhanced speed vs.
+# default numpy operations).  Using my custom functions significantly improves
+# optimization times (roughly half of the overall time utilized by the
+# numpy-based composed operations).  I attribute these gains to 1) reduced
+# overhead and 2) benefits of BLAS (or similar) accelerated dot products.
 
-	def __call__(self, *args, **kwargs):
-		t = time.time()
-		out = self.function(*args, **kwargs)
-		self.total_time += time.time() - t
-		return out
+USE_CUSTOM_FUNCTIONS = True # uses several custom operations designed and optimized for short vectors
+USE_NORMS = False # if USE_CUSTOM_FUNCTIONS is False, will try to use norms instead of composed operations (norms are slightly slower)
 
-	def reset(self):
-		self.total_time = 0
+# TODO: Evaluate whether keeping certain pieces of memory allocated reduces
+# evaluation time.  I suspect that allocating lots of short arrays can be
+# costly.
 
-@TimeAccumulator
+def fast_square_singleton(x):
+	return x*x
+
+if USE_CUSTOM_FUNCTIONS:
+	square_singleton = fast_square_singleton
+
+else:
+	square_singleton = np.square
+
 def fast_shortarray_median1d(x):
 	'''
 	Computes the median of a vector of values.
@@ -54,52 +61,98 @@ def fast_shortarray_median1d(x):
 	slower than sorting the vector and then taking the middle element (or, in
 	the case of an even number of elements, taking the average of the two
 	middle elements).
+
+	TODO: consider caching divmod result
 	'''
-	size = x.size
-	(halfsize, remainder) = divmod(size, 2)
+	(halfsize, odd_number_of_elements) = divmod(x.size, 2)
+
+	# Notes on sorting:
+	# - Sorting algorithm (i.e. kind = ...) makes no appreciable difference
+	# - Likewise for np.argsort in place of np.sort
+	# - As far as I can reason, you need to sort the whole vector to get the
+	#	median right (no obvious optimization to replace np.sort/argsort)
 	x_sorted = np.sort(x)
 
-	if remainder == 0:
-		return (x_sorted[halfsize-1] + x_sorted[halfsize])/2
-
-	else:
+	if odd_number_of_elements:
 		return x_sorted[halfsize]
 
-median1d = (
-	# TimeAccumulator(np.median)
-	fast_shortarray_median1d
-	)
+	else:
+		return (x_sorted[halfsize-1] + x_sorted[halfsize])/2.0
 
-@TimeAccumulator
+if USE_CUSTOM_FUNCTIONS:
+	median1d = fast_shortarray_median1d
+
+else:
+	median1d = np.median
+
+def fast_shortarray_sumabs1d(x):
+	'''
+	Compute the sum of absolute values of a vector's elements, a.k.a. the
+	L1-norm.
+
+	This operation is faster than np.sum(np.abs(x)) and np.linalg.norm(x, 1),
+	at least for small vectors.
+	'''
+	return np.sign(x).dot(x)
+
+if USE_CUSTOM_FUNCTIONS:
+	sumabs1d = fast_shortarray_sumabs1d
+
+elif USE_NORMS:
+	sumabs1d = lambda x: np.linalg.norm(x, 1)
+
+else:
+	sumabs1d = lambda x: np.sum(np.abs(x))
+
+def fast_shortarray_sumsq1d(x):
+	'''
+	Compute the sum of squares of a vector's elements, a.k.a. the squared
+	L2-norm.
+
+	This operation is faster than np.sum(np.square(x)) and squaring
+	np.linalg.norm(x, 2), at least for short vectors.
+	'''
+	return x.dot(x)
+
+if USE_CUSTOM_FUNCTIONS:
+	sumsq1d = fast_shortarray_sumsq1d
+
+elif USE_NORMS:
+	sumsq1d = lambda x: np.square(np.linalg.norm(x, 2))
+
+else:
+	sumsq1d = lambda x: np.sum(np.square(x))
+
 def compute_abs_fit(pars, fitting_tensors):
-	(fitting_matrix, fitting_values) = fitting_tensors[:2]
+	(fitting_matrix, fitting_values) = fitting_tensors[:2] # TODO: check overhead of these unpacking operations
 
-	return np.sum(np.abs(fitting_matrix.dot(pars) - fitting_values))
+	return sumabs1d(fitting_matrix.dot(pars) - fitting_values)
 
-@TimeAccumulator
 def compute_upper_fit(pars, upper_fitting_tensors):
-	# TODO: skip if empty?
-
 	(fitting_matrix, fitting_values) = upper_fitting_tensors[:2]
 
-	return np.sum(np.fmax(fitting_matrix.dot(pars) - fitting_values, 0))
+	if fitting_values.size:
+		# TODO: consider optimizing sum-fmax operation e.g. (x > 0).dot(x)
+		return np.sum(np.fmax(fitting_matrix.dot(pars) - fitting_values, 0.0))
 
-@TimeAccumulator
+	else:
+		# In the standard problem we don't use these penalty functions, so this
+		# allows us to skip several expensive (but empty) operations
+		return 0.0
+
 def compute_relative_fit(pars, relative_fitting_tensor_sets):
-	# TODO: combine dot products into one operation?  might speed up
-	cost = 0
+	cost = 0.0
 
-	for (fm, fv, fe) in relative_fitting_tensor_sets:
-		predicted = fm.dot(pars)
+	for fm, fv, fe in relative_fitting_tensor_sets:
+		predicted = fm.dot(pars) # TODO: combine dot products into one operation?  might speed up
 		d = predicted - fv
 
 		m = median1d(d)
 
-		cost += np.sum(np.abs(d - m))
+		cost += sumabs1d(d - m)
 
 	return cost
 
-@TimeAccumulator
 def compute_overall_fit(pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets):
 	return (
 		compute_abs_fit(pars, fitting_tensors)
@@ -107,20 +160,23 @@ def compute_overall_fit(pars, fitting_tensors, upper_fitting_tensors, relative_f
 		+ compute_relative_fit(pars, relative_fitting_tensor_sets)
 		)
 
-compute_all = TimeAccumulator(equations.compute_all)
-
 class ObjectiveValues(object):
 	def __init__(self, pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets = ()):
-		(v, dc_dt, dglc_dt) = compute_all(pars, *equations.args)
+		(v, dc_dt, dglc_dt) = equations.compute_all(pars, *equations.args)
 
-		self.mass_eq = np.sum(np.square(structure.dynamic_molar_masses * dc_dt))
-		self.energy_eq = np.sum(np.square(dglc_dt))
+		self.mass_eq = sumsq1d(structure.dynamic_molar_masses * dc_dt)
+		self.energy_eq = sumsq1d(dglc_dt)
 
 		net_pyruvate_production = v[-2] - v[-1]
 
-		self.flux = (net_pyruvate_production / TARGET_PYRUVATE_PRODUCTION - 1)**2
+		self.flux = square_singleton(net_pyruvate_production / TARGET_PYRUVATE_PRODUCTION - 1.0)
 
-		self.fit = compute_overall_fit(pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets)
+		self.fit = compute_overall_fit(
+			pars,
+			fitting_tensors,
+			upper_fitting_tensors,
+			relative_fitting_tensor_sets
+			)
 
 	def misfit_error(self):
 		return self.fit
@@ -130,7 +186,6 @@ class ObjectiveValues(object):
 
 	def total(self, disequ_weight):
 		return self.misfit_error() + disequ_weight * self.disequilibrium_error()
-
 
 def nonredundant_vectors(vectors, tolerance = 1e-15):
 	# Discards vectors that are equivalent to subsequent vectors under scaling.
@@ -372,10 +427,8 @@ def estimate_parameters(
 
 	ibm_v = [v for v in inverse_bounds_matrix.T]
 
-	time_eval_obj = 0
-
 	for (epoch, disequ_weight) in enumerate(DISEQU_WEIGHTS):
-		# Re-evaluate the objective, since the weight changes
+		# Need to re-evaluate the objective at the start of every epoch since the weight changes
 		best_obj = best_obj_components.total(disequ_weight)
 
 		for (iteration, deviation) in enumerate(PERTURBATION_SCALE):
@@ -386,8 +439,9 @@ def estimate_parameters(
 				direction = perturbation_vectors[dimension]
 
 			else:
+				# TODO: optimize this optional approach
 				coeffs = np.random.normal(size = n_perturb)
-				coeffs /= np.sqrt(np.sum(np.square(coeffs)))
+				coeffs /= np.sqrt(np.sum(np.square(coeffs))) # there are faster sum-square operations
 
 				direction = perturbation_vectors.T.dot(coeffs) # dot product on transposed matrix is probably slow
 
@@ -395,23 +449,23 @@ def estimate_parameters(
 
 			new_pars = best_pars + perturbation
 
+			# There are various possible execution strategies for bounding.
+			# This setup gives the best performance, probably because
+			# 'unbounded' is typically False everywhere.
 			new_acts = bounds_matrix.dot(new_pars)
-
 			unbounded = (lowerbounds > new_acts) | (upperbounds < new_acts)
 
 			for i in np.where(unbounded)[0]:
-				bounded = lowerbounds[i] + bounds_range[i] * random_state.random_sample()
+				bounded = random_state.uniform(lowerbounds[i], upperbounds[i])
 
 				new_pars += (bounded - new_acts[i]) * ibm_v[i]
 
-			ts = time.time()
 			new_obj_components = ObjectiveValues(
 				new_pars,
 				fitting_tensors,
 				upper_fitting_tensors,
 				relative_fitting_tensor_sets
 				)
-			time_eval_obj += time.time() - ts
 
 			new_obj = new_obj_components.total(disequ_weight)
 
@@ -429,7 +483,7 @@ def estimate_parameters(
 			log = False
 			quit = False
 
-			if iteration == 0:
+			if (iteration == 0) or (iteration == MAX_ITERATIONS-1):
 				log = True
 
 			if time.time() - last_log_time > LOG_TIME:
@@ -437,7 +491,7 @@ def estimate_parameters(
 
 			if (iteration >= CONVERGENCE_TIME) and (
 					(
-						1-best_obj / history_best_objective[-CONVERGENCE_TIME]
+						1.0 - best_obj / history_best_objective[-CONVERGENCE_TIME]
 						) < CONVERGENCE_RATE
 					) and (
 						epoch < len(DISEQU_WEIGHTS)-1
@@ -468,14 +522,11 @@ def estimate_parameters(
 
 	time_run = time.time() - time_start
 
-	print 'Objective evaluation time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(time_eval_obj))
-	print 'Equation compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(compute_all.total_time))
-	print 'Fit compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(compute_overall_fit.total_time))
-	print 'Median compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(median1d.total_time))
-	print 'Abs fit compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(compute_abs_fit.total_time))
-	print 'Rel fit compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(compute_relative_fit.total_time))
-	print 'Upper fit compute time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(compute_upper_fit.total_time))
 	print 'Total optimization time: {:02n}:{:02n}:{:05.2f} (H:M:S)'.format(*seconds_to_hms(time_run))
+
+	# TODO: consider polishing via gradient descent or just be minimizing
+	# misfit using an L1 norm subject to constraints on intermediate values,
+	# either at the end of everything or the end of each epoch
 
 	return best_pars, best_obj_components
 
