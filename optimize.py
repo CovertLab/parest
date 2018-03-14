@@ -213,11 +213,6 @@ def nonredundant_vectors(vectors, tolerance = 1e-15):
 
 def build_perturbation_vectors(naive = False):
 	if naive:
-		perturbation_vectors = [
-			vector
-			for vector in np.linalg.pinv(structure.standard_parameter_matrix).T
-			]
-
 		# The standard parameter matrix corresponds to the 'usual'
 		# parameterization of a kinetic model, in terms of kcat's, metabolite
 		# and enzyme concentrations, saturation constants (KM's), and Gibbs
@@ -226,6 +221,13 @@ def build_perturbation_vectors(naive = False):
 		# These perturbations are 'simple' in the sense that a perturbation to
 		# a given 'standard' parameter does not influence the value of any
 		# other 'standard' parameter.
+
+		perturbation_vectors = [
+			vector
+			for vector in np.linalg.pinv(structure.standard_parameter_matrix).T
+			]
+
+		# TODO: assert perturbations are simple
 
 	else:
 		perturbation_vectors = [
@@ -239,11 +241,11 @@ def build_perturbation_vectors(naive = False):
 				).T
 			]
 
-		perturbation_vectors = nonredundant_vectors(perturbation_vectors)
-
 		# Many of the basic parameter perturbation vectors end up being
 		# identical to the 'activity matrix' perturbation vectors, so I detect
 		# and strip those from the set.
+
+		perturbation_vectors = nonredundant_vectors(perturbation_vectors)
 
 	return np.array(perturbation_vectors)
 
@@ -532,7 +534,7 @@ def estimate_parameters(
 	# misfit using an L1 norm subject to constraints on intermediate values,
 	# either at the end of the whole optimization or the end of each epoch.
 
-	return best_pars, best_obj_components
+	return (best_pars, best_obj_components)
 
 if __name__ == '__main__':
 	import problems
