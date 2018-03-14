@@ -18,7 +18,10 @@ import time
 
 # TODO: some way to pass these as optional arguments
 
-DISEQU_WEIGHTS = np.logspace(-10, +10, 41)
+DISEQU_WEIGHTS = (
+	np.logspace(-10, +10, 41) # standard
+	# [10**6] # useful test weight (one epoch)
+	)
 
 MAX_ITERATIONS = int(1e6) # maximum number of iteration steps per epoch
 
@@ -45,6 +48,9 @@ USE_NORMS = False # if USE_CUSTOM_FUNCTIONS is False, will try to use norms inst
 # costly.
 
 def fast_square_singleton(x):
+	'''
+	Probably faster than alternatives; gains are minimal.
+	'''
 	return x*x
 
 if USE_CUSTOM_FUNCTIONS:
@@ -418,16 +424,14 @@ def estimate_parameters(
 	best_pars = init_pars.copy()
 	best_obj_components = init_obj_components
 
-	history_best_objective = []
-
 	perturbation_vectors = build_perturbation_vectors(naive)
 	n_perturb = len(perturbation_vectors)
 
-	bounds_range = upperbounds - lowerbounds
-
-	ibm_v = [v for v in inverse_bounds_matrix.T]
+	ibm_v = [v.copy() for v in inverse_bounds_matrix.T] # Copy needed to enforce memory-contiguity
 
 	for (epoch, disequ_weight) in enumerate(DISEQU_WEIGHTS):
+		history_best_objective = []
+
 		# Need to re-evaluate the objective at the start of every epoch since the weight changes
 		best_obj = best_obj_components.total(disequ_weight)
 
