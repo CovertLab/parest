@@ -443,7 +443,7 @@ def estimate_parameters(
 
 			else:
 				# TODO: optimize this optional approach
-				coeffs = np.random.normal(size = n_perturb)
+				coeffs = random_state.normal(size = n_perturb)
 				coeffs /= np.sqrt(np.sum(np.square(coeffs))) # there are faster sum-square operations
 
 				direction = perturbation_vectors.T.dot(coeffs) # dot product on transposed matrix is probably slow
