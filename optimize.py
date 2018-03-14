@@ -3,6 +3,8 @@ from __future__ import division
 
 from itertools import izip
 
+import time
+
 import numpy as np
 
 import liveout as lo
@@ -13,8 +15,6 @@ import equations
 import utils.linalg as la
 
 from initialization import build_initial_parameter_values
-
-import time
 
 # TODO: some way to pass these as optional arguments
 
@@ -32,7 +32,7 @@ CONVERGENCE_TIME = int(1e4) # number of iterations between checks to compare - s
 
 TARGET_PYRUVATE_PRODUCTION = 1e-3 # the target rate at which the system produces pyruvate
 
-LOG_TIME = 10 # max time between logging events
+LOG_TIME = 10 # max time, in seconds, between logging events
 
 # These options are just for demonstration purposes (enhanced speed vs.
 # default numpy operations).  Using my custom functions significantly improves
