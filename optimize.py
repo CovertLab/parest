@@ -194,7 +194,7 @@ def build_bounds(naive = False):
 		# TODO: move this to bounds.py
 		import constants
 
-		lower_conc = 1e-10 # avg 1/10 molecules per e. coli cell
+		lower_conc = 1e-10 # avg 1/10 molecules per E. coli cell
 		upper_conc = 1e2 # water conc is around 40 M
 
 		lower_enz_conc = 1e-10 # avg 1/10 molecules per cell
@@ -212,8 +212,8 @@ def build_bounds(naive = False):
 		lower_gelc = constants.RT * np.log(lower_enz_conc)
 		upper_gelc = constants.RT * np.log(upper_enz_conc)
 
-		lower_log_kcat = -constants.RT * np.log(upper_kcat)
-		upper_log_kcat = -constants.RT * np.log(lower_kcat)
+		lower_log_kcat = -constants.RT * np.log(upper_kcat / constants.K_STAR)
+		upper_log_kcat = -constants.RT * np.log(lower_kcat / constants.K_STAR)
 
 		lower_log_KM = -constants.RT * np.log(upper_KM)
 		upper_log_KM = -constants.RT * np.log(lower_KM)
@@ -291,9 +291,13 @@ def estimate_parameters(
 		callback = empty_callback
 		):
 
+	# TODO: pass initial parameters, bounds, perturbation vectors
+	# TODO: pass metaparameters
+	# TODO: more results/options/callbacks
+
 	print 'Initializing optimization.'
 
-	time_start = time.time()
+	time_start = time.time() # TODO: timing convenience classes
 
 	if random_state is None:
 		print 'No random state provided.'
@@ -343,6 +347,8 @@ def estimate_parameters(
 		upper_fitting_matrix, upper_fitting_values,
 		*[(fm, fv) for (fm, fv, fe) in relative_fitting_tensor_sets]
 		)
+
+	# init_pars = np.load('optimized_pars.npy')
 
 	print 'Initial (minimal) fitness: {:0.2f}'.format(init_fitness)
 
@@ -440,6 +446,8 @@ def estimate_parameters(
 					) and (
 						epoch < len(DISEQU_WEIGHTS)-1
 					):
+				# TODO: instead of ending the epoch, jump ahead to a time where
+				# perturbations are smaller
 				log = True
 				quit = True
 
@@ -481,7 +489,7 @@ if __name__ == '__main__':
 	(pars, obj) = estimate_parameters(
 		definition,
 		random_state = np.random.RandomState(0),
-		# naive = True,
+		naive = True,
 		# force_better_init = True,
 		# random_direction = True
 		)
