@@ -80,13 +80,34 @@ def fast_shortarray_median1d(x):
 	x_sorted = np.sort(x)
 
 	if odd_number_of_elements:
-		return x_sorted[halfsize]
+		median = x_sorted[halfsize]
 
 	else:
-		return (x_sorted[halfsize-1] + x_sorted[halfsize])/2.0
+		median = (x_sorted[halfsize-1] + x_sorted[halfsize])/2.0
+
+	return median
+
+def fast_shortarray_median1d_partition(x):
+	'''
+	Computes the median of a vector of values.  This is an alternative
+	implementation that utilizes np.partition, which appears to be slower for
+	very short array but scales better than using np.sort (which performs a
+	full sort rather than np.partition's partial support).
+	'''
+	(halfsize, odd_number_of_elements) = divmod(x.size, 2)
+
+	if odd_number_of_elements:
+		median = np.partition(x, halfsize)[halfsize]
+
+	else:
+		partitioned = np.partition(x, (halfsize-1, halfsize))
+		median = (partitioned[halfsize-1]+partitioned[halfsize])/2.0
+
+	return median
 
 if USE_CUSTOM_FUNCTIONS:
 	median1d = fast_shortarray_median1d
+	# median1d = fast_shortarray_median1d_partition
 
 else:
 	median1d = np.median
