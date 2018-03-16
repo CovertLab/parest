@@ -2,11 +2,14 @@
 from __future__ import division
 
 import numpy as np
-from scipy.optimize import minimize, linprog
+import scipy.optimize as so
 
 from utils.linalg import nullspace_projector
 
 import structure
+
+LINPROG_ITERATES = 10000 # hit a case where I needed slightly more than the default number of iterations
+TOLERANCE = 1e-6 # default tolerance (1e-15?) is very easy to break - underlying linprog precision issue?
 
 def column_of_ones_matrix(column, n_rows, n_columns, dtype = None):
 	out = np.zeros((n_rows, n_columns), dtype)
@@ -165,13 +168,13 @@ def build_initial_parameter_values( # TODO: meaningful defaults
 		np.ones(n_hidden_parameters)
 		])
 
-	result_stage1 = linprog(
+	result_stage1 = so.linprog(
 		c,
 		G, h,
 		bounds = (None, None),
 		options = dict(
-			maxiter = 10000, # hit a case where I needed slightly more than the default number of iterations
-			tol = 1e-6 # default tolerance (1e-15?) is very easy to break - underlying linprog precision issue?
+			maxiter = LINPROG_ITERATES,
+			tol = TOLERANCE
 			)
 		)
 
@@ -229,21 +232,61 @@ def build_initial_parameter_values( # TODO: meaningful defaults
 		]) - G_stage2.dot(x0_aug)
 	GN_stage2 = G_stage2.dot(N)
 
-	result_stage2 = minimize(
-		lambda dx_aug: np.sum(np.square(
-			AN_stage2.dot(dx_aug) - b_stage2
-			)),
+	def objective_stage2(dx_aug):
+		return np.sum(np.square(AN_stage2.dot(dx_aug) - b_stage2))
+
+	def objective_jacobian_stage2(dx_aug):
+		return (
+			2*AN_stage2.T.dot(AN_stage2).dot(dx_aug)
+			- 2 * b_stage2.dot(AN_stage2)
+			)
+
+	def constraints_stage2(dx_aug):
+		return h_stage2 - GN_stage2.dot(dx_aug)
+
+	def constraints_jacobian_stage2(dx_aug):
+		return -GN_stage2
+
+	result_stage2 = so.minimize(
+		objective_stage2,
 		np.zeros_like(x0_aug),
+		jac = objective_jacobian_stage2,
 		constraints = dict(
 			type = 'ineq',
-			fun = lambda dx_aug: h_stage2 - GN_stage2.dot(dx_aug)
-			)
+			fun = constraints_stage2,
+			jac = constraints_jacobian_stage2
+			),
+		method = (
+			# Works
+			'SLSQP'
+
+			# No bounds/constraint support
+			# 'Nelder-Mead'
+			# 'Powell'
+			# 'CG'
+			# 'BFGS'
+			# 'L-BFGS-B'
+			# 'TNC'
+
+			# Requires Jacobian, no bounds
+			# 'Newton-CG'
+
+			# Requires Hessian
+			# 'dogleg'
+			# 'trust-ncg'
+			# 'trust-exact'
+			# 'trust-krylov'
+
+			# Appears to need more iterates
+			# 'COBYLA'
+			),
+		tol = TOLERANCE
 		)
 
 	x_aug = x0_aug + N.dot(result_stage2.x)
 	x = x_aug[:n_basic_parameters]
 
-	assert result_stage2.success
+	assert result_stage2.success, result_stage2.message
 
 	# TODO: error checking on stage 1, 2 output
 
