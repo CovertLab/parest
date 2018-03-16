@@ -33,7 +33,16 @@ CONVERGENCE_TIME = int(1e4) # number of iterations between checks to compare - s
 
 TARGET_PYRUVATE_PRODUCTION = 1e-3 # the target rate at which the system produces pyruvate
 
-LOG_TIME = 10 # max time, in seconds, between logging events
+LOG_TIME = 10.0 # max time, in seconds, between logging events
+
+TABLE_FIELDS = (
+	lo.Field('Epoch', 'n'),
+	lo.Field('Con. pen.', '.2e', 10),
+	lo.Field('Iteration', 'n'),
+	lo.Field('Total error', '.3e', 12),
+	lo.Field('Misfit error', '.3e', 12),
+	lo.Field('Diseq. error', '.3e', 12),
+	)
 
 # These options are just for demonstration purposes (enhanced speed vs.
 # default numpy operations).  Using my custom functions significantly improves
@@ -218,6 +227,10 @@ def build_bounds(naive = False):
 		lower_log_KM = -constants.RT * np.log(upper_KM)
 		upper_log_KM = -constants.RT * np.log(lower_KM)
 
+		# RESOLUTION = np.finfo(np.float64).resolution
+		# lower_log_Keq = constants.RT * np.log(RESOLUTION)# / 2
+		# upper_log_Keq = constants.RT * np.log(1./RESOLUTION)# / 2
+
 		bounds_matrix = np.concatenate([
 			structure.full_glc_association_matrix,
 			structure.gelc_association_matrix,
@@ -225,6 +238,7 @@ def build_bounds(naive = False):
 			# structure.kcat_r_matrix,
 			structure.KM_f_matrix,
 			structure.KM_r_matrix,
+			# structure.Keq_matrix
 			])
 
 		lowerbounds = np.concatenate([
@@ -234,6 +248,7 @@ def build_bounds(naive = False):
 			# [lower_log_kcat] * structure.kcat_r_matrix.shape[0],
 			[lower_log_KM] * structure.KM_f_matrix.shape[0],
 			[lower_log_KM] * structure.KM_r_matrix.shape[0],
+			# [lower_log_Keq] * structure.Keq_matrix.shape[0],
 			])
 
 		upperbounds = np.concatenate([
@@ -243,6 +258,7 @@ def build_bounds(naive = False):
 			# [upper_log_kcat] * structure.kcat_r_matrix.shape[0],
 			[upper_log_KM] * structure.KM_f_matrix.shape[0],
 			[upper_log_KM] * structure.KM_r_matrix.shape[0],
+			# [upper_log_Keq] * structure.Keq_matrix.shape[0],
 			])
 
 		# I'm excluding reverse kcat's because it adds some non-trivial (that
@@ -341,8 +357,8 @@ def estimate_parameters(
 			) = build_bounds(naive = False)
 
 	(init_pars, init_fitness) = build_initial_parameter_values(
-		init_bounds_matrix, (init_lowerbounds + init_upperbounds)/2,
-		np.concatenate([-init_bounds_matrix, +init_bounds_matrix]), np.concatenate([-init_lowerbounds, init_upperbounds]),
+		init_bounds_matrix, (init_lowerbounds + init_upperbounds)/2.0,
+		np.concatenate([-init_bounds_matrix, +init_bounds_matrix]), np.concatenate([-init_lowerbounds, +init_upperbounds]),
 		fitting_matrix, fitting_values,
 		upper_fitting_matrix, upper_fitting_values,
 		*[(fm, fv) for (fm, fv, fe) in relative_fitting_tensor_sets]
@@ -359,14 +375,7 @@ def estimate_parameters(
 		relative_fitting_tensor_sets
 		)
 
-	table = lo.Table([
-		lo.Field('Epoch', 'n'),
-		lo.Field('Con. pen.', '.2e', 10),
-		lo.Field('Iteration', 'n'),
-		lo.Field('Total error', '.3e', 12),
-		lo.Field('Misfit error', '.3e', 12),
-		lo.Field('Diseq. error', '.3e', 12),
-		])
+	table = lo.Table(TABLE_FIELDS)
 
 	last_log_time = time.time()
 
@@ -489,7 +498,7 @@ if __name__ == '__main__':
 	(pars, obj) = estimate_parameters(
 		definition,
 		random_state = np.random.RandomState(0),
-		naive = True,
+		# naive = True,
 		# force_better_init = True,
 		# random_direction = True
 		)
