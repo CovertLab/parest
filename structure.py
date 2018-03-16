@@ -1,4 +1,20 @@
 
+'''
+Defines the various lists, vectors, and matrices needed to connect parameter
+value data to the kinetic models.
+
+Note on data types:  While nearly all coefficients in these matrices are
+integer-valued, we represent them as floating-point matrices to minimize the
+amount of implicit casting when we later use these matrices in concert with
+floating-point vectors.
+
+TODO: move some of these derived/grouped matrices into another downstream file
+TODO: reduce the number of public attributes and maybe write in CAPS to indicate constancy
+TODO: more descriptions of what the matrices are and how to use them
+
+'''
+
+
 from __future__ import division
 
 import numpy as np
@@ -6,7 +22,7 @@ import numpy as np
 from data import kb
 
 DYNAMIC_COMPOUNDS = ('F6P', 'F16P', 'DHAP', 'GAP', '13DPG', '3PG', '2PG', 'PEP')
-ACTIVE_REACTIONS = ('PGI', 'PFK', 'FBP', 'FBA', 'TPI', 'GAP', 'PGK', 'GPM', 'ENO', 'PYK', 'PPS')
+ACTIVE_REACTIONS = ('PGI', 'PFK', 'FBP', 'FBA', 'TPI', 'GAP', 'PGK', 'GPM', 'ENO', 'PYK', 'PPS') # TODO: lowercase for reaction names
 N_DYNAMIC = len(DYNAMIC_COMPOUNDS)
 
 GS = 'Gibbs standard molar energy for compound:{}'
@@ -130,35 +146,36 @@ for ind_reaction, reaction in enumerate(kb.reaction):
 	i_gte = parameters.index(GTE.format(reaction.id))
 	i_gelc = parameters.index(GELC.format(reaction.id))
 
-	frp[i_gte] = +1
-	frp[i_gelc] = -1
+	frp[i_gte] = +1.0
+	frp[i_gelc] = -1.0
 
-	rrp[i_gte] = +1
-	rrp[i_gelc] = -1
+	rrp[i_gte] = +1.0
+	rrp[i_gelc] = -1.0
 
 	solo_fbp = []
 	for reactant in reactants:
 		s = reactant.stoichiometry
+		sf = float(s)
 
 		i_gs = parameters.index(GS.format(reactant.compound))
 		i_glc = parameters.index(GLC.format(reactant.compound))
 
-		frp[i_gs] += -s
-		frp[i_glc] += -s
+		frp[i_gs] += -sf
+		frp[i_glc] += -sf
 
-		fed[i_gs] += -s
-		fed[i_glc] += -s
+		fed[i_gs] += -sf
+		fed[i_glc] += -sf
 
 		if reactant.compound in DYNAMIC_COMPOUNDS:
-			rs[DYNAMIC_COMPOUNDS.index(reactant.compound)] -= s
+			rs[DYNAMIC_COMPOUNDS.index(reactant.compound)] -= sf
 
 		for i in xrange(s):
 			fbp = np.zeros(n_parameters)
 
 			i_gber = parameters.index(GBER.format(reactant.compound, i+1, reactant.reaction))
 
-			fbp[i_glc] += -1
-			fbp[i_gber] += +1
+			fbp[i_glc] += -1.0
+			fbp[i_gber] += +1.0
 
 			solo_fbp.append(fbp)
 
@@ -176,26 +193,27 @@ for ind_reaction, reaction in enumerate(kb.reaction):
 	solo_rbp = []
 	for product in products:
 		s = product.stoichiometry
+		sf = float(s)
 
 		i_gs = parameters.index(GS.format(product.compound))
 		i_glc = parameters.index(GLC.format(product.compound))
 
-		rrp[i_gs] += -s
-		rrp[i_glc] += -s
+		rrp[i_gs] += -sf
+		rrp[i_glc] += -sf
 
-		fed[i_gs] += +s
-		fed[i_glc] += +s
+		fed[i_gs] += +sf
+		fed[i_glc] += +sf
 
 		if product.compound in DYNAMIC_COMPOUNDS:
-			rs[DYNAMIC_COMPOUNDS.index(product.compound)] += s
+			rs[DYNAMIC_COMPOUNDS.index(product.compound)] += sf
 
 		for i in xrange(s):
 			rbp = np.zeros(n_parameters)
 
 			i_gbep = parameters.index(GBEP.format(product.compound, i+1, product.reaction))
 
-			rbp[i_glc] += -1
-			rbp[i_gbep] += +1
+			rbp[i_glc] += -1.0
+			rbp[i_gbep] += +1.0
 
 			solo_rbp.append(rbp)
 
@@ -231,38 +249,38 @@ total_reverse_binding_potential_matrix = np.array(total_reverse_binding_potentia
 forward_saturated_reaction_potential_matrix = forward_reaction_potential_matrix - total_forward_binding_potential_matrix
 reverse_saturated_reaction_potential_matrix = reverse_reaction_potential_matrix - total_reverse_binding_potential_matrix
 
-stoich = np.array(reaction_stoich).T
+stoich = np.array(reaction_stoich).T.copy()
 
 reaction_forward_binding_association_matrix = np.zeros(
 	(n_reactions, forward_binding_potential_matrix.shape[0])
 	)
-reaction_forward_binding_association_matrix[zip(*reaction_forward_binding_associations)] = 1
+reaction_forward_binding_association_matrix[zip(*reaction_forward_binding_associations)] = 1.0
 
 reaction_reverse_binding_association_matrix = np.zeros(
 	(n_reactions, reverse_binding_potential_matrix.shape[0])
 	)
-reaction_reverse_binding_association_matrix[zip(*reaction_reverse_binding_associations)] = 1
+reaction_reverse_binding_association_matrix[zip(*reaction_reverse_binding_associations)] = 1.0
 
 glc_association_matrix = np.zeros((len(DYNAMIC_COMPOUNDS), n_parameters))
 
 for i, compound in enumerate(DYNAMIC_COMPOUNDS):
 	j = parameters.index(GLC.format(compound))
 
-	glc_association_matrix[i, j] = +1
+	glc_association_matrix[i, j] = +1.0
 
 full_glc_association_matrix = np.zeros((len(compounds), n_parameters))
 
 for i, compound in enumerate(compounds):
 	j = parameters.index(GLC.format(compound))
 
-	full_glc_association_matrix[i, j] = +1
+	full_glc_association_matrix[i, j] = +1.0
 
 gelc_association_matrix = np.zeros((len(reactions), n_parameters))
 
 for i, reaction in enumerate(reactions):
 	j = parameters.index(GELC.format(reaction))
 
-	gelc_association_matrix[i, j] = +1
+	gelc_association_matrix[i, j] = +1.0
 
 molar_masses = gather(kb.molar_mass, 'compound')
 
@@ -292,7 +310,7 @@ kcat_f_matrix = np.zeros((n_reactions, n_parameters))
 for i, reaction in enumerate(reactions):
 	gt_ind = parameters.index(GTE.format(reaction))
 
-	kcat_f_matrix[i, gt_ind] = +1
+	kcat_f_matrix[i, gt_ind] = +1.0
 
 	for reactant in reactants_by_reaction[reaction]:
 		for s in xrange(reactant.stoichiometry):
@@ -310,8 +328,8 @@ for i, reaction in enumerate(reactions):
 					)
 				)
 
-			kcat_f_matrix[i, gs_ind] -= 1
-			kcat_f_matrix[i, gb_ind] -= 1
+			kcat_f_matrix[i, gs_ind] -= 1.0
+			kcat_f_matrix[i, gb_ind] -= 1.0
 
 # kcat_r = exp(-kcat_r_matrix.dot(x)/RT)
 
@@ -320,7 +338,7 @@ kcat_r_matrix = np.zeros((n_reactions, n_parameters))
 for i, reaction in enumerate(reactions):
 	gt_ind = parameters.index(GTE.format(reaction))
 
-	kcat_r_matrix[i, gt_ind] = +1
+	kcat_r_matrix[i, gt_ind] = +1.0
 
 	for product in products_by_reaction[reaction]:
 		for s in xrange(product.stoichiometry):
@@ -338,8 +356,8 @@ for i, reaction in enumerate(reactions):
 					)
 				)
 
-			kcat_r_matrix[i, gs_ind] -= 1
-			kcat_r_matrix[i, gb_ind] -= 1
+			kcat_r_matrix[i, gs_ind] -= 1.0
+			kcat_r_matrix[i, gb_ind] -= 1.0
 
 # Keq = exp(-Keq_matrix.dot(x)/RT)
 
@@ -380,7 +398,7 @@ for reaction in reactions:
 					)
 				)
 
-			KM_f_matrix[i, gb_ind] = -1
+			KM_f_matrix[i, gb_ind] = -1.0
 
 			KM_f_ids.append(
 				'{}:{}, #{}'.format(
@@ -413,7 +431,7 @@ for reaction in reactions:
 					)
 				)
 
-			KM_r_matrix[i, gb_ind] = -1
+			KM_r_matrix[i, gb_ind] = -1.0
 
 			KM_r_ids.append(
 				'{}:{}, #{}'.format(
@@ -430,7 +448,7 @@ gs_association_matrix = np.zeros((len(compounds), n_parameters))
 for (i, compound) in enumerate(compounds):
 	j = parameters.index(GS.format(compound))
 
-	gs_association_matrix[i, j] = +1
+	gs_association_matrix[i, j] = +1.0
 
 standard_parameter_matrix = np.concatenate([
 	full_glc_association_matrix,
