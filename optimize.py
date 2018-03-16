@@ -171,24 +171,22 @@ def build_perturbation_vectors(naive = False):
 		# a given 'standard' parameter does not influence the value of any
 		# other 'standard' parameter.
 
-		perturbation_vectors = [
-			vector
-			for vector in np.linalg.pinv(structure.standard_parameter_matrix).T
-			]
+		perturbation_vectors = list(
+			np.linalg.pinv(structure.standard_parameter_matrix).T.copy()
+			)
 
 		# TODO: assert perturbations are simple
 
 	else:
-		perturbation_vectors = [
-			vector
-			for vector in la.bilevel_elementwise_pseudoinverse(
+		perturbation_vectors = list(
+			la.bilevel_elementwise_pseudoinverse(
 				np.concatenate([
 					structure.activity_matrix,
 					np.identity(structure.n_parameters),
 					]),
 				structure.activity_matrix
-				).T
-			]
+				).T.copy()
+			)
 
 		# Many of the basic parameter perturbation vectors end up being
 		# identical to the 'activity matrix' perturbation vectors, so I detect
@@ -310,6 +308,7 @@ def estimate_parameters(
 	# TODO: pass initial parameters, bounds, perturbation vectors
 	# TODO: pass metaparameters
 	# TODO: more results/options/callbacks
+	# TODO: logging as callbacks
 
 	print 'Initializing optimization.'
 
@@ -385,7 +384,7 @@ def estimate_parameters(
 	perturbation_vectors = build_perturbation_vectors(naive)
 	n_perturb = len(perturbation_vectors)
 
-	ibm_v = [v.copy() for v in inverse_bounds_matrix.T] # Copy needed to enforce memory-contiguity
+	ibm_v = inverse_bounds_matrix.T.copy() # Copy needed to enforce memory-contiguity
 
 	for (epoch, disequ_weight) in enumerate(DISEQU_WEIGHTS):
 		history_best_objective = []
