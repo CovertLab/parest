@@ -171,10 +171,14 @@ def build_initial_parameter_values( # TODO: meaningful defaults
 	result_stage1 = so.linprog(
 		c,
 		G, h,
-		bounds = (None, None),
+		bounds = (None, None), # defaults to lower bound of 0 on all parameters
 		options = dict(
 			maxiter = LINPROG_ITERATES,
 			tol = TOLERANCE
+			),
+		method = (
+			# 'simplex'
+			'interior-point' # produces more temperate results
 			)
 		)
 
