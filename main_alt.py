@@ -64,6 +64,12 @@ for seed_offset in xrange(args.n):
 		except OSError:
 			assert os.path.exists(outdir)
 
+		if args.naive:
+			print 'Using naive perturbations'
+
+		else:
+			print 'Using parsimonious perturbations'
+
 		pars_path = os.path.join(outdir, 'pars.npy')
 		obj_path = os.path.join(outdir, 'obj.npy')
 		hist_path = os.path.join(outdir, 'hist.npy')
