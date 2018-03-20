@@ -17,7 +17,7 @@ the lower and upper values of:
 BOUNDS_MATRIX = structure.activity_matrix
 INVERSE_BOUNDS_MATRIX = np.linalg.pinv(BOUNDS_MATRIX)
 
-RESOLUTION = 1e-15 # "resolution" of 64-bit floating point number, np.finfo(np.float64).resolution
+RESOLUTION = np.finfo(np.float64).resolution # "resolution" of 64-bit floating point number, = 1e-15
 
 '''
 Concentration are bounded from 1 fM to 1 MM.  Both are more permissive than
