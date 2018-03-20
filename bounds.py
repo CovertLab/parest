@@ -32,7 +32,7 @@ UPPER_CONC = 1e3
 Choosing upper and lower v_max values is difficult, however we know from
 fluxomics that an active pathway (like glycolysis) operates around a net
 flux of 1 mM/s.  These bounds are centered about an average of about 30 uM/s,
-and with a range consistent with RESOLUTION.  The hope is that this average
+and with a range consistent with the RESOLUTION.  The hope is that this average
 is low enough to be representative of the average flux, and far enough from
 our target glycolysis flux to not bias initialization.  At the same time, a
 flux that is too small could be tough for the system to escape.
