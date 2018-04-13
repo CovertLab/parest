@@ -4,6 +4,8 @@ Miscellaneous metabolite concentrations.
 @concentration(source = BR09S)
 Pi, 20e-3
 
-@concentration(source = misc)
-H, 6.3e-8
+@concentration(source = PBC_pg3)
 H2O, 39
+
+@concentration(source = 17545292)
+H, 6.3e-8
