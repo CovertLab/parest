@@ -2,7 +2,10 @@
 Chemical equilibrium constants for various reactions.  Some reactions are not
 mass-balanced\, some operate in the reverse direction of the standard
 stoichiometry\, and some represent equilibrium over a set of reactions rather
-than one.
+than one.  These values were taken from BR09S (Suppliment from Bennett\,
+Rabinowitz 2009 Nat Chem Bio "Absolute Metabolite Concentrations and Implied
+Enzyme Active Site Occupancy in Escherichia coli") - see that source for the
+complete citations.
 
 @equilibrium
 TPI_reverse, 24, MJ1943_1
