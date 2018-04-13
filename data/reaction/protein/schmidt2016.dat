@@ -1,4 +1,4 @@
-@relative_protein_count(source = S2015)
+@relative_protein_count(source = S2016)
 PGI, 4601
 PFK, 2387 # pfkA + pfkB
 FBP, 944
