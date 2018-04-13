@@ -9,31 +9,27 @@ BR09S: Suppliment from Bennett\, Rabinowitz 2009 Nat Chem Bio "Absolute Metaboli
 TS2010ST4_5h: Supplimentary table 4\, 5 h column from Toya\, Shimizu 2010 Biotech Progress "13C-metabolic flux analysis for batch culture of Escherichia coli and its pyk and pgi gene knockout mutants based on mass isotopomer distribution of intracellular metabolites"
 
 1429704: PMID 1429704
-16990279: PMID 16990279
 8436219: PMID 8436219
 8309937: PMID 8309937
-9442062: PMID 9442062
-1524432: PMID 1524432
-10353839: PMID 10353839
-17642514: PMID 17642514
-24141127: PMID 24141127
-11803023: PMID 11803023
-383238: PMID 383238
-16484232: PMID 16484232
-1329945: PMID 1329945
-8203917: PMID 8203917
-8422384: PMID 8422384
-15723538: PMID 15723538
-12930982: PMID 12930982
-17947381: PMID 17947381
 11300773: PMID 11300773
 12767227: PMID 12767227
-20887711: PMID 20887711
 K1989: Kruger\, N.J. Effects of temperature on the kinetic properties of phosphofructokinase from Escherichia coli Biochem. Soc. Trans. 17 760-761 1989 Escherichia coli
 10190977: PMID 10190977
 
-S2015: Schmidt 2015\, Glucose column
+11825604: PMID 11825604
+15767255: PMID 15767255
+17314096: PMID 17314096
+19073594: PMID 19073594
+9878448_fbaA: PMID 9878448
+10712619: PMID 10712619
+15531627: PMID 15531627
+
+S2016: Schmidt 2016\, Glucose column\, supplimentary table 5
 T2010T6: Table 6 from Taniguchi 2010
 W2014S2: Suppliment 2 from Wisniewski 2014 (average of three replicates)
+
+PBC_pg3: Neidhardt\, Frederick et al. "Physiology of the Bacterial Cell: A Molecular Approach" page 3 (70% of cell mass is water * 1 g/mL water / ( 18 g/mol water) = cytoplasmic concentration of about 39 M)
+
+17545292: PMID 17545292; used cytoplasmic pH of 7.2 to compute proton concentration
 
 custom_saturation_limits: Used to test a hypothesis regarding substrate saturation and how it determines stability.  Semi-quantitative; not used to fit the model by default.
