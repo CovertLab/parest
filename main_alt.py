@@ -26,7 +26,7 @@ parser.add_argument(
 	)
 
 parser.add_argument(
-	'--problem', type = str, default = 'data_agnostic'
+	'--problem', type = str, default = 'all_scaled'
 	)
 
 args = parser.parse_args()

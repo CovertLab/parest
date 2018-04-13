@@ -15,7 +15,7 @@ import optimize
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-	'--problem', type = str, default = 'data_agnostic'
+	'--problem', type = str, default = 'all_scaled'
 	)
 parser.add_argument(
 	'--seed', type = int, default = None
