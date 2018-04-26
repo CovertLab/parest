@@ -31,7 +31,7 @@ UPPER_CONC = 1e3
 '''
 Choosing upper and lower v_max values is difficult, however we know from
 fluxomics that an active pathway (like glycolysis) operates around a net
-flux of 1 mM/s.  These bounds are centered about an average of about 30 uM/s,
+flux of 0.1 mM/s.  These bounds are centered about an average of about 3 uM/s,
 and with a range consistent with the RESOLUTION.  The hope is that this average
 is low enough to be representative of the average flux, and far enough from
 our target glycolysis flux to not bias initialization.  At the same time, a
@@ -41,8 +41,8 @@ Note that this is just v_max, not a total constraint on v.  Assuming enzymes
 that are at least somewhat unsaturated, the real "average" v's should be even
 smaller.
 '''
-LOWER_VMAX = 1e-12
-UPPER_VMAX = 1e3
+LOWER_VMAX = 1e-13
+UPPER_VMAX = 1e2
 
 BOUNDS_SATURATED_REACTION_POTENTIAL = (
 	-constants.RT * np.log(UPPER_VMAX/constants.K_STAR),

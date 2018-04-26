@@ -31,7 +31,7 @@ PERTURBATION_RECOVERTY_TIME_TOLERANCE = 3
 EXPECTED_RECOVERY_EPOCHS = np.log((CONC_FOLD_PERTURBATION - 1)/(CONC_FOLD_CONVERGENCE - 1))
 PERTURBATION_RECOVERY_EPOCHS = PERTURBATION_RECOVERTY_TIME_TOLERANCE * EXPECTED_RECOVERY_EPOCHS
 
-TARGET_PYRUVATE_PRODUCTION = 1e-3
+TARGET_PYRUVATE_PRODUCTION = 0.14e-3
 
 DT = 1e1
 T_INIT = 0
@@ -105,9 +105,9 @@ def test(pars):
 
 	flux_is_fit = (flux_fit < 1e-3)
 
-	print net_pyruvate_production
-	print flux_fit
-	print flux_is_fit
+	print 'net pyruvate production:', net_pyruvate_production
+	print 'flux rel error:', flux_fit
+	print 'is flux fit?', flux_is_fit
 
 	normed_log_conc_deviation = np.linalg.norm(x_eq - x_start, 2) / constants.RT
 

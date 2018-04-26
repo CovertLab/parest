@@ -31,7 +31,7 @@ PERTURBATION_SCALE = np.logspace(+2, -6, MAX_ITERATIONS)
 CONVERGENCE_RATE = 1e-4 # if the objective fails to improve at this rate, assume convergence and move on to the next step
 CONVERGENCE_TIME = int(1e4) # number of iterations between checks to compare - should probably scale with problem size
 
-TARGET_PYRUVATE_PRODUCTION = 1e-3 # the target rate at which the system produces pyruvate
+TARGET_PYRUVATE_PRODUCTION = 0.14e-3 # the target rate at which the system produces pyruvate, in M/s
 
 LOG_TIME = 10.0 # max time, in seconds, between logging events
 
@@ -300,7 +300,6 @@ def estimate_parameters(
 		fitting_rules_and_weights = tuple(),
 		random_state = None,
 		naive = False,
-		force_better_init = False,
 		random_direction = False,
 		callback = empty_callback
 		):
@@ -311,6 +310,12 @@ def estimate_parameters(
 	# TODO: logging as callbacks
 
 	print 'Initializing optimization.'
+
+	if naive:
+		print 'Using naive perturbations.'
+
+	else:
+		print 'Using parsimonious perturabtions.'
 
 	time_start = time.time() # TODO: timing convenience classes
 
@@ -337,27 +342,9 @@ def estimate_parameters(
 	(bounds_matrix, lowerbounds, upperbounds) = build_bounds(naive)
 	inverse_bounds_matrix = np.linalg.pinv(bounds_matrix)
 
-	if not force_better_init:
-		init_bounds_matrix = bounds_matrix
-		init_lowerbounds = lowerbounds
-		init_upperbounds = upperbounds
-
-	else:
-		# The naive parameter bounds do a poor job of regularizing the
-		# ranges of the initial values.  Subsequently the initial
-		# parameters have an extremely large associated disequilibrium
-		# error.  Using this option leads to 'fairer' initialization,
-		# in the sense that both 'naive' and 'parsimonious' start from
-		# the same position.
-		(
-			init_bounds_matrix,
-			init_lowerbounds,
-			init_upperbounds
-			) = build_bounds(naive = False)
-
 	(init_pars, init_fitness) = build_initial_parameter_values(
-		init_bounds_matrix, (init_lowerbounds + init_upperbounds)/2.0,
-		np.concatenate([-init_bounds_matrix, +init_bounds_matrix]), np.concatenate([-init_lowerbounds, +init_upperbounds]),
+		bounds_matrix, (lowerbounds + upperbounds)/2.0,
+		np.concatenate([-bounds_matrix, +bounds_matrix]), np.concatenate([-lowerbounds, +upperbounds]),
 		fitting_matrix, fitting_values,
 		upper_fitting_matrix, upper_fitting_values,
 		*[(fm, fv) for (fm, fv, fe) in relative_fitting_tensor_sets]
@@ -498,7 +485,6 @@ if __name__ == '__main__':
 		definition,
 		random_state = np.random.RandomState(0),
 		# naive = True,
-		# force_better_init = True,
 		# random_direction = True
 		)
 
