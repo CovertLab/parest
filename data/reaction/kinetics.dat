@@ -19,25 +19,21 @@ ATP, 88e-6
 @forward_catalytic_rate(reaction = PFK, source = K1989)
 185
 
-# TODO: source
 @forward_catalytic_rate(reaction = FBP, source = 11825604)
 14.6
 @reactant_saturation(reaction = FBP, index = 1, source = 11825604)
 F16P, 15.4e-6
 
-# TODO: source
 @forward_catalytic_rate(reaction = FBP, source = 15767255)
 20
 @reactant_saturation(reaction = FBP, index = 1, source = 15767255)
 F16P, 2.4e-6 # TODO: check; clustering is suspect
 
-# TODO: source
 @forward_catalytic_rate(reaction = FBP, source = 17314096)
 24
 @reactant_saturation(reaction = FBP, index = 1, source = 17314096)
 F16P, 1.7e-6
 
-# TODO: source
 @forward_catalytic_rate(reaction = FBP, source = 19073594)
 14.6
 @reactant_saturation(reaction = FBP, index = 1, source = 19073594)
