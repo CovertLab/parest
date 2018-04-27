@@ -32,7 +32,7 @@ molecular_weight_data = { # in kDa per molecule
 	'PPS':150
 	}
 
-# note for future reference: 1 kDa/molecule = 1 kg/mol
+# this could be simplified by noting 1 kDa/molecule = 1 kg/mol
 
 Nav = 6.022e23
 
