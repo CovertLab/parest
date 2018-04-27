@@ -311,12 +311,6 @@ def estimate_parameters(
 
 	print 'Initializing optimization.'
 
-	if naive:
-		print 'Using naive perturbations.'
-
-	else:
-		print 'Using parsimonious perturabtions.'
-
 	time_start = time.time() # TODO: timing convenience classes
 
 	if random_state is None:
