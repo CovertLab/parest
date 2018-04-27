@@ -90,5 +90,5 @@ plt.xticks([0, 50, 100, 150, 200])
 plt.ylim(10**-17, 10**0)
 plt.yticks(10.**np.arange(-16, 0, 2))
 
-plt.savefig('figure2_reduced.pdf')
-plt.savefig('figure2_reduced.png', dpi = 300)
+plt.savefig('figure3.pdf')
+# plt.savefig('figure3.png', dpi = 300)

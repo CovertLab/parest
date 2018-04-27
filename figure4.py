@@ -286,4 +286,4 @@ for i, source in enumerate(sources):
 	plt.subplot(len(sources), 2, i*2+2)
 	plot_prd(pars, i)
 
-plt.savefig('figure3.pdf')
+plt.savefig('figure4.pdf')

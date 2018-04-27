@@ -12,8 +12,8 @@ import constants
 # 	:, np.load('out/all_scaled/valid.npy')
 # 	]
 
-pars = np.load('out/history/new_target/standard/pars.npy')[
-	:, np.load('out/history/new_target/standard/valid.npy')
+pars = np.load('out/all_scaled/pars.npy')[
+	:, np.load('out/all_scaled/valid.npy')
 	]
 
 specific_activity_data = [ # in micromol/min/mg
@@ -217,9 +217,9 @@ axes.set_ylim(-n_unique+0.5, +0.5)
 axes.set_xlim(-BILFOLD, +BILFOLD)
 
 axes.axis('off')
-fig.savefig('kcat_predictions.pdf', dpi = DPI)
+fig.savefig('figure6.pdf', dpi = DPI)
 
-with open('kcat_predictions_key.txt', 'w') as f:
+with open('figure6_key.txt', 'w') as f:
 	for indexing in unique:
 		f.write(':'.join([
 			structure.reactions[indexing]

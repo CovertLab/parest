@@ -304,12 +304,12 @@ def main():
 	axes.set_xlim(-BILFOLD, +BILFOLD)
 
 	axes.axis('off')
-	fig.savefig('residuals.pdf', dpi = DPI)
+	fig.savefig('figure5.pdf', dpi = DPI)
 
 	print '{:0.2%} valid ({} of {})'.format(valid.mean(), valid.sum(), valid.size)
 	print 'average (unscaled) fit: {:0.2f}'.format(np.mean(np.sum(np.abs(residuals), 0)))
 
-	with open('residuals_key.txt', 'w') as f:
+	with open('figure5_key.txt', 'w') as f:
 		for indexing in unique:
 			f.write(':'.join([
 				DATATYPES_ORDERED[indexing['datatype']] if indexing['datatype'] >= 0 else '',
