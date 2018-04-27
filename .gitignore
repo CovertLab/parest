@@ -7,8 +7,7 @@
 # Output
 out/*
 slurm/*
-residuals_key.txt
-kcat_predictions_key.txt
+*_key.txt
 
 # compiled python module
 *.pyc
