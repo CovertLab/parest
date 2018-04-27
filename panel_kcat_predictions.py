@@ -8,8 +8,12 @@ import matplotlib.pyplot as plt
 import structure
 import constants
 
-pars = np.load('out/all_scaled/pars.npy')[
-	:, np.load('out/all_scaled/valid.npy')
+# pars = np.load('out/all_scaled/pars.npy')[
+# 	:, np.load('out/all_scaled/valid.npy')
+# 	]
+
+pars = np.load('out/history/new_target/standard/pars.npy')[
+	:, np.load('out/history/new_target/standard/valid.npy')
 	]
 
 specific_activity_data = [ # in micromol/min/mg
@@ -155,7 +159,7 @@ POORLY_FIT_OBSERVATION_STYLE.update(
 	)
 
 for i, ind in enumerate(unique_indices):
-	prediction_ranges[i] = np.percentile(
+	prediction_ranges[i] = tuple(np.percentile(
 		residuals[ind, :],
 		(
 			0,
@@ -163,7 +167,7 @@ for i, ind in enumerate(unique_indices):
 			50 + 100 * FRACTION_OF_DATA/2,
 			100
 			)
-		) - medians[ind]
+		) - medians[ind])
 
 observations_by_prediction = []
 

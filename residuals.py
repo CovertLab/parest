@@ -211,7 +211,7 @@ def main():
 		)
 
 	for i, ind in enumerate(unique_indices):
-		prediction_ranges[i] = np.percentile(
+		prediction_ranges[i] = tuple(np.percentile(
 			residuals[ind, :],
 			(
 				0,
@@ -219,7 +219,7 @@ def main():
 				50 + 100 * FRACTION_OF_DATA/2,
 				100
 				)
-			) - medians[ind]
+			) - medians[ind])
 
 	observations_by_prediction = []
 
