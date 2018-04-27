@@ -14,23 +14,17 @@ from matplotlib.cm import RdBu
 COLOR_OFFSET = 0.1
 
 COLOR_NAIVE = (
-	'crimson'
+	# 'crimson'
 	# RdBu(0.0 + COLOR_OFFSET)
+	np.array((94, 187, 71), np.float64)/255.
 	)
 COLOR_NEW = (
-	'royalblue'
+	# 'royalblue'
 	# RdBu(1.0 - COLOR_OFFSET)
+	np.array((225, 6, 133), np.float64)/255.
 	)
 
 from matplotlib import colors
-
-COLOR_BOTH = tuple(
-	(i + j)/2
-	for (i, j) in izip(
-		colors.hex2color(colors.get_named_colors_mapping()[COLOR_NAIVE]),
-		colors.hex2color(colors.get_named_colors_mapping()[COLOR_NEW])
-		)
-	)
 
 MARKER_STYLE = dict(
 	markeredgewidth = 0.5,

@@ -30,7 +30,11 @@ sources = [
 	]
 
 COLORS = [
-	'r', 'b', 'y', 'g', 'k'
+	np.array((225, 6, 133), np.float64)/255.,
+	np.array((83, 49, 0), np.float64)/255.
+	np.array((143, 85, 0), np.float64)/255.
+	np.array((221, 145, 23), np.float64)/255.
+	np.array((251, 177, 37), np.float64)/255.
 	]
 
 lre = [

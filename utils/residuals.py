@@ -48,13 +48,15 @@ COLOR_OFFSET = 0.1
 WELL_FIT_COLOR = (
 	# (0.1, 0.3, 1,)
 	# RdBu(1.0 - COLOR_OFFSET)
-	'royalblue'
+	# 'royalblue'
+	np.array((78, 105, 177), np.float64)/255.
 	)
 
 POORLY_FIT_COLOR = (
 	# (0.9, 0.1, 0.1)
 	# RdBu(0.0 + COLOR_OFFSET)
-	'crimson'
+	# 'crimson'
+	np.array((219, 29, 61), np.float64)/255.
 	)
 
 WELL_FIT_OBSERVATION_STYLE = OBSERVATION_STYLE.copy()
@@ -155,7 +157,11 @@ def plot(residuals, indexing):
 			if np.abs(obs) > BILFOLD:
 				print 'warning - exceeds axis limits'
 
-	axes.set_ylim(-n_unique+0.5, +0.5)
+		axes.axhline(-i + 0.3125, lw = 1.0, c = 'w')
+
+	axes.axhline(-n_unique + 0.3125, lw = 1.0, c = 'w')
+
+	axes.set_ylim(-n_unique + 0.3125, +0.3125)
 	axes.set_xlim(-BILFOLD, +BILFOLD)
 
 	axes.axis('off')
