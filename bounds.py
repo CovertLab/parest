@@ -9,24 +9,15 @@ import structure
 '''
 The bounds of our new, transformed system (parsimonious perturbations).  Bounds
 the lower and upper values of:
-- concentrations of dynamic species
 - maximum forward and reverse rates of reaction
 - saturation ratios
+- concentrations of dynamic species
 '''
 
 BOUNDS_MATRIX = structure.activity_matrix
 INVERSE_BOUNDS_MATRIX = np.linalg.pinv(BOUNDS_MATRIX)
 
 RESOLUTION = np.finfo(np.float64).resolution # "resolution" of 64-bit floating point number, = 1e-15
-
-'''
-Concentration are bounded from 1 fM to 1 MM.  Both are more permissive than
-expected values.  A concentration of one molecule per E. coli cell is roughly
-1 nM, while water, the most abundant species, has a concentration of about
-50 M.  The range is consistent with the RESOLUTION.
-'''
-LOWER_CONC = 1e-12
-UPPER_CONC = 1e3
 
 '''
 Choosing upper and lower v_max values is difficult, however we know from
@@ -61,6 +52,15 @@ BOUNDS_BINDING_POTENTIAL = (
 	-constants.RT * np.log(1/RESOLUTION),
 	-constants.RT * np.log(RESOLUTION),
 	)
+
+'''
+Concentration are bounded from 1 fM to 1 MM.  Both are more permissive than
+expected values.  A concentration of one molecule per E. coli cell is roughly
+1 nM, while water, the most abundant species, has a concentration of about
+50 M.  The range is consistent with the RESOLUTION.
+'''
+LOWER_CONC = 1e-12
+UPPER_CONC = 1e3
 
 BOUNDS_GIBBS_LOG_CONC = (
 	constants.RT * np.log(LOWER_CONC),
