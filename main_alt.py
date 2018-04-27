@@ -55,7 +55,7 @@ for seed_offset in xrange(args.n):
 
 		subdir = 'naive' if args.naive else 'standard'
 
-		outdir = os.path.join('out', 'history', subdir, 'seed-{}'.format(seed))
+		outdir = os.path.join('out', 'history', 'new_target', subdir, 'seed-{}'.format(seed))
 
 		print 'Output will be saved to {}.'.format(os.path.abspath(outdir))
 		try:
@@ -86,11 +86,14 @@ for seed_offset in xrange(args.n):
 
 	if outdir is None or args.force or not all(os.path.exists(p) for p in (pars_path, obj_path, hist_path)):
 
+		callback = collect if (outdir is not None) else optimize.empty_callback
+
 		(pars, obj) = optimize.estimate_parameters(
 			rules_and_weights,
-			random_state,
-			args.naive,
-			collect if (outdir is not None) else optimize.empty_callback
+			random_state = random_state,
+			naive = args.naive,
+			random_direction = False,
+			callback = callback
 			)
 
 		if outdir is not None:
@@ -108,6 +111,8 @@ for seed_offset in xrange(args.n):
 				('constraints', np.float64),
 				('fit', np.float64),
 				]))
+
+			print 'Saved to {}'.format(outdir)
 
 	else:
 		print 'Skipped - output already exists'
