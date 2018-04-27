@@ -25,10 +25,6 @@ DATATYPES_ORDERED = (
 	'reactant_saturation',
 	'product_saturation',
 	)
-# REACTIONS_ORDERED = structure.reactions + sorted( # should probably hand-curate this
-# 	entry.id for entry in kb.reaction
-# 	if entry.id not in structure.reactions
-# 	)
 
 REACTIONS_ORDERED = (
 	'PGI',
