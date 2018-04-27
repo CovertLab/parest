@@ -55,7 +55,7 @@ for seed_offset in xrange(args.n):
 
 		subdir = 'naive' if args.naive else 'standard'
 
-		outdir = os.path.join('out', 'history', 'new_target', subdir, 'seed-{}'.format(seed))
+		outdir = os.path.join('out', 'history', subdir, 'seed-{}'.format(seed))
 
 		print 'Output will be saved to {}.'.format(os.path.abspath(outdir))
 		try:
