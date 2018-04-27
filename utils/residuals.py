@@ -43,21 +43,9 @@ OBSERVATION_OFFSET = 0.35
 
 from matplotlib.cm import RdBu
 
-COLOR_OFFSET = 0.1
+WELL_FIT_COLOR = np.array((78, 105, 177), np.float64)/255.
 
-WELL_FIT_COLOR = (
-	# (0.1, 0.3, 1,)
-	# RdBu(1.0 - COLOR_OFFSET)
-	# 'royalblue'
-	np.array((78, 105, 177), np.float64)/255.
-	)
-
-POORLY_FIT_COLOR = (
-	# (0.9, 0.1, 0.1)
-	# RdBu(0.0 + COLOR_OFFSET)
-	# 'crimson'
-	np.array((219, 29, 61), np.float64)/255.
-	)
+POORLY_FIT_COLOR = np.array((219, 29, 61), np.float64)/255.
 
 WELL_FIT_OBSERVATION_STYLE = OBSERVATION_STYLE.copy()
 WELL_FIT_OBSERVATION_STYLE.update(
@@ -90,7 +78,7 @@ def plot(residuals, indexing):
 	n_unique = unique.size
 
 	fig = plt.figure(
-		figsize = (1, 6/(45+1)*(n_unique+1)), # weird calculation but it has nice dimensions
+		figsize = (1, 6/(47)*(n_unique)), # weird calculation but it has nice dimensions
 		dpi = DPI  # DPI set here doesn't matter much
 		)
 
