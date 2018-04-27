@@ -84,11 +84,14 @@ plt.xlabel(r'$f(x)$')
 
 plt.axvline(MIN_FIT/SCALE, lw = 0.5, ls = ':', c = 'k', zorder = -10)
 
-plt.xlim(-10, 210)
-plt.xticks([0, 50, 100, 150, 200])
+plt.xlim(-10, 130)
+plt.xticks([0, 20, 40, 60, 80, 100, 120])
 
-plt.ylim(10**-17, 10**0)
-plt.yticks(10.**np.arange(-16, 0, 2))
+plt.ylim(10**-16, 10**-2)
+plt.yticks(10.**np.arange(-14, -2, 2))
 
 plt.savefig('figure3.pdf')
 # plt.savefig('figure3.png', dpi = 300)
+
+print valid_naive.sum(), valid_naive.mean()
+print valid_new.sum(), valid_new.mean()
