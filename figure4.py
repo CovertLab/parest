@@ -47,7 +47,7 @@ nbins = 30
 
 width = x_range/nbins
 x = np.linspace(bottom, top, nbins, endpoint = False) + width/2
-width_ratio = 0.95
+width_ratio = 1.00
 
 bin_sets = []
 median_bins = []
@@ -133,10 +133,7 @@ def plot_prd(pars, seed = None):
 	CONC_FOLD_CONVERGENCE = 1.01
 
 	PERTURBATION_SCALE = constants.RT * np.log(CONC_FOLD_PERTURBATION)
-	CONVERGENCE_SCALE = constants.RT * np.log(CONC_FOLD_CONVERGENCE)
-	N_PERTURBATIONS = 30
-
-	APPROX_JAC_RADIUS = 1e-5
+	# CONVERGENCE_SCALE = constants.RT * np.log(CONC_FOLD_CONVERGENCE)
 
 	PERTURBATION_RECOVERTY_TIME_TOLERANCE = 3
 	EXPECTED_RECOVERY_EPOCHS = np.log((CONC_FOLD_PERTURBATION - 1)/(CONC_FOLD_CONVERGENCE - 1))
