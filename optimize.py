@@ -41,7 +41,7 @@ TABLE_FIELDS = (
 	lo.Field('Iteration', 'n'),
 	lo.Field('Total error', '.3e', 12),
 	lo.Field('Misfit error', '.3e', 12),
-	lo.Field('Diseq. error', '.3e', 12),
+	lo.Field('UnSS error', '.3e', 10),
 	)
 
 # These options are just for demonstration purposes (enhanced speed vs.
@@ -136,7 +136,7 @@ class ObjectiveValues(object):
 	def misfit_error(self):
 		return self.fit
 
-	def disequilibrium_error(self):
+	def disequilibrium_error(self): # TODO: rename as unsteadystate_error
 		return self.mass_eq + self.energy_eq + self.flux
 
 	def total(self, disequ_weight):
