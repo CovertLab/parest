@@ -116,6 +116,8 @@ def main():
 	fig.savefig('figure5.pdf', dpi = DPI)
 
 	# print '{:0.2%} valid ({} of {})'.format(valid.mean(), valid.sum(), valid.size)
+
+	# WARNING: This is the error in the 'data agnostic' problem, not the 'all scaled' problem
 	# print 'average (unscaled) fit: {:0.2f}'.format(np.mean(np.sum(np.abs(residuals), 0)))
 
 	unique = np.unique(indexing)
