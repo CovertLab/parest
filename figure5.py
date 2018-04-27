@@ -148,16 +148,23 @@ def main():
 	residuals = residuals[sorting, :]
 	indexing = indexing[sorting]
 
+	datatypes = indexing['datatype']
+
 	import utils.residuals
 
-	fig = utils.residuals.plot(residuals, indexing)
+	for unique_datatype_index in np.unique(datatypes):
+		plotted = (datatypes == unique_datatype_index)
 
-	fig.savefig('figure5.pdf', dpi = DPI)
+		name = DATATYPES_ORDERED[unique_datatype_index]
 
-	# print '{:0.2%} valid ({} of {})'.format(valid.mean(), valid.sum(), valid.size)
+		fig = utils.residuals.plot(residuals[plotted], indexing[plotted])
 
-	# WARNING: This is the error in the 'data agnostic' problem, not the 'all scaled' problem
-	# print 'average (unscaled) fit: {:0.2f}'.format(np.mean(np.sum(np.abs(residuals), 0)))
+		fig.savefig('figure5_{}.pdf'.format(name), dpi = DPI)
+
+		# print '{:0.2%} valid ({} of {})'.format(valid.mean(), valid.sum(), valid.size)
+
+		# WARNING: This is the error in the 'data agnostic' problem, not the 'all scaled' problem
+		# print 'average (unscaled) fit: {:0.2f}'.format(np.mean(np.sum(np.abs(residuals), 0)))
 
 	unique = np.unique(indexing)
 
