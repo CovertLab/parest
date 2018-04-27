@@ -166,12 +166,14 @@ def get_relative_fit_residuals(pars):
 	return np.row_stack(all_residuals), np.concatenate(all_indexing)
 
 def main():
-	parser = ArgumentParser()
-	parser.add_argument(
-		'directory', type = str,
-		)
+	# parser = ArgumentParser()
+	# parser.add_argument(
+	# 	'directory', type = str,
+	# 	)
 
-	directory = parser.parse_args().directory
+	# directory = parser.parse_args().directory
+
+	directory = pa.join('out', 'all_scaled')
 
 	valid = np.load(pa.join(directory, 'valid.npy'))
 
@@ -190,135 +192,141 @@ def main():
 	residuals = residuals[sorting, :]
 	indexing = indexing[sorting]
 
-	medians = np.median(residuals, 1)
+	# medians = np.median(residuals, 1)
 
-	(unique, unique_indices, inverse) = np.unique(
-		indexing,
-		return_index = True,
-		return_inverse = True
-		)
+	# (unique, unique_indices, inverse) = np.unique(
+	# 	indexing,
+	# 	return_index = True,
+	# 	return_inverse = True
+	# 	)
 
-	n_unique = unique.size
+	# n_unique = unique.size
 
-	prediction_ranges = np.empty(
-		n_unique,
-		[
-			('smallest', np.float64),
-			('lower', np.float64),
-			('upper', np.float64),
-			('largest', np.float64),
-			]
-		)
+	# prediction_ranges = np.empty(
+	# 	n_unique,
+	# 	[
+	# 		('smallest', np.float64),
+	# 		('lower', np.float64),
+	# 		('upper', np.float64),
+	# 		('largest', np.float64),
+	# 		]
+	# 	)
 
-	for i, ind in enumerate(unique_indices):
-		prediction_ranges[i] = tuple(np.percentile(
-			residuals[ind, :],
-			(
-				0,
-				50 - 100 * FRACTION_OF_DATA/2,
-				50 + 100 * FRACTION_OF_DATA/2,
-				100
-				)
-			) - medians[ind])
+	# for i, ind in enumerate(unique_indices):
+	# 	prediction_ranges[i] = tuple(np.percentile(
+	# 		residuals[ind, :],
+	# 		(
+	# 			0,
+	# 			50 - 100 * FRACTION_OF_DATA/2,
+	# 			50 + 100 * FRACTION_OF_DATA/2,
+	# 			100
+	# 			)
+	# 		) - medians[ind])
 
-	observations_by_prediction = []
+	# observations_by_prediction = []
 
-	for i in xrange(n_unique):
-		observation_indexes = np.where(inverse == i)[0]
+	# for i in xrange(n_unique):
+	# 	observation_indexes = np.where(inverse == i)[0]
 
-		observations_by_prediction.append(
-			-(medians[observation_indexes] - medians[unique_indices[i]])
-			- medians[unique_indices[i]]
-			)
+	# 	observations_by_prediction.append(
+	# 		-(medians[observation_indexes] - medians[unique_indices[i]])
+	# 		- medians[unique_indices[i]]
+	# 		)
 
-	fig = plt.figure(figsize = (1, 6), dpi = DPI) # DPI set here doesn't matter much
+	# fig = plt.figure(figsize = (1, 6), dpi = DPI) # DPI set here doesn't matter much
 
-	axes = fig.add_axes((0, 0, 1, 1))
+	# axes = fig.add_axes((0, 0, 1, 1))
 
-	axes.axvline(0, **ONEFOLD_STYLE)
-	axes.axvline(-TENFOLD, **TENFOLD_STYLE)
-	axes.axvline(+TENFOLD, **TENFOLD_STYLE)
+	# axes.axvline(0, **ONEFOLD_STYLE)
+	# axes.axvline(-TENFOLD, **TENFOLD_STYLE)
+	# axes.axvline(+TENFOLD, **TENFOLD_STYLE)
 
-	def compare_datatype(d1, d2):
-		if d1 == d2:
-			return True
+	# def compare_datatype(d1, d2):
+	# 	if d1 == d2:
+	# 		return True
 
-		elif {DATATYPES_ORDERED[d1], DATATYPES_ORDERED[d2]} == {'forward_catalytic_rate', 'reverse_catalytic_rate'}:
-			return True
+	# 	elif {DATATYPES_ORDERED[d1], DATATYPES_ORDERED[d2]} == {'forward_catalytic_rate', 'reverse_catalytic_rate'}:
+	# 		return True
 
-		elif {DATATYPES_ORDERED[d1], DATATYPES_ORDERED[d2]} == {'reactant_saturation', 'product_saturation'}:
-			return True
+	# 	elif {DATATYPES_ORDERED[d1], DATATYPES_ORDERED[d2]} == {'reactant_saturation', 'product_saturation'}:
+	# 		return True
 
-		else:
-			return False
+	# 	else:
+	# 		return False
 
-	for i, inds in enumerate(unique):
-		if i != 0:
-			if not compare_datatype(last_inds['datatype'], inds['datatype']):
-				axes.axhline(-i+0.5, **TYPE_DIVIDER_STYLE)
+	# for i, inds in enumerate(unique):
+	# 	if i != 0:
+	# 		if not compare_datatype(last_inds['datatype'], inds['datatype']):
+	# 			axes.axhline(-i+0.5, **TYPE_DIVIDER_STYLE)
 
-		last_inds = inds
+	# 	last_inds = inds
 
-	for i in xrange(n_unique):
+	# for i in xrange(n_unique):
 
-		# style = TYPE_DIVIDER_STYLE.copy()
-		# style['lw'] = 0.1
+	# 	# style = TYPE_DIVIDER_STYLE.copy()
+	# 	# style['lw'] = 0.1
 
-		# axes.plot(
-		# 	(-BILFOLD, +BILFOLD),
-		# 	(-i, -i),
-		# 	**style
-		# 	)
+	# 	# axes.plot(
+	# 	# 	(-BILFOLD, +BILFOLD),
+	# 	# 	(-i, -i),
+	# 	# 	**style
+	# 	# 	)
 
-		axes.plot(
-			(prediction_ranges[i]['smallest'], prediction_ranges[i]['largest']),
-			(-i, -i),
-			**RANGE_STYLE
-			)
+	# 	axes.plot(
+	# 		(prediction_ranges[i]['smallest'], prediction_ranges[i]['largest']),
+	# 		(-i, -i),
+	# 		**RANGE_STYLE
+	# 		)
 
-		axes.plot(
-			(prediction_ranges[i]['lower'], prediction_ranges[i]['upper']),
-			(-i, -i),
-			**IQR_STYLE
-			)
+	# 	axes.plot(
+	# 		(prediction_ranges[i]['lower'], prediction_ranges[i]['upper']),
+	# 		(-i, -i),
+	# 		**IQR_STYLE
+	# 		)
 
-		# midpoint_shadow_style = MIDPOINT_STYLE.copy()
-		# midpoint_shadow_style['c'] = DARK_GRAY
-		# midpoint_shadow_style['markeredgewidth'] = midpoint_shadow_style['markeredgewidth'] * 1.5
+	# 	# midpoint_shadow_style = MIDPOINT_STYLE.copy()
+	# 	# midpoint_shadow_style['c'] = DARK_GRAY
+	# 	# midpoint_shadow_style['markeredgewidth'] = midpoint_shadow_style['markeredgewidth'] * 1.5
 
-		# axes.plot(0, -i, **midpoint_shadow_style)
-		axes.plot(0, -i, **MIDPOINT_STYLE)
+	# 	# axes.plot(0, -i, **midpoint_shadow_style)
+	# 	axes.plot(0, -i, **MIDPOINT_STYLE)
 
-		for obs in np.sort(observations_by_prediction[i]):
-			style = (
-				WELL_FIT_OBSERVATION_STYLE
-				if np.abs(obs) < TENFOLD
-				else POORLY_FIT_OBSERVATION_STYLE
-				)
-			axes.plot(obs, -i-OBSERVATION_OFFSET, **style)
+	# 	for obs in np.sort(observations_by_prediction[i]):
+	# 		style = (
+	# 			WELL_FIT_OBSERVATION_STYLE
+	# 			if np.abs(obs) < TENFOLD
+	# 			else POORLY_FIT_OBSERVATION_STYLE
+	# 			)
+	# 		axes.plot(obs, -i-OBSERVATION_OFFSET, **style)
 
-			if np.abs(obs) > BILFOLD:
-				print 'warning - exceeds axis limits'
+	# 		if np.abs(obs) > BILFOLD:
+	# 			print 'warning - exceeds axis limits'
 
-	axes.set_ylim(-n_unique+0.5, +0.5)
-	axes.set_xlim(-BILFOLD, +BILFOLD)
+	# axes.set_ylim(-n_unique+0.5, +0.5)
+	# axes.set_xlim(-BILFOLD, +BILFOLD)
 
-	axes.axis('off')
+	# axes.axis('off')
+	import utils.residuals
+
+	fig = utils.residuals.plot(residuals, indexing)
+
 	fig.savefig('figure5.pdf', dpi = DPI)
 
 	print '{:0.2%} valid ({} of {})'.format(valid.mean(), valid.sum(), valid.size)
 	print 'average (unscaled) fit: {:0.2f}'.format(np.mean(np.sum(np.abs(residuals), 0)))
 
+	unique = np.unique(indexing)
+
 	with open('figure5_key.txt', 'w') as f:
-		for indexing in unique:
+		for unique_index in unique:
 			f.write(':'.join([
-				DATATYPES_ORDERED[indexing['datatype']] if indexing['datatype'] >= 0 else '',
-				REACTIONS_ORDERED[indexing['reaction']] if indexing['reaction'] >= 0 else '',
-				COMPOUNDS_ORDERED[indexing['compound']] if indexing['compound'] >= 0 else '',
+				DATATYPES_ORDERED[unique_index['datatype']] if unique_index['datatype'] >= 0 else '',
+				REACTIONS_ORDERED[unique_index['reaction']] if unique_index['reaction'] >= 0 else '',
+				COMPOUNDS_ORDERED[unique_index['compound']] if unique_index['compound'] >= 0 else '',
 				])+'\n')
 
 	print len(unique), 'parameters'
-	print inverse.size, 'observations'
+	print indexing.size, 'observations'
 
 if __name__ == '__main__':
 	main()
