@@ -25,16 +25,51 @@ DATATYPES_ORDERED = (
 	'reactant_saturation',
 	'product_saturation',
 	)
-REACTIONS_ORDERED = structure.reactions + sorted( # should probably hand-curate this
-	entry.id for entry in kb.reaction
-	if entry.id not in structure.reactions
+# REACTIONS_ORDERED = structure.reactions + sorted( # should probably hand-curate this
+# 	entry.id for entry in kb.reaction
+# 	if entry.id not in structure.reactions
+# 	)
+
+REACTIONS_ORDERED = (
+	'PGI',
+	'PFK',
+	'PFK_no_H',
+	'FBP',
+	'FBA',
+	'FBA_TPI_reverse',
+	'TPI',
+	'TPI_reverse',
+	'GAP',
+	'GAP_PGK',
+	'PGK',
+	'PGK_reverse',
+	'GPM',
+	'GPM_reverse',
+	'ENO',
+	'PYK',
+	'PYK_no_H_reverse',
+	'PPS'
 	)
+
+REVERSED_REACTIONS = (
+	'FBA_TPI_reverse',
+	'TPI_reverse',
+	'PGK_reverse',
+	'GPM_reverse',
+	'PYK_no_H_reverse',
+	)
+
 COMPOUNDS_ORDERED = structure.compounds
 
 def ordering(ordered):
 	return {item:i for (i, item) in enumerate(ordered)}
 
 DATATYPE_ORDERING = ordering(DATATYPES_ORDERED)
+
+# not concerned about the distinction
+DATATYPE_ORDERING['reverse_catalytic_rate'] = DATATYPE_ORDERING['forward_catalytic_rate']
+DATATYPE_ORDERING['product_saturation'] = DATATYPE_ORDERING['reactant_saturation']
+
 REACTION_ORDERING = ordering(REACTIONS_ORDERED)
 COMPOUND_ORDERING = ordering(COMPOUNDS_ORDERED)
 
@@ -52,6 +87,8 @@ def get_indexing(entries):
 			]
 		)
 
+	do_reverse = np.zeros(len(entries), np.bool)
+
 	for (i, entry) in enumerate(entries):
 		indexing[i] = (
 			DATATYPE_ORDERING[getattr(entry, 'datatype', None)],
@@ -59,14 +96,18 @@ def get_indexing(entries):
 			COMPOUND_ORDERING.get(getattr(entry, 'compound', None), -1),
 			)
 
-	return indexing
+		do_reverse[i] = (getattr(entry, 'reaction', None) in REVERSED_REACTIONS)
+
+	return indexing, do_reverse
 
 def get_absolute_fit_residuals(pars):
 	(fm, fv, fe) = fitting.build_fitting_tensors(*REFERENCE_RULES)
 
 	residuals = fm.dot(pars) - fv[:, None]
 
-	indexing = get_indexing(fe)
+	indexing, do_reverse = get_indexing(fe)
+
+	residuals[do_reverse] = -residuals[do_reverse]
 
 	return residuals, indexing
 
@@ -83,7 +124,9 @@ def get_relative_fit_residuals(pars):
 
 		all_residuals.append(residuals)
 
-		indexing = get_indexing(fe)
+		indexing, do_reverse = get_indexing(fe)
+
+		assert not np.any(do_reverse)
 
 		all_indexing.append(indexing)
 
