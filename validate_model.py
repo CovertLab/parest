@@ -20,7 +20,9 @@ from utils.linalg import approx_jac
 
 FORCE = True
 
-EQU_CONC_THRESHOLD = 1.5
+DRY_RUN = False
+
+EQU_CONC_THRESHOLD = 1.001
 
 CONC_FOLD_PERTURBATION = 2
 CONC_FOLD_CONVERGENCE = 1.01
@@ -36,6 +38,7 @@ EXPECTED_RECOVERY_EPOCHS = np.log((CONC_FOLD_PERTURBATION - 1)/(CONC_FOLD_CONVER
 PERTURBATION_RECOVERY_EPOCHS = PERTURBATION_RECOVERTY_TIME_TOLERANCE * EXPECTED_RECOVERY_EPOCHS
 
 TARGET_PYRUVATE_PRODUCTION = 0.14e-3
+FLUX_FIT_THRESHOLD = 1e-3
 
 DT = 1e1
 T_INIT = 0
@@ -136,7 +139,7 @@ else:
 
 		flux_fit = (net_pyruvate_production / TARGET_PYRUVATE_PRODUCTION - 1)**2
 
-		flux_is_fit = (flux_fit < 1e-3)
+		flux_is_fit = (flux_fit < FLUX_FIT_THRESHOLD)
 
 		normed_log_conc_deviation = np.linalg.norm(x_eq - x_start, 2) / constants.RT
 
@@ -144,10 +147,15 @@ else:
 			equ.append(False)
 			lre.append(None)
 			stable.append(False)
+			print 'BAD'
 			continue
 
 		else:
 			equ.append(flux_is_fit)
+
+			if not flux_is_fit:
+				v_init = equations.reaction_rates(pars, *equations.args)
+				print 'flux error:', net_pyruvate_production, v_init[-2] - v_init[-1]
 
 		# if not flux_is_fit: print 'bad flux: {}'.format(net_pyruvate_production)
 
@@ -226,7 +234,8 @@ else:
 
 	valid = (stable & equ)
 
-	np.save(stable_path, stable)
-	np.save(equ_path, equ)
-	np.save(lre_path, lre)
-	np.save(valid_path,valid)
+	if not DRY_RUN:
+		np.save(stable_path, stable)
+		np.save(equ_path, equ)
+		np.save(lre_path, lre)
+		np.save(valid_path,valid)
