@@ -72,21 +72,24 @@ for seed_offset in xrange(args.n):
 
 		pars_path = os.path.join(outdir, 'pars.npy')
 		obj_path = os.path.join(outdir, 'obj.npy')
-		hist_path = os.path.join(outdir, 'hist.npy')
+		# hist_path = os.path.join(outdir, 'hist.npy')
 
-		hist = []
-		def collect(epoch, iteration, constraint_penalty_weight, obj):
-			hist.append((
-				epoch,
-				iteration,
-				constraint_penalty_weight,
-				obj.mass_eq + obj.energy_eq + obj.flux,
-				obj.fit,
-				))
+		# hist = []
+		# def collect(epoch, iteration, constraint_penalty_weight, obj):
+		# 	hist.append((
+		# 		epoch,
+		# 		iteration,
+		# 		constraint_penalty_weight,
+		# 		obj.mass_eq + obj.energy_eq + obj.flux,
+		# 		obj.fit,
+		# 		))
 
-	if outdir is None or args.force or not all(os.path.exists(p) for p in (pars_path, obj_path, hist_path)):
+	# if outdir is None or args.force or not all(os.path.exists(p) for p in (pars_path, obj_path, hist_path)):
+	if outdir is None or args.force or not all(os.path.exists(p) for p in (pars_path, obj_path)):
 
-		callback = collect if (outdir is not None) else optimize.empty_callback
+		# callback = collect if (outdir is not None) else optimize.empty_callback
+
+		callback = optimize.empty_callback
 
 		(pars, obj) = optimize.estimate_parameters(
 			rules_and_weights,
@@ -104,13 +107,13 @@ for seed_offset in xrange(args.n):
 				obj.flux,
 				obj.fit
 				]))
-			np.save(hist_path, np.array(hist, dtype = [
-				('epoch', np.int64),
-				('iter', np.int64),
-				('const_pen', np.float64),
-				('constraints', np.float64),
-				('fit', np.float64),
-				]))
+			# np.save(hist_path, np.array(hist, dtype = [
+			# 	('epoch', np.int64),
+			# 	('iter', np.int64),
+			# 	('const_pen', np.float64),
+			# 	('constraints', np.float64),
+			# 	('fit', np.float64),
+			# 	]))
 
 			print 'Saved to {}'.format(outdir)
 

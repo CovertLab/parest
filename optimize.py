@@ -203,20 +203,20 @@ def build_bounds(naive = False):
 		# TODO: move this to bounds.py
 		import constants
 
-		lower_conc = 1e-10 # avg 1/10 molecules per E. coli cell
-		upper_conc = 1e2 # water conc is around 40 M
+		# lower_conc = 1e-10 # avg 1/10 molecules per E. coli cell
+		# upper_conc = 1e2 # water conc is around 40 M
 
 		lower_conc = bounds.LOWER_CONC
 		upper_conc = bounds.UPPER_CONC
 
 		lower_enz_conc = 1e-10 # avg 1/10 molecules per cell
-		upper_enz_conc = 1e-2 # total protein conc in e. coli is about 1-10 mM
+		# upper_enz_conc = 1e-2 # total protein conc in e. coli is about 1-10 mM
 
 		upper_enz_conc = 1e-3 # most abundant protein is about 800k copies per cell, 1 molecule per E. coli cell ~ 1 nM
 
 		# average protein abundance ~ 1 uM
 
-		lower_kcat = 1e-5 # some mutants/unusual substrates can be very low
+		# lower_kcat = 1e-5 # some mutants/unusual substrates can be very low
 		upper_kcat = 1e6 # catalase is around 1e5 /s
 
 		lower_kcat = 1e-2 # gives average kcat of about 10 w/ upper kcat of 1e6
@@ -487,7 +487,7 @@ if __name__ == '__main__':
 	(pars, obj) = estimate_parameters(
 		definition,
 		random_state = np.random.RandomState(0),
-		naive = True,
+		# naive = True,
 		# random_direction = True
 		)
 

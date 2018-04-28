@@ -35,6 +35,8 @@ smaller.
 LOWER_VMAX = 1e-12 # one molecule per E. coli cell (1 nM) diluting at doubling time of 1 hour ~1e-13 M/s
 UPPER_VMAX = 1e-3 # 20000 ribosomes translating at 16 AA/s ~0.3 mM/s
 
+LOWER_VMAX = 1e-9
+
 BOUNDS_SATURATED_REACTION_POTENTIAL = (
 	-constants.RT * np.log(UPPER_VMAX/constants.K_STAR),
 	-constants.RT * np.log(LOWER_VMAX/constants.K_STAR),
