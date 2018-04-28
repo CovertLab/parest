@@ -32,8 +32,8 @@ Note that this is just v_max, not a total constraint on v.  Assuming enzymes
 that are at least somewhat unsaturated, the real "average" v's should be even
 smaller.
 '''
-LOWER_VMAX = 1e-13
-UPPER_VMAX = 1e2
+LOWER_VMAX = 1e-12 # one molecule per E. coli cell (1 nM) diluting at doubling time of 1 hour ~1e-13 M/s
+UPPER_VMAX = 1e-3 # 20000 ribosomes translating at 16 AA/s ~0.3 mM/s
 
 BOUNDS_SATURATED_REACTION_POTENTIAL = (
 	-constants.RT * np.log(UPPER_VMAX/constants.K_STAR),
@@ -59,8 +59,8 @@ expected values.  A concentration of one molecule per E. coli cell is roughly
 1 nM, while water, the most abundant species, has a concentration of about
 50 M.  The range is consistent with the RESOLUTION.
 '''
-LOWER_CONC = 1e-12
-UPPER_CONC = 1e3
+LOWER_CONC = 1e-10
+UPPER_CONC = 1e2
 
 BOUNDS_GIBBS_LOG_CONC = (
 	constants.RT * np.log(LOWER_CONC),
