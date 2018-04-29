@@ -7,9 +7,9 @@ import sys
 
 import numpy as np
 
-FORCE = False
+FORCE = True
 
-N = 30
+N = 300
 
 def load_pars(target_dir, n):
 	obj = []

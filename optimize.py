@@ -28,7 +28,10 @@ MAX_ITERATIONS = int(1e6) # maximum number of iteration steps per epoch
 
 PERTURBATION_SCALE = np.logspace(+2, -6, MAX_ITERATIONS)
 
-CONVERGENCE_RATE = 1e-4 # if the objective fails to improve at this rate, assume convergence and move on to the next step
+CONVERGENCE_RATE = ( # if the objective fails to improve at this rate, assume convergence and move on to the next step
+		1e-4 # default
+		# 0 # force all iterations - very slow
+		)
 CONVERGENCE_TIME = int(1e4) # number of iterations between checks to compare - should probably scale with problem size
 
 TARGET_PYRUVATE_PRODUCTION = 0.14e-3 # the target rate at which the system produces pyruvate, in M/s
@@ -219,7 +222,7 @@ def build_bounds(naive = False):
 		# lower_kcat = 1e-5 # some mutants/unusual substrates can be very low
 		upper_kcat = 1e6 # catalase is around 1e5 /s
 
-		lower_kcat = 1e-2 # gives average kcat of about 10 w/ upper kcat of 1e6
+		lower_kcat = 1e-2 # gives average kcat of about 100 w/ upper kcat of 1e6
 
 		lower_KM = lower_conc
 		upper_KM = upper_conc
@@ -487,7 +490,7 @@ if __name__ == '__main__':
 	(pars, obj) = estimate_parameters(
 		definition,
 		random_state = np.random.RandomState(0),
-		# naive = True,
+		naive = True,
 		# random_direction = True
 		)
 
