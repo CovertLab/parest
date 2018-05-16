@@ -31,9 +31,9 @@ sources = [
 
 COLORS = [
 	np.array((225, 6, 133), np.float64)/255.,
-	np.array((83, 49, 0), np.float64)/255.
-	np.array((143, 85, 0), np.float64)/255.
-	np.array((221, 145, 23), np.float64)/255.
+	np.array((83, 49, 0), np.float64)/255.,
+	np.array((143, 85, 0), np.float64)/255.,
+	np.array((221, 145, 23), np.float64)/255.,
 	np.array((251, 177, 37), np.float64)/255.
 	]
 
@@ -47,7 +47,7 @@ top = 0
 
 x_range = top - bottom
 
-nbins = 30
+nbins = 40
 
 width = x_range/nbins
 x = np.linspace(bottom, top, nbins, endpoint = False) + width/2
@@ -91,6 +91,9 @@ for i in xrange(len(sources)):
 	plt.subplot(len(sources), 2, i*2+1)
 
 	for index, bins in enumerate(bin_sets):
+		if index != i:
+			continue
+
 		plt.bar(
 			x,
 			bins,
@@ -132,6 +135,7 @@ import equations
 import structure
 import scipy.integrate
 def plot_prd(pars, seed = None):
+	SEED_OFFSET = 0
 
 	CONC_FOLD_PERTURBATION = 2
 	CONC_FOLD_CONVERGENCE = 1.01
@@ -194,7 +198,9 @@ def plot_prd(pars, seed = None):
 
 	t_final = 1/constants.MU
 
-	perturbation = np.random.RandomState(seed).normal(size = x_eq.size)
+	perturbation = np.random.RandomState(
+		seed + SEED_OFFSET
+		).normal(size = x_eq.size)
 	perturbation /= np.linalg.norm(perturbation, 2)
 	perturbation *= PERTURBATION_SCALE
 
@@ -240,7 +246,8 @@ def plot_prd(pars, seed = None):
 
 	for i, c in enumerate(structure.DYNAMIC_COMPOUNDS):
 		# plt.plot(t_hist[r] * constants.MU, c2[r, i], label = c, lw = 2)
-		plt.plot(t_hist, c2[:, i], label = c, lw = 1, color = COLORS[seed])
+		plt.plot(t_hist, c2[:, i], label = c, lw = 2.0, color = 'w')
+		plt.plot(t_hist, c2[:, i], label = c, lw = 1.5, color = COLORS[seed])
 
 	# plt.ylim(0.5, 2)
 	# plt.yticks([])

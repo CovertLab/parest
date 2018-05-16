@@ -35,13 +35,13 @@ MARKER_STYLE = dict(
 MARKER_VALID = MARKER_STYLE.copy()
 MARKER_VALID.update(
 	marker = 'o',
-	ms = 4,
+	ms = 6,
 	)
 
 MARKER_INVALID = MARKER_STYLE.copy()
 MARKER_INVALID.update(
 	marker = 'X',
-	ms = 5,
+	ms = 7.5,
 	)
 
 SCALE = ( # TODO: decide if using the scaling is worth it
@@ -78,11 +78,11 @@ plt.xlabel(r'$f(x)$')
 
 plt.axvline(MIN_FIT/SCALE, lw = 0.5, ls = ':', c = 'k', zorder = -10)
 
-plt.xlim(-10, 130)
-plt.xticks([0, 20, 40, 60, 80, 100, 120])
+plt.xlim(-10, 150)
+plt.xticks([0, 20, 40, 60, 80, 100, 120, 140])
 
-plt.ylim(10**-16, 10**-2)
-plt.yticks(10.**np.arange(-14, -2, 2))
+plt.ylim(10**-17, 10**+1)
+plt.yticks(10.**np.arange(-16, +2, 2))
 
 plt.savefig('figure3.pdf')
 # plt.savefig('figure3.png', dpi = 300)

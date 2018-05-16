@@ -1,4 +1,8 @@
 
+'''
+Plotting code for drawing the condensed box-plots for figures 5 and 6.
+'''
+
 from __future__ import division
 
 import numpy as np
@@ -6,8 +10,8 @@ import matplotlib.pyplot as plt
 
 import constants
 
-DARK_GRAY = (0.0,)*3
-MEDIUM_GRAY = (0.5,)*3
+BLACK = (0.0,)*3
+MEDIUM_GRAY = (0.6,)*3
 LIGHT_GRAY = (0.8,)*3
 
 TENFOLD = constants.RT * np.log(10)
@@ -19,12 +23,12 @@ TENFOLD_STYLE = dict(color = MEDIUM_GRAY, lw = 0.5, zorder = -2)
 ONEFOLD_STYLE = dict(color = LIGHT_GRAY, lw = 0.5, zorder = -2)
 
 TYPE_DIVIDER_STYLE = dict(color = LIGHT_GRAY, lw = 0.5, zorder = -1)
-RANGE_STYLE = dict(c = DARK_GRAY, lw = 0.5)
-IQR_STYLE = dict(c = DARK_GRAY, lw = 2)
+RANGE_STYLE = dict(c = BLACK, lw = 0.5)
+IQR_STYLE = dict(c = BLACK, lw = 2)
 MIDPOINT_STYLE = (
 	dict(
 		marker = '|',
-		c = DARK_GRAY,
+		c = BLACK,
 		ms = 2,
 		markeredgewidth = 0.5,
 		)
