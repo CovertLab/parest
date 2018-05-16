@@ -1,8 +1,9 @@
 
 from __future__ import division
 
-import os.path as pa
+import os
 from itertools import izip
+import shutil
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -128,12 +129,16 @@ def get_relative_fit_residuals(pars):
 
 	return np.row_stack(all_residuals), np.concatenate(all_indexing)
 
-def main():
-	directory = pa.join('out', 'all_scaled')
+def make_clean_directory(directory):
+	if os.path.exists(directory):
+		shutil.rmtree(directory)
 
-	valid = np.load(pa.join(directory, 'valid.npy'))
+	os.makedirs(directory)
 
-	pars = np.load(pa.join(directory, 'pars.npy'))[
+def main(input_directory, output_directory):
+	valid = np.load(os.path.join(input_directory, 'valid.npy'))
+
+	pars = np.load(os.path.join(input_directory, 'pars.npy'))[
 		:, valid
 		]
 
@@ -152,6 +157,8 @@ def main():
 
 	import utils.residuals
 
+	make_clean_directory(output_directory)
+
 	for unique_datatype_index in np.unique(datatypes):
 		plotted = (datatypes == unique_datatype_index)
 
@@ -159,7 +166,7 @@ def main():
 
 		fig = utils.residuals.plot(residuals[plotted], indexing[plotted])
 
-		fig.savefig('figure5_{}.pdf'.format(name), dpi = DPI)
+		fig.savefig(os.path.join(output_directory, '{}.pdf'.format(name)), dpi = DPI)
 
 		# print '{:0.2%} valid ({} of {})'.format(valid.mean(), valid.sum(), valid.size)
 
@@ -168,7 +175,7 @@ def main():
 
 	unique = np.unique(indexing)
 
-	with open('figure5_key.txt', 'w') as f:
+	with open(os.path.join(output_directory, 'key.txt'), 'w') as f:
 		for unique_index in unique:
 			f.write(':'.join([
 				DATATYPES_ORDERED[unique_index['datatype']] if unique_index['datatype'] >= 0 else '',
@@ -180,4 +187,7 @@ def main():
 	print indexing.size, 'observations'
 
 if __name__ == '__main__':
-	main()
+	main(
+		os.path.join('out', 'all_scaled'),
+		'figure5'
+		)
