@@ -34,6 +34,8 @@ CONVERGENCE_RATE = ( # if the objective fails to improve at this rate, assume co
 		)
 CONVERGENCE_TIME = int(1e4) # number of iterations between checks to compare - should probably scale with problem size
 
+FORCE_BETTER_INIT = True # use bounds for parsimonious perturbations for initialization, regardless of perturbation approach
+
 TARGET_PYRUVATE_PRODUCTION = 0.14e-3 # the target rate at which the system produces pyruvate, in M/s
 
 LOG_TIME = 10.0 # max time, in seconds, between logging events
@@ -206,23 +208,16 @@ def build_bounds(naive = False):
 		# TODO: move this to bounds.py
 		import constants
 
-		# lower_conc = 1e-10 # avg 1/10 molecules per E. coli cell
-		# upper_conc = 1e2 # water conc is around 40 M
-
 		lower_conc = bounds.LOWER_CONC
 		upper_conc = bounds.UPPER_CONC
 
 		lower_enz_conc = 1e-10 # avg 1/10 molecules per cell
-		# upper_enz_conc = 1e-2 # total protein conc in e. coli is about 1-10 mM
-
-		upper_enz_conc = 1e-3 # most abundant protein is about 800k copies per cell, 1 molecule per E. coli cell ~ 1 nM
+		upper_enz_conc = 1e-3 # most abundant protein is about 750 copies per cell, 1 molecule per E. coli cell ~ 1 nM
 
 		# average protein abundance ~ 1 uM
 
-		# lower_kcat = 1e-5 # some mutants/unusual substrates can be very low
-		upper_kcat = 1e6 # catalase is around 1e5 /s
-
 		lower_kcat = 1e-2 # gives average kcat of about 100 w/ upper kcat of 1e6
+		upper_kcat = 1e6 # catalase is around 1e5 /s
 
 		lower_KM = lower_conc
 		upper_KM = upper_conc
@@ -239,9 +234,6 @@ def build_bounds(naive = False):
 		lower_log_KM = -constants.RT * np.log(upper_KM)
 		upper_log_KM = -constants.RT * np.log(lower_KM)
 
-		# RESOLUTION = np.finfo(np.float64).resolution
-		# lower_log_Keq = constants.RT * np.log(RESOLUTION)# / 2
-		# upper_log_Keq = constants.RT * np.log(1./RESOLUTION)# / 2
 
 		bounds_matrix = np.concatenate([
 			structure.full_glc_association_matrix,
@@ -348,9 +340,19 @@ def estimate_parameters(
 	(bounds_matrix, lowerbounds, upperbounds) = build_bounds(naive)
 	inverse_bounds_matrix = np.linalg.pinv(bounds_matrix)
 
+	if FORCE_BETTER_INIT:
+		init_lowerbounds = bounds.LOWERBOUNDS
+		init_upperbounds = bounds.UPPERBOUNDS
+		init_bounds_matrix = bounds.BOUNDS_MATRIX
+
+	else:
+		init_lowerbounds = lowerbounds
+		init_upperbounds = upperbounds
+		init_bounds_matrix = bounds_matrix
+
 	(init_pars, init_fitness) = build_initial_parameter_values(
-		bounds_matrix, (lowerbounds + upperbounds)/2.0,
-		np.concatenate([-bounds_matrix, +bounds_matrix]), np.concatenate([-lowerbounds, +upperbounds]),
+		init_bounds_matrix, (init_lowerbounds + init_upperbounds)/2.0,
+		np.concatenate([-init_bounds_matrix, +init_bounds_matrix]), np.concatenate([-init_lowerbounds, +init_upperbounds]),
 		fitting_matrix, fitting_values,
 		upper_fitting_matrix, upper_fitting_values,
 		*[(fm, fv) for (fm, fv, fe) in relative_fitting_tensor_sets]
@@ -490,7 +492,7 @@ if __name__ == '__main__':
 	(pars, obj) = estimate_parameters(
 		definition,
 		random_state = np.random.RandomState(0),
-		naive = True,
+		# naive = True,
 		# random_direction = True
 		)
 
