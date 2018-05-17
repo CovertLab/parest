@@ -340,6 +340,11 @@ def estimate_parameters(
 	(bounds_matrix, lowerbounds, upperbounds) = build_bounds(naive)
 	inverse_bounds_matrix = np.linalg.pinv(bounds_matrix)
 
+	# TODO: if the bounds become more sophisticated, use the calculation for
+	# the bilevel elementwise pseudoinverse to acquire the inverse bounds
+	# reprojection vectors.  right now it isequivalent to the normal
+	# pseudoinverse
+
 	if FORCE_BETTER_INIT:
 		init_lowerbounds = bounds.LOWERBOUNDS
 		init_upperbounds = bounds.UPPERBOUNDS
