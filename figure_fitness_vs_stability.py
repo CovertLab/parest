@@ -14,25 +14,29 @@ import fitting
 
 SOURCES = (
 	os.path.join('out', 'all_scaled'),
-	os.path.join('out', 'all_scaled_upper_sat_limits_1e-1'),
-	os.path.join('out', 'all_scaled_upper_sat_limits_1e0'),
-	os.path.join('out', 'all_scaled_upper_sat_limits_1e1'),
-	os.path.join('out', 'all_scaled_upper_sat_limits_1e2'),
+	# os.path.join('out', 'all_scaled_upper_sat_limits_1e-1'),
+	# os.path.join('out', 'all_scaled_upper_sat_limits_1e0'),
+	# os.path.join('out', 'all_scaled_upper_sat_limits_1e1'),
+	# os.path.join('out', 'all_scaled_upper_sat_limits_1e2'),
+	os.path.join('out', 'all_scaled_Pi_H2O_1e1'),
 	)
 
 NAMES = (
 	'original',
-	'penalty 1e-1',
-	'penalty 1e0',
-	'penalty 1e1',
-	'penalty 1e2',
+	# 'penalty 1e-1',
+	# 'penalty 1e0',
+	# 'penalty 1e1',
+	# 'penalty 1e2',
+	'10x weight on [H2O], [Pi]'
 	)
+
 COLORS = [
 	np.array((225, 6, 133), np.float64)/255.,
-	np.array((83, 49, 0), np.float64)/255.,
-	np.array((143, 85, 0), np.float64)/255.,
-	np.array((221, 145, 23), np.float64)/255.,
-	np.array((251, 177, 37), np.float64)/255.
+	# np.array((83, 49, 0), np.float64)/255.,
+	# np.array((143, 85, 0), np.float64)/255.,
+	# np.array((221, 145, 23), np.float64)/255.,
+	# np.array((251, 177, 37), np.float64)/255.,
+	np.array((0, 0, 255), np.float64)/255.,
 	]
 
 REFERENCE_RULES = problems.DEFINITIONS['all_scaled']
@@ -85,6 +89,7 @@ def compute_fitness(pars):
 plt.figure(figsize = (6, 6))
 
 for (name, source, color) in izip(NAMES, SOURCES, COLORS):
+	print name
 	crt = -constants.MU/load_lre(source)
 	pars = load_pars(source)
 
@@ -106,7 +111,7 @@ for (name, source, color) in izip(NAMES, SOURCES, COLORS):
 		zorder = 10
 		)
 
-# plt.xscale('log')
+plt.xscale('log')
 # plt.yscale('log')
 
 plt.legend(loc = 'best')
