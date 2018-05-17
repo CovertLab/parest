@@ -60,7 +60,7 @@ def gather_by_field(dataset, field):
 
 from itertools import izip
 
-def scale_observations(dataset, *fields):
+def normalize_by_number_of_observations(dataset, *fields):
 	return tuple(
 		(
 			fitting.field_value_rule(**{
@@ -75,21 +75,23 @@ def scale_observations(dataset, *fields):
 			).viewitems()
 		)
 
+def scale_weights(rules_and_weights, scale):
+	return tuple( (rule, weight * scale) for rule, weight in rules_and_weights)
+
 DEFINITIONS['all_scaled'] = (
 	_DEFAULT_RULES
-	+ scale_observations(kb.concentration, 'datatype', 'compound')
-	+ scale_observations(kb.standard_energy_of_formation, 'datatype', 'compound')
-	+ scale_observations(kb.equilibrium, 'datatype', 'reaction')
-	+ scale_observations(kb.forward_catalytic_rate, 'datatype', 'reaction')
-	+ scale_observations(kb.reverse_catalytic_rate, 'datatype', 'reaction')
-	+ scale_observations(kb.reactant_saturation, 'datatype', 'reaction', 'compound')
-	+ scale_observations(kb.product_saturation, 'datatype', 'reaction', 'compound')
+	+ normalize_by_number_of_observations(kb.concentration, 'datatype', 'compound')
+	+ normalize_by_number_of_observations(kb.equilibrium, 'datatype', 'reaction')
+	+ normalize_by_number_of_observations(kb.forward_catalytic_rate, 'datatype', 'reaction')
+	+ normalize_by_number_of_observations(kb.reverse_catalytic_rate, 'datatype', 'reaction')
+	+ normalize_by_number_of_observations(kb.reactant_saturation, 'datatype', 'reaction', 'compound')
+	+ normalize_by_number_of_observations(kb.product_saturation, 'datatype', 'reaction', 'compound')
 	) + (
 	(
 		fitting.field_value_rule( # relative data hard to scale by # of obs; instead scaling by total # of data sets (3)
 			datatype = ('relative_protein_count',),
 			),
-		1.0/3
+		1.0/3 # currently using three sets of proteomics data
 		),
 	)
 
@@ -118,6 +120,17 @@ DEFINITIONS['all_scaled_upper_sat_limits_1e2'] = (
 	(
 		fitting.field_value_rule(source = ('custom_saturation_limits',)),
 		1e2
+		),
+	) + DEFINITIONS['all_scaled']
+
+DEFINITIONS['all_scaled_Pi_H2O_1e1'] = (
+	(
+		fitting.field_value_rule(datatype = 'concentration', compound = 'Pi'),
+		1e1
+		),
+	(
+		fitting.field_value_rule(datatype = 'concentration', compound = 'H2O'),
+		1e1
 		),
 	) + DEFINITIONS['all_scaled']
 
