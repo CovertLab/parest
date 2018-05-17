@@ -120,6 +120,11 @@ NADH, 1
 @product(source = BR09S, reaction = GPM_reverse)
 3PG, 1
 
+@reactant(source = EcoCyc, reaction = ENO_no_H2O)
+2PG, 1
+@product(source = EcoCyc, reaction = ENO_no_H2O)
+PEP, 1
+
 @reactant(source = BR09S, reaction = PYK_no_H_reverse)
 ATP, 1
 PYR, 1

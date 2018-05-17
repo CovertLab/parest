@@ -43,6 +43,7 @@ REACTIONS_ORDERED = (
 	'GPM',
 	'GPM_reverse',
 	'ENO',
+	'ENO_no_H2O',
 	'PYK',
 	'PYK_no_H_reverse',
 	'PPS'

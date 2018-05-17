@@ -80,13 +80,13 @@ GPM_reverse, 8.65, 16
 GPM_reverse, 11.65, 17
 GPM_reverse, 6.1, 18
 
-ENO, 2.3, 1
-ENO, 0.54, 2
-ENO, 2.9, 3
-ENO, 4.6, 4
-ENO, 1.43, 5
-ENO, 5.15, 6
-ENO, 2.15, 7
+ENO_no_H2O, 2.3, 1
+ENO_no_H2O, 0.54, 2
+ENO_no_H2O, 2.9, 3
+ENO_no_H2O, 4.6, 4
+ENO_no_H2O, 1.43, 5
+ENO_no_H2O, 5.15, 6
+ENO_no_H2O, 2.15, 7
 
 PYK_no_H_reverse, 1.55e-4, 1
 PYK_no_H_reverse, 1.1e-3, 2

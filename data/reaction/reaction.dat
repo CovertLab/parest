@@ -21,4 +21,5 @@ PFK_no_H: pfk reaction without H+
 PGK_reverse: pgk reverse reaction
 GAP_PGK: gap-pgk net reaction
 GPM_reverse: gpm reverse reaction
+ENO_no_H2O: enolase reaction without water
 PYK_no_H_reverse: pyk reverse reaction without H+
