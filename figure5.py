@@ -173,6 +173,8 @@ def main(input_directory, output_directory):
 		# WARNING: This is the error in the 'data agnostic' problem, not the 'all scaled' problem
 		# print 'average (unscaled) fit: {:0.2f}'.format(np.mean(np.sum(np.abs(residuals), 0)))
 
+		plt.close(fig)
+
 	unique = np.unique(indexing)
 
 	with open(os.path.join(output_directory, 'key.txt'), 'w') as f:

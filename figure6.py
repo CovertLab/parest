@@ -87,6 +87,8 @@ def main(input_directory, output_directory):
 
 	fig.savefig(os.path.join(output_directory, 'specific_activity.pdf'), dpi = DPI)
 
+	plt.close(fig)
+
 	with open(os.path.join(output_directory, 'key.txt'), 'w') as f:
 		for unique_index in unique:
 			f.write(':'.join([
