@@ -28,6 +28,9 @@ def load_pars(target_dir, n):
 				a = np.load(path)
 
 			except IOError:
+				if not errors:
+					print 'IO Error detected'
+
 				errors.append(path)
 
 			else:

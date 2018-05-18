@@ -92,11 +92,6 @@ else:
 	stable = []
 
 	for (i, pars) in enumerate(all_pars.T):
-		# print '-'*79
-		# print i, all_obj[:, i]
-
-	# for pars in [all_pars[:, 214]]:
-
 		dx_dt = lambda t, x: dg_dt(x, pars)
 
 		x_start = init_dg_dt(pars)
@@ -147,7 +142,15 @@ else:
 			equ.append(False)
 			lre.append(None)
 			stable.append(False)
-			print 'BAD'
+
+			if not ode.successful():
+				print 'ODE integration failure'
+
+			else:
+				print 'Initial concentrations too far from equilibrium ({:0.2e}, should be < 1)'.format(
+					normed_log_conc_deviation / np.log(EQU_CONC_THRESHOLD)
+					)
+
 			continue
 
 		else:
