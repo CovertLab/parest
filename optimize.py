@@ -20,7 +20,7 @@ from initialization import build_initial_parameter_values
 # TODO: some way to pass these as optional arguments
 
 DISEQU_WEIGHTS = (
-	np.logspace(-10, +10, 41) # standard (TODO: shift up 5 decibels?)
+	np.logspace(-5, +15, 41)
 	# [10**6] # useful test weight (one epoch)
 	)
 
