@@ -16,7 +16,7 @@ parser.add_argument(
 	'--seed', type = int, default = None
 	)
 parser.add_argument(
-	'--n', type = int, default = 1
+	'--n', type = int, default = 1 # does this feature still work?  is it needed?
 	)
 parser.add_argument(
 	'--force', action = 'store_true'
@@ -27,6 +27,10 @@ parser.add_argument(
 
 parser.add_argument(
 	'--problem', type = str, default = 'all_scaled'
+	)
+
+parser.add_argument(
+	'--outdir', type = str, default = None
 	)
 
 args = parser.parse_args()
@@ -44,8 +48,6 @@ for seed_offset in xrange(args.n):
 	if args.seed is None:
 		random_state = np.random.RandomState(None)
 		print 'No seed provided; a random seed will be used.'
-		print 'Output will not be saved.'
-		outdir = None
 
 	else:
 		seed = args.seed + seed_offset
@@ -53,11 +55,24 @@ for seed_offset in xrange(args.n):
 		random_state = np.random.RandomState(seed)
 		print 'Using random seed {}.'.format(seed)
 
-		subdir = 'naive' if args.naive else 'standard'
+	if args.outdir is None:
+		if args.seed is None:
+			outdir = None
 
-		outdir = os.path.join('out', 'history', subdir, 'seed-{}'.format(seed))
+		else:
+			subdir = 'naive' if args.naive else 'standard'
 
+			outdir = os.path.join('out', 'history', subdir, 'seed-{}'.format(seed))
+
+	else:
+		outdir = os.path.join('out', args.outdir, 'seed-{}'.format(seed))
+
+	if outdir is None:
+		print 'Output will not be saved.'
+
+	else:
 		print 'Output will be saved to {}.'.format(os.path.abspath(outdir))
+
 		try:
 			os.makedirs(outdir)
 
