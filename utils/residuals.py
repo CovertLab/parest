@@ -14,6 +14,7 @@ BLACK = (0.0,)*3
 MEDIUM_GRAY = (0.6,)*3
 LIGHT_GRAY = (0.8,)*3
 
+TWOFOLD = constants.RT * np.log(2)
 TENFOLD = constants.RT * np.log(10)
 BILFOLD = constants.RT * np.log(1e9)
 
@@ -70,7 +71,22 @@ def _get_common_value(*values):
 
 	return value
 
-def plot(residuals, indexing):
+from collections import namedtuple
+
+ResidaulsStatistics = namedtuple(
+	'ResidaulsStatistics',
+	(
+		'n_unique',
+		'n_within_2x_median',
+		'n_within_10x_median',
+		'n_within_iqr',
+		'n_within_range',
+		'n_with_narrow_range',
+		'n_with_very_narrow_range'
+		)
+	)
+
+def plot(residuals, indexing, return_stats = False):
 	medians = np.median(residuals, 1)
 
 	(unique, unique_indices, inverse) = np.unique(
@@ -109,6 +125,13 @@ def plot(residuals, indexing):
 
 	observations_by_prediction = []
 
+	n_within_2x_median = 0
+	n_within_10x_median = 0
+	n_within_iqr = 0
+	n_within_range = 0
+	n_with_narrow_range = 0
+	n_with_very_narrow_range = 0
+
 	for i in xrange(n_unique):
 		observation_indexes = np.where(inverse == i)[0]
 
@@ -116,6 +139,37 @@ def plot(residuals, indexing):
 			-(medians[observation_indexes] - medians[unique_indices[i]])
 			- medians[unique_indices[i]]
 			)
+
+	for i in xrange(n_unique):
+		obs_median = np.median(observations_by_prediction[i])
+
+		if np.abs(obs_median) < TWOFOLD:
+			n_within_2x_median += 1
+
+		if np.abs(obs_median) < TENFOLD:
+			n_within_10x_median += 1
+
+		if prediction_ranges[i]['lower'] < obs_median < prediction_ranges[i]['upper']:
+			n_within_iqr += 1
+
+		if prediction_ranges[i]['smallest'] < obs_median < prediction_ranges[i]['largest']:
+			n_within_range += 1
+
+		if prediction_ranges[i]['largest'] - prediction_ranges[i]['smallest'] < TENFOLD:
+			n_with_narrow_range += 1
+
+		if prediction_ranges[i]['largest'] - prediction_ranges[i]['smallest'] < TWOFOLD:
+			n_with_very_narrow_range += 1
+
+	stats = ResidaulsStatistics(
+		n_unique,
+		n_within_2x_median,
+		n_within_10x_median,
+		n_within_iqr,
+		n_within_range,
+		n_with_narrow_range,
+		n_with_very_narrow_range,
+		)
 
 	axes = fig.add_axes((0, 0, 1, 1))
 
@@ -158,4 +212,8 @@ def plot(residuals, indexing):
 
 	axes.axis('off')
 
-	return fig
+	if return_stats:
+		return fig, stats
+
+	else:
+		return fig
