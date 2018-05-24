@@ -15,7 +15,7 @@ from ks_test import ks_test
 	)
 
 (residuals_penalized, indexing_penalized) = figure5.get_residuals_and_indexing(
-	os.path.join('out', 'all_scaled_upper_sat_limits_1e-1')
+	os.path.join('out', 'all_scaled_upper_sat_limits_1e2')
 	)
 
 assert np.all(indexing_standard == indexing_penalized)
