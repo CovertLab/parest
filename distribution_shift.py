@@ -15,7 +15,7 @@ from ks_test import ks_test
 	)
 
 (residuals_penalized, indexing_penalized) = figure5.get_residuals_and_indexing(
-	os.path.join('out', 'all_scaled_upper_sat_limits_1e2')
+	os.path.join('out', 'all_scaled_upper_sat_limits_1e-1')
 	)
 
 assert np.all(indexing_standard == indexing_penalized)
@@ -61,5 +61,3 @@ for s in sorting:
 		out.append(figure5.COMPOUNDS_ORDERED[c])
 
 	print ':'.join(out)
-
-import ipdb; ipdb.set_trace()
