@@ -123,17 +123,6 @@ DEFINITIONS['all_scaled_upper_sat_limits_1e2'] = (
 		),
 	) + DEFINITIONS['all_scaled']
 
-DEFINITIONS['all_scaled_Pi_H2O_1e1'] = (
-	(
-		fitting.field_value_rule(datatype = 'concentration', compound = 'Pi'),
-		1e1
-		),
-	(
-		fitting.field_value_rule(datatype = 'concentration', compound = 'H2O'),
-		1e1
-		),
-	) + DEFINITIONS['all_scaled']
-
 def test():
 	print '{} problem definitions:'.format(len(DEFINITIONS))
 	print '\n'.join(DEFINITIONS.viewkeys())
