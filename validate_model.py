@@ -12,15 +12,17 @@ np.random.seed(33)
 import matplotlib.pyplot as plt
 import scipy.integrate
 
-import problems
 import constants
 import equations
 import structure
 from utils.linalg import approx_jac
 
-FORCE = True
+# Execution options
 
+FORCE = True
 DRY_RUN = False
+
+# Criterion
 
 EQU_CONC_THRESHOLD = 1.001
 
@@ -39,6 +41,8 @@ PERTURBATION_RECOVERY_EPOCHS = PERTURBATION_RECOVERY_TIME_TOLERANCE * EXPECTED_R
 
 TARGET_PYRUVATE_PRODUCTION = 0.14e-3
 FLUX_FIT_THRESHOLD = 1e-3
+
+# ODE integration parameters
 
 DT = 1e1
 T_INIT = 0
@@ -72,12 +76,17 @@ def init_dg_dt(pars):
 
 target_dir = sys.argv[1]
 
-stable_path = pa.join(target_dir, 'stable.npy')
+# stable_path = pa.join(target_dir, 'stable.npy')
 equ_path = pa.join(target_dir, 'equ.npy')
 lre_path = pa.join(target_dir, 'lre.npy')
 valid_path = pa.join(target_dir, 'valid.npy')
 
-paths = [stable_path, equ_path, lre_path, valid_path]
+paths = [
+	# stable_path,
+	equ_path,
+	lre_path,
+	valid_path
+	]
 
 if not FORCE and all(pa.exists(path) for path in paths):
 	print 'Skipping {}, output already exists'.format(target_dir)
@@ -89,9 +98,12 @@ else:
 
 	equ = []
 	lre = []
-	stable = []
+	# stable = []
 
 	for (i, pars) in enumerate(all_pars.T):
+		# if i != 200:
+		# 	continue
+
 		dx_dt = lambda t, x: dg_dt(x, pars)
 
 		x_start = init_dg_dt(pars)
@@ -141,7 +153,7 @@ else:
 		if not ode.successful() or not (normed_log_conc_deviation < np.log(EQU_CONC_THRESHOLD)):
 			equ.append(False)
 			lre.append(None)
-			stable.append(False)
+			# stable.append(False)
 
 			if not ode.successful():
 				print 'ODE integration failure'
@@ -172,73 +184,78 @@ else:
 
 		largest_real_eigenvalue = np.max(np.real(eigvals))
 
-		# import ipdb; ipdb.set_trace()
-
 		# print largest_real_eigenvalue / constants.MU
 
 		lre.append(largest_real_eigenvalue)
 
-		if largest_real_eigenvalue >= 0:
-			stable.append(False)
-			continue
+		print i, np.mean(equ)
 
-		t_final = -PERTURBATION_RECOVERY_EPOCHS / largest_real_eigenvalue
+		# if largest_real_eigenvalue >= 0:
+		# 	stable.append(False)
+		# 	continue
 
-		# x_final = []
+		# t_final = -PERTURBATION_RECOVERY_EPOCHS / largest_real_eigenvalue
 
-		for p in xrange(N_PERTURBATIONS):
-			# x_init = x_eq + (np.random.uniform(size = x_eq.size) - 0.5) * PERTURBATION_SCALE
-			perturbation = np.random.normal(size = x_eq.size)
-			perturbation /= np.linalg.norm(perturbation, 2)
-			perturbation *= PERTURBATION_SCALE
+		# # x_final = []
 
-			x_init = x_eq + perturbation
+		# for p in xrange(N_PERTURBATIONS):
+		# 	# x_init = x_eq + (np.random.uniform(size = x_eq.size) - 0.5) * PERTURBATION_SCALE
+		# 	perturbation = np.random.normal(size = x_eq.size)
+		# 	perturbation /= np.linalg.norm(perturbation, 2)
+		# 	perturbation *= PERTURBATION_SCALE
 
-			ode = scipy.integrate.ode(dx_dt)
+		# 	x_init = x_eq + perturbation
 
-			ode.set_initial_value(x_init, T_INIT)
+		# 	ode = scipy.integrate.ode(dx_dt)
 
-			ode.set_integrator(INTEGRATOR)
+		# 	ode.set_initial_value(x_init, T_INIT)
 
-			x_curr = x_init.copy()
+		# 	ode.set_integrator(
+		# 		INTEGRATOR,
+		# 		# **INTEGRATOR_OPTIONS # TODO
+		# 		)
 
-			while ode.successful() and ode.t < t_final and not np.linalg.norm(x_curr - x_eq, 2) < CONVERGENCE_SCALE:
-				x_curr = ode.integrate(ode.t + DT)
+		# 	x_curr = x_init.copy()
 
-			# print np.linalg.norm(x_curr - x_eq, 2) / CONVERGENCE_SCALE
+		# 	while ode.successful() and ode.t < t_final and not np.linalg.norm(x_curr - x_eq, 2) < CONVERGENCE_SCALE:
+		# 		x_curr = ode.integrate(ode.t + DT)
 
-			# x_final.append(x_curr)
+		# 	# print np.linalg.norm(x_curr - x_eq, 2) / CONVERGENCE_SCALE
 
-			if not ode.successful():
-				# print 'integration failed'
-				stable.append(False)
-				break
+		# 	# x_final.append(x_curr)
 
-			elif ode.t >= t_final:
-				# print 'failed to converge'
-				# print ode.t
-				# print np.abs(x_curr - x_eq)
-				# print constants.RT * np.log(CONC_FOLD_CONVERGENCE)
-				# print dx_dt(0, x_curr)
-				stable.append(False)
-				break
+		# 	if not ode.successful():
+		# 		# print 'integration failed'
+		# 		stable.append(False)
+		# 		break
 
-			# else:
-			# 	print 'recovered by {} (expected ~{})'.format(ode.t, -EXPECTED_RECOVERY_EPOCHS/largest_real_eigenvalue)
+		# 	elif ode.t >= t_final:
+		# 		# print 'failed to converge'
+		# 		# print ode.t
+		# 		# print np.abs(x_curr - x_eq)
+		# 		# print constants.RT * np.log(CONC_FOLD_CONVERGENCE)
+		# 		# print dx_dt(0, x_curr)
+		# 		stable.append(False)
+		# 		break
 
-		else:
-			stable.append(True)
+		# 	# else:
+		# 	# 	print 'recovered by {} (expected ~{})'.format(ode.t, -EXPECTED_RECOVERY_EPOCHS/largest_real_eigenvalue)
 
-		print i, np.mean(equ), np.mean(stable)
+		# else:
+		# 	stable.append(True)
 
-	stable = np.array(stable, np.bool)
+		# print i, np.mean(equ), np.mean(stable)
+
+	# stable = np.array(stable, np.bool)
 	equ = np.array(equ, np.bool)
 	lre = np.array(lre, np.float64)
 
-	valid = (stable & equ)
+	valid = ((lre < 0) & equ)
 
 	if not DRY_RUN:
-		np.save(stable_path, stable)
+		# np.save(stable_path, stable)
 		np.save(equ_path, equ)
 		np.save(lre_path, lre)
 		np.save(valid_path,valid)
+
+	print '{:0.2%}'.format(valid.mean())
