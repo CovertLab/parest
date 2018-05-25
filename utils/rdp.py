@@ -61,6 +61,8 @@ def rdp(points, threshold):
 
 
 if __name__ == '__main__':
+	raise Exception('This demonstration code is broken without installing the third-party RDP package.')
+
 	from time import time
 
 	import matplotlib.pyplot as plt

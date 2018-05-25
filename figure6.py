@@ -83,7 +83,7 @@ def main(input_directory, output_directory):
 
 	fig = utils.residuals.plot(residuals, indexing)
 
-	make_clean_directory(output_directory)
+	# make_clean_directory(output_directory)
 
 	fig.savefig(os.path.join(output_directory, 'specific_activity.pdf'), dpi = DPI)
 

@@ -52,6 +52,9 @@ SCALE = ( # TODO: decide if using the scaling is worth it
 obj_naive = np.load('out/history/naive/obj.npy')
 valid_naive = np.load('out/history/naive/valid.npy')
 
+# obj_new = np.load('out/all_scaled_upper_sat_limits_1e0/obj.npy')
+# valid_new = np.load('out/all_scaled_upper_sat_limits_1e0/valid.npy')
+
 obj_new = np.load('out/history/standard/obj.npy')
 valid_new = np.load('out/history/standard/valid.npy')
 
@@ -78,11 +81,11 @@ plt.xlabel(r'$f(x)$')
 
 plt.axvline(MIN_FIT/SCALE, lw = 0.5, ls = ':', c = 'k', zorder = -10)
 
-plt.xlim(-10, 150)
-plt.xticks([0, 20, 40, 60, 80, 100, 120, 140])
+plt.xlim(-10, 260)
+plt.xticks([0, 50, 100, 150, 200, 250])
 
-plt.ylim(10**-17, 10**+1)
-plt.yticks(10.**np.arange(-16, +2, 2))
+plt.ylim(10**-25, 10**+1)
+plt.yticks(10.**np.array([-24, -20, -16, -12, -8, -4, 0]))
 
 plt.savefig('figure3.pdf')
 # plt.savefig('figure3.png', dpi = 300)

@@ -136,10 +136,10 @@ def make_clean_directory(directory):
 
 	os.makedirs(directory)
 
-def main(input_directory, output_directory):
-	valid = np.load(os.path.join(input_directory, 'valid.npy'))
+def get_residuals_and_indexing(directory):
+	valid = np.load(os.path.join(directory, 'valid.npy'))
 
-	pars = np.load(os.path.join(input_directory, 'pars.npy'))[
+	pars = np.load(os.path.join(directory, 'pars.npy'))[
 		:, valid
 		]
 
@@ -154,18 +154,58 @@ def main(input_directory, output_directory):
 	residuals = residuals[sorting, :]
 	indexing = indexing[sorting]
 
+	return residuals, indexing
+
+def main(input_directory, output_directory):
+	# valid = np.load(os.path.join(input_directory, 'valid.npy'))
+
+	# pars = np.load(os.path.join(input_directory, 'pars.npy'))[
+	# 	:, valid
+	# 	]
+
+	# abs_res, abs_ind = get_absolute_fit_residuals(pars)
+	# rel_res, rel_ind = get_relative_fit_residuals(pars)
+
+	# residuals = np.row_stack([abs_res, rel_res])
+	# indexing = np.concatenate([abs_ind, rel_ind])
+
+	# sorting = np.argsort(indexing)
+
+	# residuals = residuals[sorting, :]
+	# indexing = indexing[sorting]
+
+	# datatypes = indexing['datatype']
+
+	(residuals, indexing) = get_residuals_and_indexing(input_directory)
+
 	datatypes = indexing['datatype']
 
 	import utils.residuals
 
-	make_clean_directory(output_directory)
+	# make_clean_directory(output_directory)
+
+	n_unique = 0
+	n_within_2x_median = 0
+	n_within_10x_median = 0
+	n_within_iqr = 0
+	n_within_range = 0
+	n_with_narrow_range = 0
+	n_with_very_narrow_range = 0
 
 	for unique_datatype_index in np.unique(datatypes):
 		plotted = (datatypes == unique_datatype_index)
 
 		name = DATATYPES_ORDERED[unique_datatype_index]
 
-		fig = utils.residuals.plot(residuals[plotted], indexing[plotted])
+		fig, stats = utils.residuals.plot(residuals[plotted], indexing[plotted], True)
+
+		n_unique += stats.n_unique
+		n_within_2x_median += stats.n_within_2x_median
+		n_within_10x_median += stats.n_within_10x_median
+		n_within_iqr += stats.n_within_iqr
+		n_within_range += stats.n_within_range
+		n_with_narrow_range += stats.n_with_narrow_range
+		n_with_very_narrow_range += stats.n_with_very_narrow_range
 
 		fig.savefig(os.path.join(output_directory, '{}.pdf'.format(name)), dpi = DPI)
 
@@ -186,8 +226,15 @@ def main(input_directory, output_directory):
 				COMPOUNDS_ORDERED[unique_index['compound']] if unique_index['compound'] >= 0 else '',
 				])+'\n')
 
-	print len(unique), 'parameters'
-	print indexing.size, 'observations'
+	print len(unique), 'parameters with training data'
+	print indexing.size, 'total observations (including replicates)'
+
+	print '{} ({:0.2%}) within 2x of median prediction'.format(n_within_2x_median, n_within_2x_median/n_unique)
+	print '{} ({:0.2%}) within 10x of median prediction'.format(n_within_10x_median, n_within_10x_median/n_unique)
+	print '{} ({:0.2%}) within interquartile range of predictions'.format(n_within_iqr, n_within_iqr/n_unique)
+	print '{} ({:0.2%}) within full range of predictions'.format(n_within_range, n_within_range/n_unique)
+	print '{} ({:0.2%}) with a range less than 2x'.format(n_with_very_narrow_range, n_with_very_narrow_range/n_unique)
+	print '{} ({:0.2%}) with a range less than 10x'.format(n_with_narrow_range, n_with_narrow_range/n_unique)
 
 if __name__ == '__main__':
 	main(

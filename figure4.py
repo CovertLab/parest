@@ -26,7 +26,7 @@ sources = [
 	'out/all_scaled_upper_sat_limits_1e-1/',
 	'out/all_scaled_upper_sat_limits_1e0/',
 	'out/all_scaled_upper_sat_limits_1e1/',
-	'out/all_scaled_upper_sat_limits_1e2/'
+	'out/all_scaled_upper_sat_limits_1e2/',
 	]
 
 COLORS = [
@@ -34,7 +34,7 @@ COLORS = [
 	np.array((83, 49, 0), np.float64)/255.,
 	np.array((143, 85, 0), np.float64)/255.,
 	np.array((221, 145, 23), np.float64)/255.,
-	np.array((251, 177, 37), np.float64)/255.
+	np.array((251, 177, 37), np.float64)/255.,
 	]
 
 lre = [
