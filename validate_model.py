@@ -7,7 +7,7 @@ from itertools import izip
 import sys
 
 import numpy as np
-np.random.seed(33)
+# np.random.seed(33)
 
 import matplotlib.pyplot as plt
 import scipy.integrate
@@ -29,9 +29,9 @@ EQU_CONC_THRESHOLD = 1.001
 CONC_FOLD_PERTURBATION = 2
 CONC_FOLD_CONVERGENCE = 1.01
 
-PERTURBATION_SCALE = constants.RT * np.log(CONC_FOLD_PERTURBATION)
-CONVERGENCE_SCALE = constants.RT * np.log(CONC_FOLD_CONVERGENCE)
-N_PERTURBATIONS = 30
+# PERTURBATION_SCALE = constants.RT * np.log(CONC_FOLD_PERTURBATION)
+# CONVERGENCE_SCALE = constants.RT * np.log(CONC_FOLD_CONVERGENCE)
+# N_PERTURBATIONS = 30
 
 APPROX_JAC_RADIUS = 1e-5
 
@@ -101,8 +101,6 @@ else:
 	# stable = []
 
 	for (i, pars) in enumerate(all_pars.T):
-		# if i != 200:
-		# 	continue
 
 		dx_dt = lambda t, x: dg_dt(x, pars)
 
@@ -256,6 +254,6 @@ else:
 		# np.save(stable_path, stable)
 		np.save(equ_path, equ)
 		np.save(lre_path, lre)
-		np.save(valid_path,valid)
+		np.save(valid_path, valid)
 
 	print '{:0.2%}'.format(valid.mean())
