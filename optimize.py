@@ -21,12 +21,15 @@ from initialization import build_initial_parameter_values
 
 DISEQU_WEIGHTS = (
 	np.logspace(-5, +15, 41)
-	# [10**6] # useful test weight (one epoch)
 	)
 
 MAX_ITERATIONS = int(1e6) # maximum number of iteration steps per epoch
 
-PERTURBATION_SCALE = np.logspace(+2, -6, MAX_ITERATIONS)
+PERTURBATION_SCALE = np.logspace(
+	+2,
+	-6,
+	MAX_ITERATIONS
+	)
 
 CONVERGENCE_RATE = ( # if the objective fails to improve at this rate, assume convergence and move on to the next step
 		1e-4 # default
