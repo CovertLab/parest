@@ -42,6 +42,9 @@ sorting = np.argsort(abs_diff)
 
 import utils.residuals
 
+print 'Median differences exceeding 10x'
+print '-'*40
+
 for s in sorting:
 
 	if abs_diff[s] < utils.residuals.TENFOLD:
