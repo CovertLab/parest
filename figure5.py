@@ -233,8 +233,8 @@ def main(input_directory, output_directory):
 	print '{} ({:0.2%}) within 10x of median prediction'.format(n_within_10x_median, n_within_10x_median/n_unique)
 	print '{} ({:0.2%}) within interquartile range of predictions'.format(n_within_iqr, n_within_iqr/n_unique)
 	print '{} ({:0.2%}) within full range of predictions'.format(n_within_range, n_within_range/n_unique)
-	print '{} ({:0.2%}) with a range less than 2x'.format(n_with_very_narrow_range, n_with_very_narrow_range/n_unique)
-	print '{} ({:0.2%}) with a range less than 10x'.format(n_with_narrow_range, n_with_narrow_range/n_unique)
+	print '{} ({:0.2%}) with an IQR less than 2x'.format(n_with_very_narrow_range, n_with_very_narrow_range/n_unique)
+	print '{} ({:0.2%}) with an IQR less than 10x'.format(n_with_narrow_range, n_with_narrow_range/n_unique)
 
 if __name__ == '__main__':
 	main(

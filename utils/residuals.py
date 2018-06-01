@@ -155,10 +155,10 @@ def plot(residuals, indexing, return_stats = False):
 		if prediction_ranges[i]['smallest'] < obs_median < prediction_ranges[i]['largest']:
 			n_within_range += 1
 
-		if prediction_ranges[i]['largest'] - prediction_ranges[i]['smallest'] < TENFOLD:
+		if prediction_ranges[i]['upper'] - prediction_ranges[i]['lower'] < TENFOLD:
 			n_with_narrow_range += 1
 
-		if prediction_ranges[i]['largest'] - prediction_ranges[i]['smallest'] < TWOFOLD:
+		if prediction_ranges[i]['upper'] - prediction_ranges[i]['lower'] < TWOFOLD:
 			n_with_very_narrow_range += 1
 
 	stats = ResidaulsStatistics(
