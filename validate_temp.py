@@ -1,6 +1,7 @@
 
 from __future__ import division
 
+import sys
 import os.path as pa
 from itertools import izip
 
@@ -16,9 +17,11 @@ import equations
 import structure
 from utils.linalg import approx_jac
 
+# Criterion constants
+
 EQU_CONC_THRESHOLD = 1.001
 
-CONC_FOLD_PERTURBATION = 2
+CONC_FOLD_PERTURBATION = 2.0
 CONC_FOLD_CONVERGENCE = 1.01
 
 PERTURBATION_SCALE = constants.RT * np.log(CONC_FOLD_PERTURBATION)
@@ -33,11 +36,18 @@ PERTURBATION_RECOVERY_EPOCHS = PERTURBATION_RECOVERY_TIME_TOLERANCE * EXPECTED_R
 
 TARGET_PYRUVATE_PRODUCTION = 0.14e-3
 
+FLUX_FIT_THRESHOLD = 1e-3
+
+# ODE integration parameters
+
 DT = 1e1
 T_INIT = 0
 INTEGRATOR = 'lsoda'
 INTEGRATOR_OPTIONS = dict(
-	atol = 1e-6 # Default absolute tolerance is way too low (1e-12)
+	atol = 1e-6, # Default absolute tolerance is way too low (1e-12)
+	# first_step = 0.1,
+	# max_step = 1.0
+	# rtol = 1e-6
 	)
 
 conc_ind = [
@@ -57,8 +67,10 @@ def dg_dt(glc, pars):
 def init_dg_dt(pars):
 	return structure.glc_association_matrix.dot(pars)
 
-pars = np.load('optimized_pars.npy')
+# pars = np.load('optimized_pars.npy')
 # pars = np.load('out/all_scaled/seed-21/pars.npy')
+
+pars = np.load(sys.argv[1])
 
 def test(pars):
 	dx_dt = lambda t, x: dg_dt(x, pars)
@@ -103,7 +115,7 @@ def test(pars):
 
 	flux_fit = (net_pyruvate_production / TARGET_PYRUVATE_PRODUCTION - 1)**2
 
-	flux_is_fit = (flux_fit < 1e-3)
+	flux_is_fit = (flux_fit < FLUX_FIT_THRESHOLD)
 
 	print 'net pyruvate production:', net_pyruvate_production
 	print 'flux rel error:', flux_fit
@@ -116,12 +128,18 @@ def test(pars):
 		lre = None
 		stable = False
 
+		if not ode.successful():
+			print 'ODE integration failure'
+
+		else:
+			print 'Initial concentrations too far from equilibrium ({:0.2e}, should be < 1)'.format(
+				normed_log_conc_deviation / np.log(EQU_CONC_THRESHOLD)
+				)
+
 		return equ, lre, stable
 
 	else:
 		equ = True
-
-	# import ipdb; ipdb.set_trace()
 
 	# x_eq = init_dg_dt(pars)
 
@@ -131,7 +149,6 @@ def test(pars):
 
 	largest_real_eigenvalue = np.max(np.real(eigvals))
 
-	# import ipdb; ipdb.set_trace()
 
 	# print largest_real_eigenvalue / constants.MU
 
@@ -157,24 +174,44 @@ def test(pars):
 
 		ode.set_initial_value(x_init, T_INIT)
 
-		ode.set_integrator(INTEGRATOR)
+		ode.set_integrator(
+			INTEGRATOR,
+			# **INTEGRATOR_OPTIONS # TODO
+			)
 
 		x_curr = x_init.copy()
 
+		# t_hist = []
+		# x_hist = []
+
 		while ode.successful() and ode.t < t_final and not np.linalg.norm(x_curr - x_eq, 2) < CONVERGENCE_SCALE:
-			x_curr = ode.integrate(ode.t + DT)
+			x_next = ode.integrate(ode.t + DT)
+
+			# if np.any(np.isnan(x_next)):
+			# 	import matplotlib.pyplot as plt
+
+			# 	plt.plot(t_hist, x_hist)
+
+			# 	plt.savefig('temp.pdf')
+
+			# 	import ipdb; ipdb.set_trace()
+
+			x_curr = x_next
+
+			# t_hist.append(ode.t)
+			# x_hist.append(x_curr)
 
 		# print np.linalg.norm(x_curr - x_eq, 2) / CONVERGENCE_SCALE
 
 		# x_final.append(x_curr)
 
 		if not ode.successful():
-			print 'integration failed'
+			print p, 'integration failed'
 			stable = False
 			break
 
 		elif ode.t >= t_final:
-			print 'failed to converge'
+			print p, 'failed to converge'
 			print ode.t
 			print np.abs(x_curr - x_eq)
 			print constants.RT * np.log(CONC_FOLD_CONVERGENCE)
