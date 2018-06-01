@@ -14,29 +14,27 @@ import fitting
 
 SOURCES = (
 	os.path.join('out', 'all_scaled'),
-	# os.path.join('out', 'all_scaled_upper_sat_limits_1e-1'),
-	# os.path.join('out', 'all_scaled_upper_sat_limits_1e0'),
-	# os.path.join('out', 'all_scaled_upper_sat_limits_1e1'),
-	# os.path.join('out', 'all_scaled_upper_sat_limits_1e2'),
-	os.path.join('out', 'all_scaled_Pi_H2O_1e1'),
+	os.path.join('out', 'all_scaled_upper_sat_limits_1e-1'),
+	os.path.join('out', 'all_scaled_upper_sat_limits_1e0'),
+	os.path.join('out', 'all_scaled_upper_sat_limits_1e1'),
+	os.path.join('out', 'all_scaled_upper_sat_limits_1e2'),
 	)
 
 NAMES = (
 	'original',
-	# 'penalty 1e-1',
-	# 'penalty 1e0',
-	# 'penalty 1e1',
-	# 'penalty 1e2',
-	'10x weight on [H2O], [Pi]'
+	'penalty 1e-1',
+	'penalty 1e0',
+	'penalty 1e1',
+	'penalty 1e2',
 	)
 
 COLORS = [
 	np.array((225, 6, 133), np.float64)/255.,
-	# np.array((83, 49, 0), np.float64)/255.,
-	# np.array((143, 85, 0), np.float64)/255.,
-	# np.array((221, 145, 23), np.float64)/255.,
-	# np.array((251, 177, 37), np.float64)/255.,
-	np.array((0, 0, 255), np.float64)/255.,
+	np.array((83, 49, 0), np.float64)/255.,
+	np.array((143, 85, 0), np.float64)/255.,
+	np.array((221, 145, 23), np.float64)/255.,
+	np.array((251, 177, 37), np.float64)/255.,
+	# np.array((0, 0, 255), np.float64)/255.,
 	]
 
 REFERENCE_RULES = problems.DEFINITIONS['all_scaled']
@@ -88,8 +86,17 @@ def compute_fitness(pars):
 
 plt.figure(figsize = (6, 6))
 
-for (name, source, color) in izip(NAMES, SOURCES, COLORS):
-	print name
+N_COLS = int(np.ceil(np.sqrt(len(SOURCES))))
+N_ROWS = int(np.ceil(len(SOURCES) / N_COLS))
+
+for (i, (name, source, color)) in enumerate(izip(NAMES, SOURCES, COLORS)):
+
+	if i == 0:
+		ax1 = plt.subplot(N_ROWS, N_COLS, i+1)
+
+	else:
+		plt.subplot(N_ROWS, N_COLS, i+1, sharex = ax1, sharey = ax1)
+
 	crt = -constants.MU/load_lre(source)
 	pars = load_pars(source)
 
@@ -98,7 +105,7 @@ for (name, source, color) in izip(NAMES, SOURCES, COLORS):
 	plt.plot(
 		crt, fit,
 		'o',
-		ms = 5, markeredgewidth = 0.5,
+		ms = 3, markeredgewidth = 0.5,
 		markerfacecolor = color, markeredgecolor = 'w',
 		label = name
 		)
@@ -106,17 +113,24 @@ for (name, source, color) in izip(NAMES, SOURCES, COLORS):
 	plt.plot(
 		np.median(crt), np.median(fit),
 		'*',
-		ms = 10, markeredgewidth = 1,
-		markerfacecolor = color, markeredgecolor = 'k',
+		ms = 8, markeredgewidth = 1,
+		markerfacecolor = 'w', markeredgecolor = 'k',
 		zorder = 10
 		)
 
-plt.xscale('log')
-# plt.yscale('log')
+	plt.title(name)
 
-plt.legend(loc = 'best')
+	plt.xscale('log')
+	# plt.yscale('log')
 
-plt.xlabel(r'Characteristic recovery time, relative to $\tau = 1 / \mu$')
-plt.ylabel(r'Misfit error $f$')
+	# plt.legend(loc = 'best')
+
+	# plt.xlabel(r'Characteristic recovery time, relative to $\tau = 1 / \mu$')
+	# plt.ylabel(r'Misfit error $f$')
+
+	plt.xlabel('CRT')
+	plt.ylabel('f')
+
+plt.tight_layout()
 
 plt.savefig('crt_vs_fit.pdf')
