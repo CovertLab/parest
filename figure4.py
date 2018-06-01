@@ -47,7 +47,7 @@ top = 0
 
 x_range = top - bottom
 
-nbins = 40
+nbins = 30
 
 width = x_range/nbins
 x = np.linspace(bottom, top, nbins, endpoint = False) + width/2
