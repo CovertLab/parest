@@ -1,4 +1,13 @@
 
+'''
+
+Defines the parameter value bounds.  Only used in 'parsimonious' perturbation.
+See optimize.py for the 'naive' bounds.
+
+TODO: move 'naive' bounds to this file or another file
+
+'''
+
 from __future__ import division
 
 import numpy as np

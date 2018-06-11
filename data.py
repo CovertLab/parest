@@ -1,4 +1,11 @@
 
+'''
+
+Defines the datatypes that will be loaded, and loads them into a 'knowledge
+base' object (kb).
+
+'''
+
 from __future__ import division
 
 import os

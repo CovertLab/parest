@@ -1,4 +1,11 @@
 
+'''
+
+Simple script that outputs the number of training data points in the basic
+optimization problem.
+
+'''
+
 from __future__ import division
 
 import numpy as np

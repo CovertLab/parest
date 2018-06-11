@@ -1,4 +1,14 @@
 
+'''
+
+One of two general parameter estimation execution scripts (also see
+main_alt.py).  For details, consult README.md as well as the command-line info
+given by
+
+python main.py -h
+
+'''
+
 from __future__ import division
 
 import os

@@ -1,4 +1,10 @@
 
+'''
+
+Various constants used in the optimization or elsewhere.
+
+'''
+
 import numpy as np
 
 RT = 0.6 # kcal/mol - dependent on temperature

@@ -5,11 +5,6 @@ format.  The format supports comments, multiple data types per file, and
 default parameter assignments.  It collects the explicit data as well as
 the metadata into a 'knowledge base' object.
 
-# TODO: more documentation
-# TODO: consider a format that distinguishes between keys and values
-# TODO: investigate parser libraries
-# TODO: tests
-
 """
 
 from __future__ import division

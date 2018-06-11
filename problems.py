@@ -1,4 +1,12 @@
 
+'''
+
+The various parameter estimation problems are defined here, as well as
+several convenience functions that can be used to build up new problems.  All
+problems are stored in the global constant DEFINITIONS.
+
+'''
+
 from collections import OrderedDict
 
 from data import kb
@@ -6,8 +14,11 @@ import structure
 import fitting
 
 _DEFAULT_EXCLUDE_DATATYPE = (
+	# Pseudo-fitting data; not desired by default
 	'upper_reactant_saturation_limit',
 	'upper_product_saturation_limit',
+
+	# SEOF data proved to be very inaccurate and was ultimately excluded
 	'standard_energy_of_formation'
 	)
 
@@ -19,21 +30,25 @@ _DEFAULT_RULES = (
 	)
 
 def accept_all(value = 1e0):
+	'''
+	A rule-generation function that accepts everything.
+	'''
 	return (
 		lambda entry: True,
 		value
 		)
 
-def exclude_entry(excluded_entry):
-	return (
-		(lambda entry: entry.id == excluded_entry.id, 0),
-		accept_all()
-		)
-
 DEFINITIONS = OrderedDict()
+
+'''
+The 'data agnostic' problem weights all data evenly.
+'''
 
 DEFINITIONS['data_agnostic'] = _DEFAULT_RULES + (accept_all(),)
 
+'''
+The 'no data' problem excludes all training data.
+'''
 DEFINITIONS['no_data'] = _DEFAULT_RULES + (accept_all(0),)
 
 _KINETICS_TYPES = (
@@ -61,6 +76,16 @@ def gather_by_field(dataset, field):
 from itertools import izip
 
 def normalize_by_number_of_observations(dataset, *fields):
+	'''
+
+	Creates a rule-weight pair that normalizes the weighting on the data by the
+	number of observations.  This was found to give better fits, since data
+	were often consistent and errors were usually consequent of a systemic
+	change rather than experimental error.  E.g. chemical equilibria constants
+	were found to not be totally consistent for the cell interior, despite
+	having many (sometimes 10+) observations on each constant.
+
+	'''
 	return tuple(
 		(
 			fitting.field_value_rule(**{
@@ -75,8 +100,9 @@ def normalize_by_number_of_observations(dataset, *fields):
 			).viewitems()
 		)
 
-def scale_weights(rules_and_weights, scale):
-	return tuple( (rule, weight * scale) for rule, weight in rules_and_weights)
+'''
+The 'all scaled' ruleset is the default.
+'''
 
 DEFINITIONS['all_scaled'] = (
 	_DEFAULT_RULES
@@ -94,6 +120,11 @@ DEFINITIONS['all_scaled'] = (
 		1.0/3 # currently using three sets of proteomics data
 		),
 	)
+
+'''
+Variants on the 'all scaled' data set that include the saturation penalty, with
+increasing weight.
+'''
 
 DEFINITIONS['all_scaled_upper_sat_limits_1e-1'] = (
 	(
@@ -122,16 +153,6 @@ DEFINITIONS['all_scaled_upper_sat_limits_1e2'] = (
 		1e2
 		),
 	) + DEFINITIONS['all_scaled']
-
-def test():
-	print '{} problem definitions:'.format(len(DEFINITIONS))
-	print '\n'.join(DEFINITIONS.viewkeys())
-
-	import fitting
-
-	for name, rules_and_weights in DEFINITIONS.viewitems():
-		fitting.build_fitting_tensors(*rules_and_weights)
-		fitting.build_relative_fitting_tensor_sets(*rules_and_weights)
 
 if __name__ == '__main__':
 	test()

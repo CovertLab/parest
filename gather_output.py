@@ -1,4 +1,13 @@
 
+'''
+
+Gathers input from a set of parameter estimation runs into single files.
+Assumes n = 300 seeds (0-299).  Call pattern
+
+python gather_output.py <output_directory>
+
+'''
+
 from __future__ import division
 
 import os.path as pa

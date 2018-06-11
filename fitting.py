@@ -1,4 +1,9 @@
 
+'''
+Builds the vectors and matrices used in the misfit cost function, utilized by
+the optimization problem.
+'''
+
 from __future__ import division
 
 import numpy as np
@@ -8,6 +13,10 @@ import constants
 import structure
 
 def find_weight(rules_and_weights, entry):
+	'''
+	Find the right weight for a data entry, given certain rules (filters) and
+	corresponding weights.
+	'''
 	for rule, weight in rules_and_weights:
 		if rule(entry):
 			return weight
@@ -16,6 +25,9 @@ def find_weight(rules_and_weights, entry):
 		raise Exception('Entry {} was not assigned a weight.'.format(entry))
 
 def field_value_rule(**fields_and_values):
+	'''
+	Convenience metafunction for generation a rule based on field values.
+	'''
 	def rule(entry):
 		return all(
 			hasattr(entry, field) and (getattr(entry, field) in values)
@@ -25,6 +37,10 @@ def field_value_rule(**fields_and_values):
 	return rule
 
 def build_fitting_tensors(*rules_and_weights):
+	'''
+	Builds standard fitting problem matrices, vectors, and metadata.
+	'''
+
 	if len(rules_and_weights) == 0:
 		rules_and_weights = ((lambda entry: True, 1.0),)
 
@@ -435,8 +451,10 @@ def build_fitting_tensors(*rules_and_weights):
 	return fitting_mat, fitting_values, fitting_entries
 
 def build_upper_fitting_tensors(*rules_and_weights):
-	# Similar to normal fitting, except we only penalize for values above
-	# some threshold.
+	'''
+	Same as build_fitting_tensors, except these rules will only be used to
+	penalize for quantities above some threshold.
+	'''
 
 	if len(rules_and_weights) == 0:
 		rules_and_weights = ((lambda entry: True, 1.0),)
@@ -568,6 +586,12 @@ def build_upper_fitting_tensors(*rules_and_weights):
 	return fitting_mat, fitting_values, fitting_entries
 
 def build_relative_fitting_tensor_sets(*rules_and_weights):
+	'''
+	Same as build_fitting_tensors, except these will be used to fit data with
+	some degree of freedom (e.g. a set of values on an arbitrary but shared
+	basis).
+	'''
+
 	if len(rules_and_weights) == 0:
 		rules_and_weights = ((lambda entry: True, 1.0),)
 
@@ -635,10 +659,3 @@ def build_relative_fitting_tensor_sets(*rules_and_weights):
 		tensor_sets.append((gelc_mat, gelc_values, gelc_entries))
 
 	return tensor_sets
-
-def test():
-	(fv, fm, fe) = build_fitting_tensors()
-	tensor_sets = build_relative_fitting_tensor_sets()
-
-if __name__ == '__main__':
-	test()

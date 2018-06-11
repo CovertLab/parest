@@ -1,4 +1,12 @@
 
+'''
+
+Defines the function used to initialize the parameter estimation problem with
+a set of well-fit parameter values.
+
+'''
+
+
 from __future__ import division
 
 import numpy as np
@@ -31,8 +39,14 @@ def build_initial_parameter_values( # TODO: meaningful defaults
 		upper_penalty_matrix, upper_penalty_values,
 		*relative_penalty_matrices_and_values # matrix-value pairs
 		):
+	'''
 
-	# TODO: documentation
+	Finds the best-fit set of parameter values given some optimization problem,
+	and then regularizes the unfit values (e.g. undetermined and partially
+	determined values) to the middle of the provided bounds.
+
+	'''
+
 	# TODO: thorough error checking on dimensions of inputs and outputs
 
 	# Stage 1: set up and solve the linear program
@@ -295,25 +309,3 @@ def build_initial_parameter_values( # TODO: meaningful defaults
 	# TODO: error checking on stage 1, 2 output
 
 	return x, f
-
-def test():
-	import fitting
-	import problems
-
-	for problem, definition in problems.DEFINITIONS.viewitems():
-		fitting_tensors = fitting.build_fitting_tensors(*definition)
-		relative_fitting_tensor_sets = fitting.build_relative_fitting_tensor_sets(*definition)
-
-		try:
-			(init_pars, fitness, residuals) = build_initial_parameter_values(
-				fitting_tensors, relative_fitting_tensor_sets
-				)
-
-		except Exception as e:
-			print 'Failed to initialize problem "{}" with exception {}'.format(
-				problem,
-				e
-				)
-
-if __name__ == '__main__':
-	test()

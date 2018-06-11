@@ -1,4 +1,11 @@
 
+'''
+
+This file defines the primary step in the parameter estimation workflow, plus
+several accessory functions.
+
+'''
+
 from __future__ import division
 
 from itertools import izip
@@ -7,7 +14,7 @@ import time
 
 import numpy as np
 
-import liveout as lo
+import utils.liveout as lo
 
 import structure
 import fitting
@@ -87,11 +94,17 @@ else:
 		sumsq1d = lambda x: np.sum(np.square(x))
 
 def compute_abs_fit(pars, fitting_tensors):
+	'''
+	Computes the degree of fit to the training data.
+	'''
 	(fitting_matrix, fitting_values) = fitting_tensors[:2] # TODO: check overhead of these unpacking operations
 
 	return sumabs1d(fitting_matrix.dot(pars) - fitting_values)
 
 def compute_upper_fit(pars, upper_fitting_tensors):
+	'''
+	Computes the degree of fit to the training data (single-sided penalty).
+	'''
 	(fitting_matrix, fitting_values) = upper_fitting_tensors[:2]
 
 	if fitting_values.size:
@@ -104,6 +117,9 @@ def compute_upper_fit(pars, upper_fitting_tensors):
 		return 0.0
 
 def compute_relative_fit(pars, relative_fitting_tensor_sets):
+	'''
+	Computes the degree of fit to the training data (relative).
+	'''
 	cost = 0.0
 
 	for fm, fv, fe in relative_fitting_tensor_sets:
@@ -117,6 +133,9 @@ def compute_relative_fit(pars, relative_fitting_tensor_sets):
 	return cost
 
 def compute_overall_fit(pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets):
+	'''
+	Computes the total degree of fit (misfit cost).
+	'''
 	return (
 		compute_abs_fit(pars, fitting_tensors)
 		+ compute_upper_fit(pars, upper_fitting_tensors)
@@ -124,6 +143,9 @@ def compute_overall_fit(pars, fitting_tensors, upper_fitting_tensors, relative_f
 		)
 
 class ObjectiveValues(object):
+	'''
+	Convenience class for storing objective values.
+	'''
 	def __init__(self, pars, fitting_tensors, upper_fitting_tensors, relative_fitting_tensor_sets = ()):
 		(v, dc_dt, dglc_dt) = equations.compute_all(pars, *equations.args)
 
@@ -151,7 +173,9 @@ class ObjectiveValues(object):
 		return self.misfit_error() + disequ_weight * self.disequilibrium_error()
 
 def nonredundant_vectors(vectors, tolerance = 1e-15):
-	# Discards vectors that are equivalent to subsequent vectors under scaling.
+	'''
+	Discards vectors that are equivalent to subsequent vectors under scaling.
+	'''
 
 	retained = []
 
@@ -169,6 +193,13 @@ def nonredundant_vectors(vectors, tolerance = 1e-15):
 	return retained
 
 def build_perturbation_vectors(naive = False):
+	'''
+
+	Builds the perturbation vectors using the procedure described in the text.
+	By default, the perturbations are 'parsimonious'.
+
+	'''
+
 	if naive:
 		# The standard parameter matrix corresponds to the 'usual'
 		# parameterization of a kinetic model, in terms of kcat's, metabolite
@@ -207,6 +238,12 @@ def build_perturbation_vectors(naive = False):
 import bounds
 
 def build_bounds(naive = False):
+	'''
+
+	Builds the problem bounds.  By default, the bounds are 'parsimonious'.
+
+	'''
+
 	if naive:
 		# TODO: move this to bounds.py
 		import constants
@@ -294,6 +331,10 @@ def build_bounds(naive = False):
 	return bounds_matrix, lowerbounds, upperbounds
 
 def seconds_to_hms(t):
+	'''
+	Convenience function for computing time in total seconds to time in hours,
+	minutes, and seconds.
+	'''
 	hours = t//3600
 	minutes = t//60 - 60*hours
 	seconds = t - 60*minutes - 3600*hours
@@ -301,6 +342,9 @@ def seconds_to_hms(t):
 	return (hours, minutes, seconds)
 
 def empty_callback(epoch, iteration, constraint_penalty_weight, obj_components):
+	'''
+	Example, empty callback provided to the estimate_parameters function.
+	'''
 	pass
 
 def estimate_parameters(
@@ -310,6 +354,11 @@ def estimate_parameters(
 		random_direction = False,
 		callback = empty_callback
 		):
+	'''
+
+	The optimization procedure, described extensively in the manuscript.
+
+	'''
 
 	# TODO: pass initial parameters, bounds, perturbation vectors
 	# TODO: pass metaparameters
