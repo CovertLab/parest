@@ -26,7 +26,7 @@ pars = np.load(os.path.join(SOURCE, 'pars.npy'))[:, valid]
 TARGET_FLUX = 0.14e-3
 
 rrs = np.array([
-	equations.reaction_rates(x, *equations.args) / TARGET_FLUX
+	equations.reaction_rates(x, *equations.args)
 	# np.log10(equations.reverse_reaction_rates(x, *equations.args)/equations.forward_reaction_rates(x, *equations.args))
 	for x in pars.T
 	])
@@ -37,9 +37,13 @@ def interquartile_range(values):
 def median_absolute_deviation(values):
 	return np.median(np.abs(values - np.median(values)))
 
+SCALE = 1e-6
+
 for name, rr in izip(structure.ACTIVE_REACTIONS, rrs.T):
-	print '{}: {:0.2%} +/- {:0.2%}'.format(
+	print '{}: {:0.2f} +- {:0.2f}, {:0.2%} +/- {:0.2%}'.format(
 		name,
-		np.median(rr),
-		median_absolute_deviation(rr)
+		np.median(rr / SCALE),
+		median_absolute_deviation(rr / SCALE),
+		np.median(rr / TARGET_FLUX),
+		median_absolute_deviation(rr / TARGET_FLUX)
 		)
