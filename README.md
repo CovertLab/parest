@@ -54,3 +54,17 @@ The network structure is also defined in the `data` subdirectory.  New reactions
 ### Changing the kinetic rate laws
 
 Kinetic rate laws are automatically assembled using the procedure described in the text.  There is currently no option to use other kinetic rate law schemes.
+
+## Manuscript data and figures
+
+### Output data
+
+The data used to generate all output is committed in the directory structure.  It has already been gathered up and validated for its dynamic viability.  If you wish to regenerate the data, you will need to call `main.py` or `main_alt.py` with the correct arguments for 300 seeds, then re-gather and output the data.  System independence of results should be true but is difficult to verify.
+
+### Figures
+
+Figure generation files are found under the `figures` subdirectory.  They should be executed from the root `parest` directory.
+
+### Tables
+
+Table generation files are found under the `tables` subdirectory.  They should be executed from the root `parest` directory.
