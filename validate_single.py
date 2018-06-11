@@ -1,4 +1,15 @@
 
+'''
+
+Validates the dynamical viability of a single set of estimated parameter
+values.  Call pattern:
+
+python validate_simply.py parameters_to_validate.npy
+
+This file should have behavior consistent with validate_model.py, but no
+guarantees.
+
+'''
 from __future__ import division
 
 import sys

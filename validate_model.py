@@ -1,4 +1,13 @@
 
+'''
+
+Validates the dynamical viability of a set of estimated parameter values.  Call
+pattern:
+
+python validate_model.py <output directory>
+
+'''
+
 from __future__ import division
 
 import os.path as pa
