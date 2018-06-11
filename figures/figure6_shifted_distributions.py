@@ -8,8 +8,7 @@ from itertools import izip
 import numpy as np
 import matplotlib.pyplot as plt
 
-import figure5
-from ks_test import ks_test
+import figures.figure4_fit
 
 import utils.residuals
 
@@ -18,15 +17,15 @@ OUTPUT_DIRECTORY = 'figure6_shifted_distributions'
 if not os.path.exists(OUTPUT_DIRECTORY):
 	os.mkdir(OUTPUT_DIRECTORY)
 
-(residuals_standard, indexing_standard) = figure5.get_residuals_and_indexing(
+(residuals_standard, indexing_standard) = figures.figure4_fit.get_residuals_and_indexing(
 	os.path.join('out', 'all_scaled')
 	)
 
-(residuals_small, indexing_small) = figure5.get_residuals_and_indexing(
+(residuals_small, indexing_small) = figures.figure4_fit.get_residuals_and_indexing(
 	os.path.join('out', 'all_scaled_upper_sat_limits_1e-1')
 	)
 
-(residuals_large, indexing_large) = figure5.get_residuals_and_indexing(
+(residuals_large, indexing_large) = figures.figure4_fit.get_residuals_and_indexing(
 	os.path.join('out', 'all_scaled_upper_sat_limits_1e2')
 	)
 
@@ -61,14 +60,14 @@ for (name, residuals) in (
 
 	fig = utils.residuals.plot(residuals[plotted], indexing[plotted])
 
-	fig.savefig(os.path.join(OUTPUT_DIRECTORY, '{}.pdf'.format(name)), dpi = figure5.DPI)
+	fig.savefig(os.path.join(OUTPUT_DIRECTORY, '{}.pdf'.format(name)), dpi = figures.figure4_fit.DPI)
 
 	plt.close(fig)
 
 with open(os.path.join(OUTPUT_DIRECTORY, 'key.txt'), 'w') as f:
 	for uni in unique_values[shifted_large]:
 		f.write(':'.join([
-			figure5.DATATYPES_ORDERED[uni['datatype']] if uni['datatype'] >= 0 else '',
-			figure5.REACTIONS_ORDERED[uni['reaction']] if uni['reaction'] >= 0 else '',
-			figure5.COMPOUNDS_ORDERED[uni['compound']] if uni['compound'] >= 0 else '',
+			figures.figure4_fit.DATATYPES_ORDERED[uni['datatype']] if uni['datatype'] >= 0 else '',
+			figures.figure4_fit.REACTIONS_ORDERED[uni['reaction']] if uni['reaction'] >= 0 else '',
+			figures.figure4_fit.COMPOUNDS_ORDERED[uni['compound']] if uni['compound'] >= 0 else '',
 			])+'\n')

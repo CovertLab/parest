@@ -157,25 +157,6 @@ def get_residuals_and_indexing(directory):
 	return residuals, indexing
 
 def main(input_directory, output_directory):
-	# valid = np.load(os.path.join(input_directory, 'valid.npy'))
-
-	# pars = np.load(os.path.join(input_directory, 'pars.npy'))[
-	# 	:, valid
-	# 	]
-
-	# abs_res, abs_ind = get_absolute_fit_residuals(pars)
-	# rel_res, rel_ind = get_relative_fit_residuals(pars)
-
-	# residuals = np.row_stack([abs_res, rel_res])
-	# indexing = np.concatenate([abs_ind, rel_ind])
-
-	# sorting = np.argsort(indexing)
-
-	# residuals = residuals[sorting, :]
-	# indexing = indexing[sorting]
-
-	# datatypes = indexing['datatype']
-
 	(residuals, indexing) = get_residuals_and_indexing(input_directory)
 
 	datatypes = indexing['datatype']
@@ -183,6 +164,9 @@ def main(input_directory, output_directory):
 	import utils.residuals
 
 	# make_clean_directory(output_directory)
+
+	if not os.path.exists(output_directory):
+		os.makedirs(output_directory)
 
 	n_unique = 0
 	n_within_2x_median = 0
@@ -239,5 +223,5 @@ def main(input_directory, output_directory):
 if __name__ == '__main__':
 	main(
 		os.path.join('out', 'all_scaled'),
-		'figure5'
+		'figure4'
 		)

@@ -10,8 +10,6 @@ import matplotlib.pyplot as plt
 import structure
 import constants
 
-from figure5 import make_clean_directory
-
 def main(input_directory, output_directory):
 	pars = np.load(os.path.join(input_directory, 'pars.npy'))[
 		:, np.load(os.path.join(input_directory, 'valid.npy'))
@@ -83,7 +81,8 @@ def main(input_directory, output_directory):
 
 	fig = utils.residuals.plot(residuals, indexing)
 
-	# make_clean_directory(output_directory)
+	if not os.path.exists(output_directory):
+		os.makedirs(output_directory)
 
 	fig.savefig(os.path.join(output_directory, 'specific_activity.pdf'), dpi = DPI)
 

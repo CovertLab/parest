@@ -1,7 +1,7 @@
 
 import os
 
-import figure6
+import figures.figure6_predictions
 
 inputs_and_outputs = tuple(
 	(
@@ -12,5 +12,5 @@ inputs_and_outputs = tuple(
 	)
 
 for input_and_output in inputs_and_outputs:
-	figure6.main(*input_and_output)
+	figures.figure6_predictions.main(*input_and_output)
 
