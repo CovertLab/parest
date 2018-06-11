@@ -1,6 +1,6 @@
 
 '''
-Plotting code for drawing the condensed box-plots for figures 5 and 6.
+Plotting code for drawing the condensed box-plots for figures 4 and 6.
 '''
 
 from __future__ import division

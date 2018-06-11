@@ -1,4 +1,11 @@
 
+'''
+
+Defines a function for performing the RDP algorithm on data, useful for
+reducing the number of points in a plot.  Not used.
+
+'''
+
 from __future__ import division
 
 import numpy as np

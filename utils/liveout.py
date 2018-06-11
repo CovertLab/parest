@@ -1,4 +1,11 @@
 
+'''
+
+Defines functions and classes for outputing data to a shell in a live, updating
+table.
+
+'''
+
 import sys
 
 from itertools import izip

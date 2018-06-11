@@ -1,4 +1,10 @@
 
+'''
+
+Defines a function for performing soft-margin SVM.  Not used.
+
+'''
+
 from __future__ import division
 
 import numpy as np

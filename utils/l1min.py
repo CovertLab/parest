@@ -1,5 +1,11 @@
 
-# TODO: delete?
+'''
+
+Defines a function to perform constrained L1-norm minimization.  Unused.
+
+TODO: delete
+
+'''
 
 from __future__ import division
 

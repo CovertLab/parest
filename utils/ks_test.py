@@ -1,4 +1,14 @@
 
+'''
+
+Performs the two-sample KS test, a non-parameteric test on whether two
+distributions are significantly different.  Not used.
+
+TODO: delete
+
+'''
+
+
 from __future__ import division
 
 import numpy as np

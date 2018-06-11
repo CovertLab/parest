@@ -1,5 +1,9 @@
 
-# TODO: delete?
+'''
+
+Deifnes a plotting utility function.  Unused but helpful for inspecting matrices.
+
+'''
 
 from __future__ import division
 

@@ -1,5 +1,11 @@
 
-# TODO: delete?
+'''
+
+Functions for performing various, specialized linear algebra optimizations.
+Largely unutilized, except for bilevel_elementwise_pseudoinverse and
+approx_jac.
+
+'''
 
 from __future__ import division
 
@@ -42,6 +48,11 @@ def nullspace_basis(matrix, rcond = _RES):
 	return null
 
 def pinv(matrix, rcond = _RES):
+	'''
+	Finds the Moore-Penrose pseudo-inverse using the singular value
+	decomposition.
+	'''
+
 	u, s, vT = np.linalg.svd(matrix, full_matrices = False)
 
 	retain = (s / s[0] > rcond)
@@ -78,6 +89,13 @@ def bilevel_pseudoinverse(first_matrix, second_matrix, rcond = _RES):
 	return second_nullspace_projector.dot(first_matrix_pseudoinverse)
 
 def bilevel_elementwise_pseudoinverse(first_matrix, second_matrix, rcond = _RES):
+	'''
+
+	Creates the pseudo-inverse matrix that solves a bilevel least-squares
+	optimization problem.
+
+	'''
+
 	n, size = first_matrix.shape
 
 	vectors = [first_matrix[[i], :] for i in xrange(n)]
@@ -102,6 +120,10 @@ def bilevel_elementwise_pseudoinverse(first_matrix, second_matrix, rcond = _RES)
 	return np.concatenate(bilevel_pinvs, 1)
 
 def approx_jac(f, x, d = 1e-3):
+	'''
+	Computes an approximate Jacobian on a function f with respect to parameter
+	values x using centered differences with a size of d.
+	'''
 	f0 = f(x)
 
 	j = np.empty((f0.size, x.size))
