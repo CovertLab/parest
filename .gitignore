@@ -7,8 +7,7 @@
 # Output
 out/*
 slurm/*
-figure*/*
-
+*.txt
 
 # compiled python module
 *.pyc
