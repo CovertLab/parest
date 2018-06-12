@@ -13,7 +13,7 @@ See `requirements.txt` for specific version information.
 To run a single, standard optimization, call `python optimize.py`.  The output parameter values will be saved as `optimized_pars.npy`.
 
 ### Specific parameter estimation
-To run a specific optimization problem, call `python main.py` with the appropriate options (see `python main.py -h` for arguments).  For example, to run the optimization using the smallest saturation penalty (see text) and see #32,
+To run a specific optimization problem, call `python main.py` with the appropriate options (see `python main.py -h` for arguments).  For example, to run the optimization using the smallest saturation penalty (see text) and seed #32,
 
 ```bash
 python main.py --seed=32 --problem=all_scaled_upper_sat_limits_1e-1
