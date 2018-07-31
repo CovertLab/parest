@@ -5,6 +5,7 @@ Kinetic model parameter estimation workflow, currently implemented for modeling 
 ## Dependencies
 - Python 2.7.5 or equivalent
 - NumPy, SciPy, matplotlib
+
 See `requirements.txt` for specific version information.
 
 ## Usage
@@ -29,7 +30,7 @@ Output can be collected by calling `python gather_output.py <output directory>`.
 
 ### Validation
 
-Single sets of output parameters can be validated by calling `bash python validate_single.py`.  Gathered sets of parameter values can be validated by `python validate_model.py <output directory>`.  These files should give consistent results although `validate_single.py` may fall out of date (it exists as a weakly supported convenience).
+Single sets of output parameters can be validated by calling `python validate_single.py`.  Gathered sets of parameter values can be validated by `python validate_model.py <output directory>`.  These files should give consistent results although `validate_single.py` may fall out of date (it exists as a weakly supported convenience).
 
 ### Simulation
 
